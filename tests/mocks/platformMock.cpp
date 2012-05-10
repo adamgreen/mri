@@ -120,13 +120,11 @@ static size_t getTransmitDataBufferSize()
 
 int Platform_CommCausedInterrupt(void)
 {
-    // UNDONE: Need to test.
     return 0;
 }
 
 void Platform_CommClearInterrupt(void)
 {
-    // UNDONE: Need to test.
 }
 
 void platformMock_CommSetShareFlag(int flag)
@@ -141,7 +139,6 @@ int Platform_CommIsSharedWithApplication(void)
 
 int Platform_CommIsWaitingForGdbToConnect(void)
 {
-    // UNDONE: Need to test.
     return 1;
 }
 

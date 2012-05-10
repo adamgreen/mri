@@ -198,8 +198,6 @@ uint8_t Platform_DetermineCauseOfException(void)
 {
     uint32_t exceptionNumber = getCurrentlyExecutingExceptionNumber();
     
-    /* UNDONE: Might want to look at Fault Status Registers to better disambiguate cause of faults.  For example you
-               can get a UsageFault for divide by 0 errors but today this code just returns SIGILL. */
     switch(exceptionNumber)
     {
     case 2:

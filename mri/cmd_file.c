@@ -40,8 +40,6 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
     Buffer_WriteChar(pBuffer, '/');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
     Buffer_WriteChar(pBuffer, ',');
-    
-    // UNDONE: Modes should be passed in from higher level.
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->flags);
     Buffer_WriteChar(pBuffer, ',');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->mode);
