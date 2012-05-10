@@ -13,7 +13,6 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
-/* UNDONE: To be deleted!! */
 /* Implementation of Assembly Language routines to be used by MRI debug monitor. */
     .text
     .code 16
