@@ -134,7 +134,7 @@ static void setSuccessfulInitFlag(void)
 
 static void blockIfGdbHasNotConnected(void);
 static void waitForGdbToConnect(void);
-static void initializeMriStructureOnDebuggerEntry(void);
+static void determineSignalValue(void);
 static int  isDebugTrap(void);
 static void prepareForDebuggerExit(void);
 static void clearFirstExceptionFlag(void);
@@ -152,7 +152,7 @@ void __mriDebugException(void)
     }
 
     Platform_EnteringDebugger();
-    initializeMriStructureOnDebuggerEntry();
+    determineSignalValue();
     
     if (isDebugTrap() && 
         Semihost_IsDebuggeeMakingSemihostCall() && 
@@ -187,9 +187,8 @@ static void waitForGdbToConnect(void)
     }
 }
 
-static void initializeMriStructureOnDebuggerEntry(void)
+static void determineSignalValue(void)
 {
-    clearCoreStructure();
     g_mri.signalValue = Platform_DetermineCauseOfException();
 }
 
