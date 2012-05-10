@@ -18,7 +18,7 @@
 #define _DEBUG_CM3_H_
 
 #include <stdio.h>
-#include <cmsis.h>
+#include <LPC17xx.h>
 #include <try_catch.h>
 #include "cortex-m.h"
 

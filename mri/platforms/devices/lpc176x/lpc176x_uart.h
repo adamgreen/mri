@@ -18,7 +18,7 @@
 #define _LPC176X_UART_H_
 
 #include <stdint.h>
-#include <cmsis.h>
+#include <LPC17xx.h>
 #include <token.h>
 
 #define LPC176X_UART_FLAGS_SHARE    1
