@@ -1,0 +1,127 @@
+/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+*/
+/* Declaration of routines that need to be provided for a specific target hardware platform before mri can be used to
+   as a debug conduit for it. */
+#ifndef _PLATFORMS_H_
+#define _PLATFORMS_H_
+
+#include <stdint.h>
+#include "token.h"
+#include "buffer.h"
+#include "try_catch.h"
+
+void      __mriPlatform_Init(Token* pParameterTokens);
+char*     __mriPlatform_GetPacketBuffer(void);
+uint32_t  __mriPlatform_GetPacketBufferSize(void);
+void      __mriPlatform_EnteringDebugger(void);
+void      __mriPlatform_LeavingDebugger(void);
+
+uint32_t  __mriPlatform_CommHasReceiveData(void);
+int       __mriPlatform_CommReceiveChar(void);
+void      __mriPlatform_CommSendChar(int character);
+int       __mriPlatform_CommCausedInterrupt(void);
+void      __mriPlatform_CommClearInterrupt(void);
+int       __mriPlatform_CommIsSharedWithApplication(void);
+int       __mriPlatform_CommIsWaitingForGdbToConnect(void);
+
+uint8_t   __mriPlatform_DetermineCauseOfException(void);
+void      __mriPlatform_DisplayFaultCauseToGdbConsole(void);
+void      __mriPlatform_EnableSingleStep(void);
+void      __mriPlatform_DisableSingleStep(void);
+int       __mriPlatform_IsSingleStepping(void);
+uint32_t  __mriPlatform_GetProgramCounter(void);
+void      __mriPlatform_SetProgramCounter(uint32_t newPC);
+void      __mriPlatform_AdvanceProgramCounterToNextInstruction(void);
+int       __mriPlatform_IsCurrentInstructionHardcodedBreakpoint(void);
+int       __mriPlatform_WasProgramCounterModifiedByUser(void);
+int       __mriPlatform_WasMemoryFaultEncountered(void);
+
+void      __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer);
+void      __mriPlatform_CopyContextToBuffer(Buffer* pBuffer);
+void      __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer);
+
+uint32_t     __mriPlatform_GetDeviceMemoryMapXmlSize(void);
+const char*  __mriPlatform_GetDeviceMemoryMapXml(void);
+
+typedef enum
+{
+    MRI_PLATFORM_WRITE_WATCHPOINT = 0,
+    MRI_PLATFORM_READ_WATCHPOINT,
+    MRI_PLATFORM_READWRITE_WATCHPOINT
+}  PlatformWatchpointType;
+
+__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address, uint32_t kind);
+__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind);
+__throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type);
+__throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type);
+
+typedef enum
+{
+    MRI_PLATFORM_INSTRUCTION_OTHER = 0,
+    MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL,
+    MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL
+}  PlatformInstructionType;
+
+typedef struct
+{
+    uint32_t    parameter1;
+    uint32_t    parameter2;
+    uint32_t    parameter3;
+    uint32_t    parameter4;
+}  PlatformSemihostParameters;
+
+PlatformInstructionType     __mriPlatform_TypeOfCurrentInstruction(void);
+PlatformSemihostParameters  __mriPlatform_GetSemihostCallParameters(void);
+void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue);
+
+/* Macroes which allow code to drop the __mri namespace prefix. */
+#define Platform_Init                                       __mriPlatform_Init
+#define Platform_GetPacketBuffer                            __mriPlatform_GetPacketBuffer
+#define Platform_GetPacketBufferSize                        __mriPlatform_GetPacketBufferSize
+#define Platform_EnteringDebugger                           __mriPlatform_EnteringDebugger
+#define Platform_LeavingDebugger                            __mriPlatform_LeavingDebugger
+#define Platform_CommHasReceiveData                         __mriPlatform_CommHasReceiveData
+#define Platform_CommReceiveChar                            __mriPlatform_CommReceiveChar
+#define Platform_CommSendChar                               __mriPlatform_CommSendChar
+#define Platform_CommCausedInterrupt                        __mriPlatform_CommCausedInterrupt
+#define Platform_CommClearInterrupt                         __mriPlatform_CommClearInterrupt
+#define Platform_CommIsSharedWithApplication                __mriPlatform_CommIsSharedWithApplication
+#define Platform_CommIsWaitingForGdbToConnect               __mriPlatform_CommIsWaitingForGdbToConnect
+#define Platform_DetermineCauseOfException                  __mriPlatform_DetermineCauseOfException
+#define Platform_DisplayFaultCauseToGdbConsole              __mriPlatform_DisplayFaultCauseToGdbConsole
+#define Platform_EnableSingleStep                           __mriPlatform_EnableSingleStep
+#define Platform_DisableSingleStep                          __mriPlatform_DisableSingleStep
+#define Platform_IsSingleStepping                           __mriPlatform_IsSingleStepping
+#define Platform_GetProgramCounter                          __mriPlatform_GetProgramCounter
+#define Platform_SetProgramCounter                          __mriPlatform_SetProgramCounter
+#define Platform_AdvanceProgramCounterToNextInstruction     __mriPlatform_AdvanceProgramCounterToNextInstruction
+#define Platform_IsCurrentInstructionHardcodedBreakpoint    __mriPlatform_IsCurrentInstructionHardcodedBreakpoint
+#define Platform_WasProgramCounterModifiedByUser            __mriPlatform_WasProgramCounterModifiedByUser
+#define Platform_WasMemoryFaultEncountered                  __mriPlatform_WasMemoryFaultEncountered
+#define Platform_WriteTResponseRegistersToBuffer            __mriPlatform_WriteTResponseRegistersToBuffer
+#define Platform_CopyContextToBuffer                        __mriPlatform_CopyContextToBuffer
+#define Platform_CopyContextFromBuffer                      __mriPlatform_CopyContextFromBuffer
+#define Platform_GetDeviceMemoryMapXmlSize                  __mriPlatform_GetDeviceMemoryMapXmlSize
+#define Platform_GetDeviceMemoryMapXml                      __mriPlatform_GetDeviceMemoryMapXml
+#define Platform_SetHardwareBreakpoint                      __mriPlatform_SetHardwareBreakpoint
+#define Platform_ClearHardwareBreakpoint                    __mriPlatform_ClearHardwareBreakpoint
+#define Platform_SetHardwareWatchpoint                      __mriPlatform_SetHardwareWatchpoint
+#define Platform_ClearHardwareWatchpoint                    __mriPlatform_ClearHardwareWatchpoint
+#define Platform_TypeOfCurrentInstruction                   __mriPlatform_TypeOfCurrentInstruction
+#define Platform_GetSemihostCallParameters                  __mriPlatform_GetSemihostCallParameters
+#define Platform_SetSemihostCallReturnValue                 __mriPlatform_SetSemihostCallReturnValue
+
+#endif /* _PLATFORMS_H_ */

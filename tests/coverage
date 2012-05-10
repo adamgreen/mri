@@ -1,0 +1,4 @@
+#! /usr/bin/env bash
+export CPPUTEST_USE_GCOV=Y
+make clean gcov
+export CPPUTEST_USE_GCOV=N

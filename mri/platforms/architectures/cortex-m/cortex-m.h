@@ -1,0 +1,113 @@
+/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+*/
+/* Routines and globals which expose the Cortex-M functionality to the mri debugger.  Also describes global architecture
+  state which is shared between cortex-m.c and cortex-m_asm.S */
+#ifndef _CORTEXM_H_
+#define _CORTEXM_H_
+
+/* Definitions used by C and Assembler code. */
+/* Flag bits used in CortexMState::flags field. */
+#define CORTEXM_FLAGS_ACTIVE_DEBUG          1
+#define CORTEXM_FLAGS_FAULT_DURING_DEBUG    2
+#define CORTEXM_FLAGS_SINGLE_STEPPING       4
+#define CORTEXM_FLAGS_RESTORE_BASEPRI       8
+
+/* Constants related to special memory area used by the debugger for its stack so that it doesn't interferes with
+   the task's stack contents. */
+#define CORTEXM_DEBUGGER_STACK_SIZE            64
+#define CORTEXM_DEBUGGER_STACK_SIZE_IN_BYTES   (CORTEXM_DEBUGGER_STACK_SIZE * 8)
+#define CORTEXM_DEBUGGER_STACK_FILL            0xDEADBEEF
+
+/* Offsets of fields within the CortexMState structure defined below.  These are used to access the fields of the
+   structure from within assembly language code. */
+#define CORTEXM_STATE_DEBUGGER_STACK_OFFSET 0
+#define CORTEXM_STATE_FLAGS_OFFSET          (CORTEXM_STATE_DEBUGGER_STACK_OFFSET + CORTEXM_DEBUGGER_STACK_SIZE_IN_BYTES)
+#define CORTEXM_STATE_SAVED_MSP_OFFSET      (CORTEXM_STATE_FLAGS_OFFSET + 4)
+#define CORTEXM_STATE_TASK_SP_OFFSET        (CORTEXM_STATE_SAVED_MSP_OFFSET + 4)
+#define CORTEXM_STATE_CONTEXT_OFFSET        (CORTEXM_STATE_TASK_SP_OFFSET + 4)
+
+
+/* Definitions only required from C code. */
+#if !__ASSEMBLER__
+
+#include <stdint.h>
+#include <token.h>
+
+/* NOTE: The MriExceptionHandler function definition in mriasm.S is dependent on the layout of this structure.  It
+         is also dictated by the version of gdb which supports the ARM processors.  It should only be changed if the
+         gdb ARM support code is modified and then the context saving and restoring code will need to be modified to
+         use the correct offsets as well. 
+*/
+typedef struct
+{
+    uint32_t    R0;
+    uint32_t    R1;
+    uint32_t    R2;
+    uint32_t    R3;
+    uint32_t    R4;
+    uint32_t    R5;
+    uint32_t    R6;
+    uint32_t    R7;
+    uint32_t    R8;
+    uint32_t    R9;
+    uint32_t    R10;
+    uint32_t    R11;
+    uint32_t    R12;
+    uint32_t    SP;
+    uint32_t    LR;
+    uint32_t    PC;
+    /* Reserve room for 8 96-bit floats. */
+    uint32_t    Floats[8 * 3];
+    uint32_t    FPS;
+    uint32_t    CPSR;
+} Context;
+
+/* NOTE: The largest buffer is required for receiving the 'G' command which receives the contents of the registers from 
+   the debugger as two hex digits per byte.  Also need a character for the 'G' command itself. */
+#define CORTEXM_PACKET_BUFFER_SIZE (1 + 2 * sizeof(Context))
+
+typedef struct
+{
+    uint64_t            debuggerStack[CORTEXM_DEBUGGER_STACK_SIZE];
+    volatile uint32_t   flags;
+    volatile uint32_t   savedMSP;
+    volatile uint32_t   taskSP;
+    Context             context;
+    uint32_t            originalPC;
+    uint32_t            originalPSRBitsToMaintain;
+    uint32_t            originalMPUControlValue;
+    uint32_t            originalMPURegionAddress;
+    uint32_t            originalMPURegionAttributesAndSize;
+    uint32_t            originalBasePriority;
+    int                 maxStackUsed;
+    char                packetBuffer[CORTEXM_PACKET_BUFFER_SIZE];
+} CortexMState;
+
+extern CortexMState     __mriCortexMState;
+extern const uint32_t   __mriCortexMFakeStack[8];
+
+uint32_t __mriGetIPSR(void);
+void     __mriSetBASEPRI(uint32_t basePriority);
+uint32_t __mriGetBASEPRI(void);
+void     __mriDSB(void);
+void     __mriISB(void);
+
+void     __mriCortexMInit(Token* pParameterTokens);
+
+#endif /* !__ASSEMBLER__ */
+
+
+#endif /* _CORTEXM_H_ */

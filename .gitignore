@@ -1,0 +1,12 @@
+.DS_Store
+*.o
+*.ar
+CppUTest/CppUTest_tests
+CppUTest/lib/libCppUTest.a
+CppUTest/objs/
+tests/lib/
+tests/objs/
+tests/mri/
+tests/mri_tests
+drop/
+mri/obj
