@@ -81,7 +81,7 @@ static void disableMbedInterface(void)
 
 static void fetchAndSaveMbedUid(void)
 {
-    semihost_uid(g_state.mbedUid);
+    __mriGetMbedUid(g_state.mbedUid);
 }
 
 static void setMbedDetectedFlag(void)

@@ -13,25 +13,48 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
-/* Assembly Language routines which expose mbed1768 board specifc functionality to the mri debugger. */
+/* Assembly Language routines which expose mbed1768 board semi-host functionality to the mri debugger. It is based on
+   the code contained in the mbed SDK for exposing its semi-host functionality.  Having these functions in this 
+   module of the MRI library allows the debugger to work on mbed devices even if the application doesn't utilize the
+   mbed SDK itself. */
     .text
     .code 16
     .syntax unified
     
     .global __mriDisableMbed
+    .thumb_func
     /* extern "C" int __mriDisableMbed(void);
        Attempts to disable the debug interface on the mbed device.
     
-       Returns -1 on failure and 0 otherwise.
+       Returns -1 on failure.
     */
 __mriDisableMbed:
-    sub     sp, #8
-    add     r1, sp, #4
-    movw    r0, #261
-    bkpt	0x00ab
-    cmp     r0, #0
-    ite     eq
-    ldreq   r0, [sp, #4]
-    movne.w r0, #-1
-    add     sp, #8
-    bx      lr
+    sub     sp, #8          // Allocate 4 byte parameter block on stack (round up to maintain 8 byte alignment.)
+    add     r1, sp, #4      // R1 = pointer to 4 byte parameter block on stack.
+    movw    r0, #261        // R0 = semi-host id for disabling JTAG port use from mbed interface chip.
+    bkpt	0xab            // Semi-host breakpoint.
+    cmp     r0, #0          // Was the call successful (returned 0 in R0)?
+    ite     eq              
+    ldreq   r0, [sp, #4]    //  If so load R0 with the first word from parameter block.
+    movne.w r0, #-1         //  If not then set R0 to -1.
+    add     sp, #8          // Restore stack pointer
+    bx      lr              //  and return to caller.
+
+
+    .global __mriGetMbedUid
+    .thumb_func
+    /* extern "C" int __mriGetMbedUid(uint8_t* pOutputBuffer);
+       Reads the unique device id from the mbed interface chip.
+       
+       Returns -1 on failure.
+    */
+__mriGetMbedUid:
+    sub     sp, #8          // Allocate 8 byte parameter block on stack.
+    str     r0, [sp, #0]    // param[0] = pOutputBuffer  Pointer to output buffer for UID.
+    movs    r0, #33
+    str     r0, [sp, #4]    // param[1] = 33  Size of UID output buffer in bytes.
+    mov     r1, sp          // R1 = pointer to 8 byte parameter block on stack.
+    movw    r0, #257        // R0 = semi-host id for fetching mbed UID.
+    bkpt    0xab            // Semi-host breakpoint.
+    add     sp, #8          // Restore stack pointer
+    bx      lr              //  and return to caller.

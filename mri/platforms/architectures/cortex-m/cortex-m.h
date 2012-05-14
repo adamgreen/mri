@@ -69,9 +69,6 @@ typedef struct
     uint32_t    SP;
     uint32_t    LR;
     uint32_t    PC;
-    /* Reserve room for 8 96-bit floats. */
-    uint32_t    Floats[8 * 3];
-    uint32_t    FPS;
     uint32_t    CPSR;
 } Context;
 

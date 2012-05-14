@@ -309,6 +309,7 @@ void Platform_CommClearInterrupt(void)
     uint32_t interruptId;
     
     interruptId = __mriLpc176xState.pCurrentUart->pUartRegisters->IIR;
+    (void)interruptId;
 }
 
 

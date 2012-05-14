@@ -18,6 +18,6 @@
 #define _MBED1768_ASM_H_
 
 int      __mriDisableMbed(void);
-int      semihost_uid(uint8_t* pOutputBuffer);
+int      __mriGetMbedUid(uint8_t* pOutputBuffer);
 
 #endif /* _MBED1768_ASM_H_ */

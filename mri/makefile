@@ -65,11 +65,7 @@ DEFINES = -DTARGET_LPC1768
 OPTIMIZATION = s
 
 #  Compiler Options
-GPFLAGS = -O$(OPTIMIZATION) -gstabs+3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -fshort-wchar -ffunction-sections -fdata-sections -fpromote-loop-indices -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -fno-exceptions
-GPFLAGS += $(patsubst %,-I%,$(INCDIRS))
-GPFLAGS += $(DEFINES)
-
-GCFLAGS = -O$(OPTIMIZATION) -gstabs+3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -fshort-wchar -ffunction-sections -fdata-sections -fpromote-loop-indices -Wall -Wextra -Werror -fno-exceptions
+GCFLAGS = -O$(OPTIMIZATION) -gstabs+3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -Wall -Wextra -Werror -fno-exceptions
 GCFLAGS += $(patsubst %,-I%,$(INCDIRS))
 GCFLAGS += $(DEFINES)
 

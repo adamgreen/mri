@@ -14,6 +14,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
 /* Handler for gdb query commands. */
+#include <string.h>
 #include "buffer.h"
 #include "core.h"
 #include "platforms.h"
@@ -22,11 +23,24 @@
 #include "cmd_query.h"
 
 
-static uint32_t handleQuerySupportedCommand(void);
-static uint32_t handleQueryTransferCommand(void);
-static uint32_t handleQueryTransferMemoryMapCommand(void);
-static void     readQueryTransferMemoryMapReadArguments(Buffer* pBuffer, AddressLength* pOffsetLength);
-static void     handleMemoryMapReadCommand(AddressLength* pOffsetLength);
+typedef struct
+{
+    const char* pAnnex;
+    uint32_t    annexSize;
+    uint32_t    offset;
+    uint32_t    length;
+} AnnexOffsetLength;
+
+static uint32_t    handleQuerySupportedCommand(void);
+static uint32_t    handleQueryTransferCommand(void);
+static uint32_t    handleQueryTransferMemoryMapCommand(void);
+static void        readQueryTransferReadArguments(Buffer* pBuffer, AnnexOffsetLength* pAnnexOffsetLength);
+static const char* readQueryTransferAnnexArgument(Buffer* pBuffer);
+static void        readQueryTransferOffsetLengthArguments(Buffer* pBuffer, AnnexOffsetLength* pAnnexOffsetLength);
+static void        validateAnnexIsNull(const char* pAnnex);
+static void        handleQueryTransferReadCommand(AnnexOffsetLength* pArguments);
+static uint32_t    handleQueryTransferFeaturesCommand(void);
+static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
 /* Handle the 'q' command used by gdb to communicate state to debug monitor and vice versa.
 
     Command Format: qSSS
@@ -60,7 +74,7 @@ uint32_t HandleQueryCommand(void)
 */
 static uint32_t handleQuerySupportedCommand(void)
 {
-    static const char querySupportResponse[] = "qXfer:memory-map:read+;PacketSize=";
+    static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;PacketSize=";
     uint32_t          PacketSize = Platform_GetPacketBufferSize();
     Buffer*           pBuffer = GetInitializedBuffer();
 
@@ -80,6 +94,7 @@ static uint32_t handleQueryTransferCommand(void)
 {
     Buffer*             pBuffer =GetBuffer();
     static const char   memoryMapObject[] = "memory-map";
+    static const char   featureObject[] = "features";
     
     if (!Buffer_IsNextCharEqualTo(pBuffer, ':'))
     {
@@ -90,6 +105,10 @@ static uint32_t handleQueryTransferCommand(void)
     if (Buffer_MatchesString(pBuffer, memoryMapObject, sizeof(memoryMapObject)-1))
     {
         return handleQueryTransferMemoryMapCommand();
+    }
+    else if (Buffer_MatchesString(pBuffer, featureObject, sizeof(featureObject)-1))
+    {
+        return handleQueryTransferFeaturesCommand();
     }
     else
     {
@@ -104,12 +123,13 @@ static uint32_t handleQueryTransferCommand(void)
 */
 static uint32_t handleQueryTransferMemoryMapCommand(void)
 {
-    Buffer*             pBuffer =GetBuffer();
-    AddressLength       offsetLength;
+    Buffer*             pBuffer = GetBuffer();
+    AnnexOffsetLength   arguments;
     
     __try
     {
-        readQueryTransferMemoryMapReadArguments(pBuffer, &offsetLength);
+        __throwing_func( readQueryTransferReadArguments(pBuffer, &arguments) );
+        __throwing_func( validateAnnexIsNull(arguments.pAnnex) );
     }
     __catch
     {
@@ -117,36 +137,79 @@ static uint32_t handleQueryTransferMemoryMapCommand(void)
         return 0;
     }
 
-    handleMemoryMapReadCommand(&offsetLength);
+    arguments.pAnnex = Platform_GetDeviceMemoryMapXml();
+    arguments.annexSize = Platform_GetDeviceMemoryMapXmlSize();
+    handleQueryTransferReadCommand(&arguments);
     
     return 0;
 }
 
-static void readQueryTransferMemoryMapReadArguments(Buffer* pBuffer, AddressLength* pOffsetLength)
+static void readQueryTransferReadArguments(Buffer* pBuffer, AnnexOffsetLength* pAnnexOffsetLength)
 {
-    static const char   ReadCommand[] = "read";
+    static const char   readCommand[] = "read";
 
+    memset(pAnnexOffsetLength, 0, sizeof(*pAnnexOffsetLength));
     if (!Buffer_IsNextCharEqualTo(pBuffer, ':') ||
-        !Buffer_MatchesString(pBuffer, ReadCommand, sizeof(ReadCommand)-1) ||
-        !Buffer_IsNextCharEqualTo(pBuffer, ':') ||
-        !Buffer_IsNextCharEqualTo(pBuffer, ':'))
+        !Buffer_MatchesString(pBuffer, readCommand, sizeof(readCommand)-1) ||
+        !Buffer_IsNextCharEqualTo(pBuffer, ':') )
     {
         __throw(invalidArgumentException);
     }
     
-    ReadAddressAndLengthArguments(pBuffer, pOffsetLength);
+    __try
+    {
+        __throwing_func( pAnnexOffsetLength->pAnnex = readQueryTransferAnnexArgument(pBuffer) );
+        __throwing_func( readQueryTransferOffsetLengthArguments(pBuffer, pAnnexOffsetLength) );
+    }
+    __catch
+    {
+        __rethrow;
+    }
 }
 
-static void handleMemoryMapReadCommand(AddressLength* pOffsetLength)
+static const char* readQueryTransferAnnexArgument(Buffer* pBuffer)
+{
+    static const char   targetXmlAnnex[] = "target.xml";
+    const char*         pReturn = NULL;
+    
+    if (Buffer_MatchesString(pBuffer, targetXmlAnnex, sizeof(targetXmlAnnex)-1))
+        pReturn = targetXmlAnnex;
+
+    if (pReturn && !Buffer_IsNextCharEqualTo(pBuffer, ':'))
+        __throw_and_return(invalidArgumentException, NULL);
+    else if (!pReturn && Buffer_IsNextCharEqualTo(pBuffer, ':'))
+        return NULL;
+    else if (!pReturn)
+        __throw_and_return(invalidArgumentException, NULL);
+    else
+        return pReturn;
+}
+
+static void readQueryTransferOffsetLengthArguments(Buffer* pBuffer, AnnexOffsetLength* pAnnexOffsetLength)
+{
+    AddressLength       offsetLength;
+
+    ReadAddressAndLengthArguments(pBuffer, &offsetLength);
+    pAnnexOffsetLength->offset = offsetLength.address;
+    pAnnexOffsetLength->length = offsetLength.length;
+}
+
+static void validateAnnexIsNull(const char* pAnnex)
+{
+    if (pAnnex)
+        __throw(invalidArgumentException);
+}
+
+static void handleQueryTransferReadCommand(AnnexOffsetLength* pArguments)
 {
     Buffer*  pBuffer = GetBuffer();
     char     dataPrefixChar = 'm';
-    uint32_t offset = pOffsetLength->address;
-    uint32_t length = pOffsetLength->length;
+    uint32_t offset = pArguments->offset;
+    uint32_t length = pArguments->length;
     uint32_t outputBufferSize;
     uint32_t validMemoryMapBytes;
     
-    if (offset >= Platform_GetDeviceMemoryMapXmlSize())
+    if (offset >= pArguments->annexSize)
     {
         /* Attempt to read past end of XML content so flag with a l only packet. */
         dataPrefixChar = 'l';
@@ -155,7 +218,7 @@ static void handleMemoryMapReadCommand(AddressLength* pOffsetLength)
     }
     else
     {
-        validMemoryMapBytes = Platform_GetDeviceMemoryMapXmlSize() - offset;
+        validMemoryMapBytes = pArguments->annexSize - offset;
     }
     
     InitBuffer();
@@ -171,5 +234,38 @@ static void handleMemoryMapReadCommand(AddressLength* pOffsetLength)
     }
     
     Buffer_WriteChar(pBuffer, dataPrefixChar);
-    Buffer_WriteSizedString(pBuffer, Platform_GetDeviceMemoryMapXml() + offset, length);
+    Buffer_WriteSizedString(pBuffer, pArguments->pAnnex + offset, length);
+}
+
+/* Handle the "qXfer:features" command used by gdb to read the target XML from the stub.
+
+    Command Format: qXfer:features:read:target.xml:offset,length
+*/
+static uint32_t handleQueryTransferFeaturesCommand(void)
+{
+    Buffer*             pBuffer = GetBuffer();
+    AnnexOffsetLength   arguments;
+    
+    __try
+    {
+        __throwing_func( readQueryTransferReadArguments(pBuffer, &arguments) );
+        __throwing_func( validateAnnexIs(arguments.pAnnex, "target.xml") );
+    }
+    __catch
+    {
+        PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
+        return 0;
+    }
+
+    arguments.pAnnex = Platform_GetTargetXml();
+    arguments.annexSize = Platform_GetTargetXmlSize();
+    handleQueryTransferReadCommand(&arguments);
+    
+    return 0;
+}
+
+static void validateAnnexIs(const char* pAnnex, const char* pExpected)
+{
+    if (0 != strcmp(pAnnex, pExpected))
+        __throw(invalidArgumentException);
 }

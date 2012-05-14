@@ -55,6 +55,8 @@ void      __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer);
 
 uint32_t     __mriPlatform_GetDeviceMemoryMapXmlSize(void);
 const char*  __mriPlatform_GetDeviceMemoryMapXml(void);
+uint32_t     __mriPlatform_GetTargetXmlSize(void);
+const char*  __mriPlatform_GetTargetXml(void);
 
 typedef enum
 {
@@ -115,6 +117,8 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_CopyContextToBuffer                        __mriPlatform_CopyContextToBuffer
 #define Platform_CopyContextFromBuffer                      __mriPlatform_CopyContextFromBuffer
 #define Platform_GetDeviceMemoryMapXmlSize                  __mriPlatform_GetDeviceMemoryMapXmlSize
+#define Platform_GetTargetXmlSize                           __mriPlatform_GetTargetXmlSize
+#define Platform_GetTargetXml                               __mriPlatform_GetTargetXml
 #define Platform_GetDeviceMemoryMapXml                      __mriPlatform_GetDeviceMemoryMapXml
 #define Platform_SetHardwareBreakpoint                      __mriPlatform_SetHardwareBreakpoint
 #define Platform_ClearHardwareBreakpoint                    __mriPlatform_ClearHardwareBreakpoint

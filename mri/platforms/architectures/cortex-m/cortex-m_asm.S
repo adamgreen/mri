@@ -25,6 +25,7 @@
     .equ CFSR_BUS_IMPRECISE_BIT, 0x00000400
     
     .global __mriGetIPSR
+    .thumb_func
     /* extern "C" uint32_t __mriGetIPSR(void)
        Returns the current value of the IPSR register.
     */
@@ -34,6 +35,7 @@ __mriGetIPSR:
     
     
     .global __mriSetBASEPRI
+    .thumb_func
     /* extern "C" void __mriSetBASEPRI(uint32_t BasePriority)
        Sets the BASEPRI register.
     */
@@ -43,6 +45,7 @@ __mriSetBASEPRI:
     
     
     .global __mriGetBASEPRI
+    .thumb_func
     /* extern "C" uint32_t __mriGetBASEPRI(void)
        Gets the BASEPRI register.
     */
@@ -51,6 +54,7 @@ __mriGetBASEPRI:
     bx      lr
     
     .global __mriDSB
+    .thumb_func
     /* extern "C" void __mriDSB(void)
         Data synchronization barrier.
     */
@@ -59,6 +63,7 @@ __mriDSB:
     bx      lr
 
     .global __mriISB
+    .thumb_func
     /* extern "C" void __mriISB(void)
         Instruction synchronization barrier.
     */
@@ -95,6 +100,7 @@ mriGetSPAndCallHandler:
     
     
     .type checkForStackError, function
+    .thumb_func
     /* Handles hard/memory/bus fault exceptions by checking for stacking/unstacking errors before calling the main
        MriExceptionHandler.  Sets r1 register to point to a fake stack frame in FLASH when a stacking/unstacking
        error occurs rather than pointing to the interrupted process's stack pointer as usual.
@@ -146,8 +152,6 @@ checkForStackError:
             unsigned int    SP;
             unsigned int    LR;
             unsigned int    PC;
-            unsigned int    Floats[8 * 3];
-            unsigned int    FPS;
             unsigned int    CPSR;
         } SContext;
     */
@@ -196,34 +200,32 @@ mriSaveRestoreContext:
     /* Load R12, LR, PC, and PSR from stacked area. */
     ldmia   r1!, {r2-r5}
     /* Store R12 to context. */
-    str     r2, [r0], #8      /* Skip over SP which was already saved above. */
-    /* Store LR & PC to context. */
-    stmia   r0!, {r3, r4}
-    /* Store PSR to context, skipping floating point registers and status. */
-    str     r5, [r0, #8*12+4]
+    str     r2, [r0], #8      /* Skip over SP which will be saved in context just before calling __mriDebugException. */
+    /* Store LR, PC, and PSR to context. */
+    stmia   r0!, {r3, r4, r5}
     /* R1 will now be pointing to the task's SP at interrupt time unless the stack was 8-byte aligned. */
     tst     r5, #0x200
     it      ne
     addne   r1, r1, #4
-    /* Jump back past the PC and LR that were placed in context to store the potentially updated SP. */
-    str     r1, [r0, #-12]
+    /* Jump back past the PSR, PC and LR that were placed in context to store the potentially updated SP. */
+    str     r1, [r0, #-16]
 
     /**** Run the C routine which allows for debugging of exceptions. */
     bl      __mriDebugException
 
     /**** Restore the tasks' registers which may have been modified by debugger. */
     /* Point context source pointer to location of PSR data. */
-    ldr     r0, =(__mriCortexMState + CORTEXM_STATE_CONTEXT_OFFSET + 16*4 + 8*12 + 4)
+    ldr     r0, =(__mriCortexMState + CORTEXM_STATE_CONTEXT_OFFSET + 16*4)
     /* Retrieve value of task's SP at time of interrupt.  May have been changed by debug client. */
-    ldr     r1, [r0, #-(4+8*12+3*4)]
-    /* Does it need to be 8-byte aligned? Fetch PSR, advance down past floating point registers, and check bit 9. */
-    ldr     r2, [r0], #-(4+8*12)
+    ldr     r1, [r0, #-(3*4)]
+    /* Does it need to be 8-byte aligned? Fetch PSR and check bit 9. */
+    ldr     r2, [r0]
     tst     r2, #0x200
     it      ne
     subne   r1, r1, #4
     /* Store PSR on task stack. */
     str     r2, [r1, #-4]!
-    /* Copy PC and LR from context to stacking area. */
+    /* Copy PC and LR from context to task stack. */
     ldmdb   r0!, {r2,r3}
     stmdb   r1!, {r2,r3}
     /* Copy r12 from context to stack area.  Skip over SP in context as it was already handled above. */
@@ -231,7 +233,7 @@ mriSaveRestoreContext:
     str     r12, [r1, #-4]!
     /* Load R4-R11 from context. */
     ldmdb   r0!, {r4-r11}
-    /* Copy R0 - R3 from context to stack area. */
+    /* Copy R0 - R3 from context to task stack. */
     ldmdb   r0!, {r2,r3,r12,lr}
     stmdb   r1!, {r2,r3,r12,lr}
     /* Restore lr from the debugger stack. */
@@ -260,6 +262,7 @@ mriSaveRestoreContext:
 
 
     .type mriAdvancePCAndReturn, function
+    .thumb_func
     /* Branched to from MriException handler if the debugger is already active.  Getting an exception in such a
        scenario typically means that a memory fault occurred while attempting to access an invalid memory address so
        it should be flagged as such and then the offending instruction skipped.  The debug monitor can then check the
@@ -305,6 +308,7 @@ mriClearFaultStatusBitsAndReturn:
 
     .global HardFault_Handler
     .type HardFault_Handler, function
+    .thumb_func
     /* extern "C" void HardFault_Handler(void);
        Override Hard Faults and send to MriExceptionHandler.
     */
@@ -314,6 +318,7 @@ HardFault_Handler:
  
     .global MemManage_Handler
     .type MemManage_Handler, function
+    .thumb_func
     /* extern "C" void MemManage_Handler(void);
        Override MPU Memory Faults and send to MriExceptionHandler.
     */
@@ -323,6 +328,7 @@ MemManage_Handler:
 
     .global BusFault_Handler
     .type BusFault_Handler, function
+    .thumb_func
     /* extern "C" void BusFault_Handler(void);
        Override Bus Faults and send to MriExceptionHandler.
     */
@@ -332,6 +338,7 @@ BusFault_Handler:
 
     .global UsageFault_Handler
     .type UsageFault_Handler, function
+    .thumb_func
     /* extern "C" void UsageFault_Handler(void);
        Override Instruction Usage Faults and send to MriExceptionHandler.
     */
@@ -341,6 +348,7 @@ UsageFault_Handler:
 
     .global DebugMon_Handler
     .type DebugMon_Handler, function
+    .thumb_func
     /* extern "C" void DebugMon_Handler(void);
        Override Debug Monintor exceptions and send to MriExceptionHandler.
     */
@@ -352,36 +360,37 @@ DebugMon_Handler:
     .global UART0_IRQHandler
     .weak   UART0_IRQHandler
     .type UART0_IRQHandler, function
+    .thumb_func
     /* extern "C" void UART0_IRQHandler(void);
        Override UART0 exceptions and send to MriExceptionHandler.
     */
 UART0_IRQHandler:
     b       mriExceptionHandler
 
-/* Implementation of LPC176x UART1 function to be intercepted and sent to mri instead. */
     .global UART1_IRQHandler
     .weak   UART1_IRQHandler
     .type UART1_IRQHandler, function
+    .thumb_func
     /* extern "C" void UART1_IRQHandler(void);
        Override UART1 exceptions and send to MriExceptionHandler.
     */
 UART1_IRQHandler:
     b       mriExceptionHandler
 
-/* Implementation of LPC176x UART2 function to be intercepted and sent to mri instead. */
     .global UART2_IRQHandler
     .weak   UART2_IRQHandler
     .type UART2_IRQHandler, function
+    .thumb_func
     /* extern "C" void UART2_IRQHandler(void);
        Override UART2 exceptions and send to MriExceptionHandler.
     */
 UART2_IRQHandler:
     b       mriExceptionHandler
 
-/* Implementation of LPC176x UART3 function to be intercepted and sent to mri instead. */
     .global UART3_IRQHandler
     .weak   UART3_IRQHandler
     .type UART3_IRQHandler, function
+    .thumb_func
     /* extern "C" void UART3_IRQHandler(void);
        Override UART3 exceptions and send to MriExceptionHandler.
     */

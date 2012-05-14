@@ -20,6 +20,7 @@
 
     .pushsection .text.__mriTestRegisters, "ax" @progbits
     .global __mriTestRegisters
+    .thumb_func
     /* Test out context saving and restoring. */
 __mriTestRegisters:
     push {r4-r11,lr}
@@ -45,6 +46,7 @@ __mriTestRegisters:
 
     .pushsection .text.__mriTestStackError, "ax" @progbits
     .global __mriTestStackError
+    .thumb_func
     /* Test getting a stacking error when CTRL+C is pressed during this loop. */
 __mriTestStackError:
     mvn     r0, #0

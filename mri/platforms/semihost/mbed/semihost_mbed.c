@@ -144,6 +144,7 @@ static int handleMbedSemihostIsTtyRequest(PlatformSemihostParameters* pSemihostP
     const IsTtyParameters* pParameters;
     
     pParameters = (const IsTtyParameters*)pSemihostParameters->parameter2;
+    (void)pParameters;
 
     Platform_AdvanceProgramCounterToNextInstruction();
 

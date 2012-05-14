@@ -291,6 +291,16 @@ const char*  Platform_GetDeviceMemoryMapXml(void)
     return NULL;
 }
 
+uint32_t Platform_GetTargetXmlSize(void)
+{
+    return 0;
+}
+
+const char*  Platform_GetTargetXml(void)
+{
+    return NULL;
+}
+
 __throws void  Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
     (void)address;
