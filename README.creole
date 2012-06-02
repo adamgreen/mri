@@ -52,7 +52,6 @@ The mbed interface chip uses the JTAG connection to the LPC1768 to provide speci
 ** It appears that it may be possible to workaround this issue in the GDB source code itself and I am currently dogfooding such a build of arm-none-eabi-gdb on my Mac.  Please contact me if you would like to help test this fix as well.
 
 
-
 ==Hit a Problem!
 GDB allows for all of the data sent between your PC and the remote MRI target to be captured to a log file.  If you enter the following command in GDB before issuing the "target remote" command then everything for your session will be logged to a file called mri.log in the current directory where GDB was launched:
 {{{

@@ -59,6 +59,7 @@ CortexMState    __mriCortexMState;
 static const char g_targetXml[] = 
     "<?xml version=\"1.0\"?>\n"
     "<!DOCTYPE feature SYSTEM \"gdb-target.dtd\">\n"
+    "<target>\n"
     "<feature name=\"org.gnu.gdb.arm.m-profile\">\n"
     "<reg name=\"r0\" bitsize=\"32\"/>\n"
     "<reg name=\"r1\" bitsize=\"32\"/>\n"
@@ -77,7 +78,8 @@ static const char g_targetXml[] =
     "<reg name=\"lr\" bitsize=\"32\"/>\n"
     "<reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>\n"
     "<reg name=\"xpsr\" bitsize=\"32\" regnum=\"25\"/>\n"
-    "</feature>\n";
+    "</feature>\n"
+    "</target>\n";
 
 /* Macro to provide index for specified register in the SContext structure. */
 #define CONTEXT_MEMBER_INDEX(MEMBER) (offsetof(Context, MEMBER)/sizeof(uint32_t))
