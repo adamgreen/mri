@@ -3,51 +3,53 @@ This is the first alpha release for early adopters: 0.1-20120510.1
 
 
 ==MRI - Monitor for Remote Inspection
-MRI is a debug monitor which allows the GNU debugger, gdb, to be used with a [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]].  This makes it possible to debug applications running on the mbed device using a full featured source level debugger.  MRI is able to communicate with gdb through the convenient USB based serial port on the mbed or any of the device's other 3 available serial ports (incase the application requires exclusive access to the USB based serial port.)
+MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]].  This makes it possible to debug applications running on the mbed device using a full featured source level debugger.  MRI is able to communicate with GDB through the convenient USB based serial port on the mbed or any of the device's other 3 available serial ports (incase the application requires exclusive access to the USB based serial port.)
 
 The MRI experience has been initially optimized for the [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]] as the primary goal is to provide a production quality debug solution for this specific device.  The project has however been architected so that it already works on other boards featuring a LPC176x processor and should be relatively easy to port to other Cortex-M3 based devices.
 
 //Please Note: This project just contains the sources to build the MRI debug monitor library but doesn't show how to link it into your program and make use of it.  Such an example will be provided via the [[https://github.com/adamgreen/gcc4mbed|gcc4mbed project]] in the near future so please stay tuned for its impending alpha rollout.//
 
 
-==Features
+==MRI Features on mbed 1768
 * 6 hardware breakpoints
 * 4 data watchpoints
 * single stepping
 * runs over any of the serial ports on the mbed device (selected when user compiles their code)
-* baud rate is determined at runtime (through gdb command line)
+* baud rate is determined at runtime (through GDB command line)
 * semi-host functionality:
-** stdout/stderr/stdin are redirected to/from the gdb console
+** stdout/stderr/stdin are redirected to/from the GDB console
 ** minimal mbed LocalFileSystem semi-host support (fopen, fwrite, fread, fseek, and fclose)
-** maintains access to device's unique ethernet address
-* works with free Code Sourcery GCC based tool chain
+** maintains access to mbed device's unique ethernet address
+* works with free [[https://launchpad.net/gcc-arm-embedded|GNU Tools for ARM Embedded Processors]]
 * no program binary size limitations
-* open source(LGPL)
+* open source (LGPL)
 
 
 ==Limitations
-While MRI offers many of the features to which a user may be accustomed to from a JTAG debugger, there are some limitations imposed by the simple fact that this debugger runs as a monitor on the device itself:
+While MRI offers many of the features typically seen in a JTAG debugger, there are some limitations imposed by the simple fact that this debug solution runs as a monitor on the device itself.  These include:
 
 ===Hard Faults
-While debugging a hard fault, the user should be careful to not attempt to access invalid memory locations from the debugger as this could lead to a double fault condition which will hard lock the device.  MRI provides gdb with a map of valid memory locations on the LPC1768 so that gdb can prevent the user from providing a completely invalid address.  However it might still be possible to issue a hard fault causing read from a write-only peripheral register for example.
+While debugging a hard fault, the user should be careful to not attempt to access invalid memory locations from the debugger as this could lead to a double fault condition which will hard lock the device.  MRI provides GDB with a map of valid memory locations on the LPC1768 so that GDB can prevent the user from providing a completely invalid address.  However it might still be possible to issue a read from a write-only peripheral register for example, leading to a hard fault.
 
 ===UART Conflicts
-MRI communicates with gdb via one of the serial ports on the mbed device.  Since MRI requires exclusive access to its serial connection, the user must make sure to not use the same serial port from within their application.  This may require the use of another serial connection between the user's PC and their mbed through something like this [[http://www.sparkfun.com/products/9717|FTDI USB to TTL serial cable.]]  If you are only contention on the serial port is for printf() output then simply calling the standard C library functions (and never trying to override the baud rate or make other method calls on a Serial object) will allow MRI to intercept the data destined to stdout and redirect it to the gdb console.
+MRI communicates with GDB via one of the serial ports on the mbed device.  Since MRI requires exclusive access to its serial connection, the user must make sure to not use the same serial port from within their application.  This may require the use of another serial connection between the user's PC and their mbed through something like this [[http://www.sparkfun.com/products/9717|FTDI USB to TTL serial cable.]]  If your only contention on the serial port is for printf() output then simply calling the standard C library functions (and never trying to override the baud rate or make other method calls on a Serial object) will allow MRI to intercept the data destined to stdout and redirect it to the GDB console.
 
 ===Interrupt Priority Conflicts
 MRI runs its ISRs at priority level 0 and everything else in the system should run at a lower priority if you want to to be able to debug it.  If you never call NVIC_SetPriority() to customize the priorities of your interrupt handlers then you should have no problems.  If you do make calls to this function then only use priorities lower than 0 (a value of 1 or greater.)
 
 ===Memory Resources
-Unlike a JTAG debugger, MRI does run on the mbed device itself.  It doesn't use any CPU resources until a breakpoint or other debug event is encountered and you are interacting with it via gdb.  It does however take up code space in FLASH (<10k) and data space in RAM (<1300 bytes) which could have been otherwise used by the application.  //Note: These are the resource usage numbers for the current alpha build.  The RAM usage numbers should decrease by the first production release.  The FLASH numbers are unlikely to go down and are more likely to increase a bit over time as new features and/or bug fixes are made.
+Unlike a JTAG debugger, MRI does run on the mbed device itself.  It doesn't use any CPU resources until a breakpoint or other debug event is encountered and you are interacting with it via GDB.  It does however take up code space in FLASH (<10k) and data space in RAM (<1300 bytes) which could have been otherwise used by your code.  //Note: These are the resource usage numbers for the current alpha build.  The RAM usage numbers should decrease by the first production release.  The FLASH numbers are unlikely to go down and are more likely to increase a bit over time as new features and/or bug fixes are made.//
 
 ===mbed Interface Chip
-The mbed interface chip uses the JTAG connection to the LPC1768 to provide special (and very useful) functionality on the mbed.  The biggest one is programming via the USB mass storage device.  This awesome mbed feature remains intact thanks to a recent firmware update made available from the mbed team.  There are however other runtime features such as the LocalFileSystem which are disabled when you use MRI.  If your program does use the LocalFileSystem module to access files on the embedded FLASH drive then they will be intercepted by MRI.  Calls to fopen, fread, fwrite, and fseek for files in the LocalFileSystem will be redirected to gdb where they provide access to the current directory of gdb on the host PC.  Another feature provided by the interface chip is a unique ethernet address for each mbed device.  MRI intercepts these requests as well from the user's code and returns the address that it captures from the interface chip before it is disabled.
+The mbed interface chip uses the JTAG connection to the LPC1768 to provide special (and very useful) functionality on the mbed.  The biggest feature provided is programming via the USB mass storage device.  This awesome mbed feature remains intact thanks to a recent firmware update made available from the mbed team.  There are however other runtime features such as the LocalFileSystem which are disabled when you use MRI.  If your program does use the LocalFileSystem module to access files on the embedded FLASH drive then they will be intercepted by MRI.  Calls to fopen, fread, fwrite, and fseek for files in the LocalFileSystem will be redirected to GDB where they provide access to GDB's current directory on the host PC.  Another feature provided by the interface chip is a unique ethernet address for each mbed device.  MRI intercepts these requests as well from the user's code and returns the address that it captures from the interface chip before it is disabled.
 
 
-==Known Issues
-Known issues that will be investigated for future fixes include:
-* On Mac OS X, I see a hang in gdb when issuing the {{{target remote}}} command.  The workaround is to disconnect the mbed device from the Mac by unplugging the USB cable and then reconnecting it to force reenumeration.  Unfortunately this typically needs to be done just before each gdb attachment to the device.
-** It appears that it may be possible to workaround this issue in the gdb source code itself and I am currently dogfooding such a build of arm-none-eabi-gdb on my Mac.  Please contact me if you would like to help test this fix as well.
+==Please Note!
+* You need to upgrade the firmware in the mbed's interface chip to allow MRI to run on the device.
+** Download [[http://mbed.org/media/uploads/simon/mbedmicrocontroller_21164.if]].  Copy this file to your mbed device and then reset it.  This will update the firmware on the interface chip so that the JTAG portion can be disabled.
+* On Mac OS X, I see a hang in GDB when issuing the {{{target remote}}} command.  The workaround is to disconnect the mbed device from the Mac by unplugging the USB cable and then reconnecting it to force reenumeration.  Unfortunately this needs to be done just before each GDB attachment to the device.
+** It appears that it may be possible to workaround this issue in the GDB source code itself and I am currently dogfooding such a build of arm-none-eabi-gdb on my Mac.  Please contact me if you would like to help test this fix as well.
+
 
 
 ==Hit a Problem!
@@ -56,4 +58,4 @@ GDB allows for all of the data sent between your PC and the remote MRI target to
 set remotelogfile mri.log
 }}}
 
-When reporting a problem that you encounter with MRI, please describe as clearly as possible what you were doing when you encountered the issue and provide a log file captured as shown above.
+When reporting a problem that you encounter with MRI, please describe as clearly as possible what you were doing when you encountered the issue and provide this mri.log.
