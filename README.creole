@@ -1,5 +1,6 @@
 ==Version Information
-This is the second alpha release for early adopters: 0.2-20120514.1
+This is the second alpha release for early adopters: 0.2-20120601.1
+
 Updated to work with GCC ARM Embedded toolchain.  No longer works with Code Sourcery Lite but version 0.1 does.
 
 
