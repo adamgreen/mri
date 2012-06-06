@@ -261,8 +261,14 @@ ifeq ($(CPPUTEST_USE_EXTENSIONS), Y)
 CPPUTEST_LIB += $(CPPUTEST_HOME)/lib/libCppUTestExt.a
 endif
 
-#LD_LIBRARIES += -lstdc++ -lprofile_rt
-LD_LIBRARIES += -lstdc++ -lgcov
+LD_LIBRARIES += -lstdc++
+
+# Xcode uses a different library for code coverage.
+ifeq ($(UNAME_OS),$(MACOSX_STR))
+    LD_LIBRARIES += -lprofile_rt
+else
+    LD_LIBRARIES += -lgcov
+endif
 
 TARGET_LIB = \
     $(CPPUTEST_LIB_DIR)/lib$(COMPONENT_NAME).a
