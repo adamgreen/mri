@@ -36,7 +36,7 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
     Buffer*            pBuffer = GetInitializedBuffer();
 
     Buffer_WriteString(pBuffer, gdbOpenCommand);
-    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pParameters->pFilename);
+    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)(size_t)pParameters->pFilename);
     Buffer_WriteChar(pBuffer, '/');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
     Buffer_WriteChar(pBuffer, ',');

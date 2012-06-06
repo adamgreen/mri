@@ -18,16 +18,16 @@
 
 void        platformMock_CommInitReceiveData(const char* pDataToReceive);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
-void        platformMock_CommUninitTransmitDataBuffer();
+void        platformMock_CommUninitTransmitDataBuffer(void);
 int         platformMock_CommDoesTransmittedDataEqual(const char* thisString);
 void        platformMock_CommSetShareFlag(int flag);
 
 void        platformMock_SetInitException(int exceptionToThrow);
-void        platformMock_ClearInitCount();
-int         platformMock_GetInitCount();
-Token*      platformMock_GetInitTokenCopy();
+void        platformMock_ClearInitCount(void);
+int         platformMock_GetInitCount(void);
+Token*      platformMock_GetInitTokenCopy(void);
 
-void        platformMock_ClearDisableSingleStepCount();
-int         platformMock_GetDisableSingleStepCount();
+void        platformMock_ClearDisableSingleStepCount(void);
+int         platformMock_GetDisableSingleStepCount(void);
 
 #endif /* _PLATFORM_MOCK_H_ */

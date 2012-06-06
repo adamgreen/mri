@@ -1,5 +1,5 @@
 #Set this to @ to keep the makefile quiet
-SILENCE = @
+#SILENCE = @
 
 #---- Outputs ----#
 COMPONENT_NAME = mri
@@ -13,6 +13,7 @@ CPPUTEST_HOME = ../CppUTest
 
 CPP_PLATFORM = Gcc
 
+CPPUTEST_USE_VPATH = Y
 CPPUTEST_CPPFLAGS += -fno-common
 CPPUTEST_CPPFLAGS += -DTARGET_LPC1768
 CPPUTEST_WARNINGFLAGS += -Wall 

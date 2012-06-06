@@ -46,9 +46,9 @@ uint32_t HandleMemoryReadCommand(void)
         PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
         return 0;
     }
-        
+
     InitBuffer();
-    ReadMemoryIntoHexBuffer(pBuffer, (unsigned char *)addressLength.address, addressLength.length);
+    ReadMemoryIntoHexBuffer(pBuffer, (void *)(size_t)addressLength.address, addressLength.length);
 
     return 0;
 }
@@ -79,7 +79,7 @@ uint32_t HandleMemoryWriteCommand(void)
         return 0;
     }
     
-    if (WriteHexBufferToMemory(pBuffer, (unsigned char *)addressLength.address, addressLength.length))
+    if (WriteHexBufferToMemory(pBuffer, (void *)(size_t)addressLength.address, addressLength.length))
         PrepareStringResponse("OK");
     else
         PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
@@ -114,7 +114,7 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
         return 0;
     }
     
-    if (WriteBinaryBufferToMemory(pBuffer, (unsigned char *)addressLength.address, addressLength.length))
+    if (WriteBinaryBufferToMemory(pBuffer, (void *)(size_t)addressLength.address, addressLength.length))
     {
         PrepareStringResponse("OK");
     }

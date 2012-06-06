@@ -123,6 +123,8 @@ static void handleBreakpointWatchpointException(void)
     case exceededHardwareResourcesException:
         PrepareStringResponse(MRI_ERROR_NO_FREE_BREAKPOINT);
         break;
+    default:
+        break;
     }
     
     return;

@@ -29,6 +29,10 @@
 
 extern int __mriExceptionCode;
 
+/* On Linux, it is possible that __try and __catch are already defined. */
+#undef __try
+#undef __catch
+
 #define __throws
 
 #define __try \
