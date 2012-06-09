@@ -35,7 +35,9 @@ void      __mriPlatform_CommSendChar(int character);
 int       __mriPlatform_CommCausedInterrupt(void);
 void      __mriPlatform_CommClearInterrupt(void);
 int       __mriPlatform_CommIsSharedWithApplication(void);
+void      __mriPlatform_CommPrepareToWaitForGdbConnection(void);
 int       __mriPlatform_CommIsWaitingForGdbToConnect(void);
+void      __mriPlatform_CommWaitForReceiveDataToStop(void);
 
 uint8_t   __mriPlatform_DetermineCauseOfException(void);
 void      __mriPlatform_DisplayFaultCauseToGdbConsole(void);
@@ -101,7 +103,9 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_CommCausedInterrupt                        __mriPlatform_CommCausedInterrupt
 #define Platform_CommClearInterrupt                         __mriPlatform_CommClearInterrupt
 #define Platform_CommIsSharedWithApplication                __mriPlatform_CommIsSharedWithApplication
+#define Platform_CommPrepareToWaitForGdbConnection          __mriPlatform_CommPrepareToWaitForGdbConnection
 #define Platform_CommIsWaitingForGdbToConnect               __mriPlatform_CommIsWaitingForGdbToConnect
+#define Platform_CommWaitForReceiveDataToStop               __mriPlatform_CommWaitForReceiveDataToStop
 #define Platform_DetermineCauseOfException                  __mriPlatform_DetermineCauseOfException
 #define Platform_DisplayFaultCauseToGdbConsole              __mriPlatform_DisplayFaultCauseToGdbConsole
 #define Platform_EnableSingleStep                           __mriPlatform_EnableSingleStep

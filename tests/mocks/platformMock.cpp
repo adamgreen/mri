@@ -128,6 +128,14 @@ void Platform_CommClearInterrupt(void)
 {
 }
 
+void Platform_CommPrepareToWaitForGdbConnection(void)
+{
+}
+
+void Platform_CommWaitForReceiveDataToStop(void)
+{
+}
+
 void platformMock_CommSetShareFlag(int flag)
 {
     g_commShareFlag = flag;

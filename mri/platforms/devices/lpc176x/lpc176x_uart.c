@@ -83,7 +83,6 @@ static void     selectPinForTx(void);
 static void     selectPinForRx(void);
 static uint32_t calculatePinSelectionValue(uint32_t originalPinSelectionValue, uint32_t mask);
 static void     enableUartToInterruptOnReceivedChar(void);
-static void     initUartAutoBaudDetection(void);
 static void     configureNVICForUartInterrupt(void);
 static int      calculateUartIndex(void);
 void __mriLpc176xUart_Init(Token* pParameterTokens)
@@ -132,7 +131,7 @@ static void configureUartForExclusiveUseOfDebugger(void)
     setUartTo8N1();
     selectUartPins();
     enableUartToInterruptOnReceivedChar();
-    initUartAutoBaudDetection();
+    Platform_CommPrepareToWaitForGdbConnection();
     configureNVICForUartInterrupt();
 }
 
@@ -218,16 +217,6 @@ static void enableUartToInterruptOnReceivedChar(void)
     __mriLpc176xState.pCurrentUart->pUartRegisters->LCR &= ~baudDivisorLatchBit;
     __mriLpc176xState.pCurrentUart->pUartRegisters->IER = enableReceiveDataInterrupt;
     __mriLpc176xState.pCurrentUart->pUartRegisters->LCR = originalLCR;
-}
-
-static void initUartAutoBaudDetection(void)
-{
-    static const uint32_t   autoBaudStart = 1;
-    static const uint32_t   autoBaudModeForStartBitOnly = 1 << 1;
-    static const uint32_t   autoBaudAutoRestart = 1 << 2;
-    static const uint32_t   autoBaudValue = autoBaudStart | autoBaudModeForStartBitOnly | autoBaudAutoRestart;
-    
-    __mriLpc176xState.pCurrentUart->pUartRegisters->ACR = autoBaudValue;
 }
 
 static void configureNVICForUartInterrupt(void)
@@ -327,4 +316,47 @@ int Platform_CommIsWaitingForGdbToConnect(void)
         return 0;
 
     return (int)(__mriLpc176xState.pCurrentUart->pUartRegisters->ACR & autoBaudStarting);
+}
+
+
+void Platform_CommPrepareToWaitForGdbConnection(void)
+{
+    static const uint32_t   autoBaudStart = 1;
+    static const uint32_t   autoBaudModeForStartBitOnly = 1 << 1;
+    static const uint32_t   autoBaudAutoRestart = 1 << 2;
+    static const uint32_t   autoBaudValue = autoBaudStart | autoBaudModeForStartBitOnly | autoBaudAutoRestart;
+    
+    __mriLpc176xState.pCurrentUart->pUartRegisters->ACR = autoBaudValue;
+}
+
+
+static int hasHostSentDataInLessThan10Milliseconds(void);
+static int isNoReceivedCharAndNoTimeout(void);
+void Platform_CommWaitForReceiveDataToStop(void)
+{
+    while (hasHostSentDataInLessThan10Milliseconds())
+    {
+        Platform_CommReceiveChar();
+    }
+}
+
+static int hasHostSentDataInLessThan10Milliseconds(void)
+{
+    uint32_t originalSysTickControlValue = getCurrentSysTickControlValue();
+    uint32_t originalSysTickReloadValue = getCurrentSysTickReloadValue();
+    start10MillisecondSysTick();
+
+    while (isNoReceivedCharAndNoTimeout())
+    {
+    }
+
+    setSysTickReloadValue(originalSysTickReloadValue);
+    setSysTickControlValue(originalSysTickControlValue);
+    
+    return Platform_CommHasReceiveData();
+}
+
+static int isNoReceivedCharAndNoTimeout(void)
+{
+    return !Platform_CommHasReceiveData() && !has10MillisecondSysTickExpired();
 }

@@ -134,6 +134,8 @@ static void setSuccessfulInitFlag(void)
 
 static void blockIfGdbHasNotConnected(void);
 static void waitForGdbToConnect(void);
+static void waitForFirstCharFromHost(void);
+static int  didHostSendGdbAckChar(void);
 static void determineSignalValue(void);
 static int  isDebugTrap(void);
 static void prepareForDebuggerExit(void);
@@ -182,9 +184,27 @@ static void blockIfGdbHasNotConnected(void)
 
 static void waitForGdbToConnect(void)
 {
+    for (;;)
+    {
+        waitForFirstCharFromHost();
+        if (didHostSendGdbAckChar())
+            return;
+        Platform_CommWaitForReceiveDataToStop();
+        Platform_CommPrepareToWaitForGdbConnection();
+    }
+}
+
+static void waitForFirstCharFromHost(void)
+{
     while (Platform_CommIsWaitingForGdbToConnect())
     {
     }
+}
+
+static int didHostSendGdbAckChar(void)
+{
+    return ('+' == Platform_CommReceiveChar());
+    
 }
 
 static void determineSignalValue(void)
