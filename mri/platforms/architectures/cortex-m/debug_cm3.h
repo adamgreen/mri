@@ -812,6 +812,61 @@ static __INLINE uint32_t getCurrentlyExecutingExceptionNumber(void)
 }
 
 
+static __INLINE uint32_t getCurrentSysTickControlValue(void)
+{
+    return SysTick->CTRL;
+}
+
+static __INLINE uint32_t getCurrentSysTickReloadValue(void)
+{
+    return SysTick->LOAD;
+}
+
+static __INLINE void setSysTickControlValue(uint32_t controlValue)
+{
+    SysTick->CTRL = controlValue;
+}
+
+static __INLINE void setSysTickReloadValue(uint32_t reloadValue)
+{
+    SysTick->LOAD = reloadValue & SysTick_LOAD_RELOAD_Msk;
+}
+
+static __INLINE uint32_t getSysTick10MillisecondInterval(void)
+{
+    return SysTick->CALIB & SysTick_CALIB_TENMS_Msk;
+}
+
+static __INLINE void disableSysTick(void)
+{
+    SysTick->CTRL = 0;
+}
+
+static __INLINE void enableSysTickWithCClkNoInterrupt(void)
+{
+    SysTick->VAL = 0;
+    SysTick->CTRL = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_CLKSOURCE_Msk;
+}
+
+static __INLINE void start10MillisecondSysTick(void)
+{
+    if (getSysTick10MillisecondInterval() == 0)
+        return;
+        
+     disableSysTick();
+     setSysTickReloadValue(getSysTick10MillisecondInterval());
+     enableSysTickWithCClkNoInterrupt();
+}
+
+static __INLINE int has10MillisecondSysTickExpired(void)
+{
+    if (getSysTick10MillisecondInterval() == 0)
+        return 1;
+
+    return SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk;
+}
+
+
 /* Program Status Register Bits. */
 /*  Was the stack 8-byte aligned during auto stacking. */
 #define PSR_STACK_ALIGN     (1 << 9)
