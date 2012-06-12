@@ -21,8 +21,6 @@
 #include <LPC17xx.h>
 #include <token.h>
 
-#define LPC176X_UART_FLAGS_SHARE    1
-
 typedef struct
 {
     volatile uint32_t*  pPeripheralClockSelection;

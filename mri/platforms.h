@@ -34,7 +34,8 @@ int       __mriPlatform_CommReceiveChar(void);
 void      __mriPlatform_CommSendChar(int character);
 int       __mriPlatform_CommCausedInterrupt(void);
 void      __mriPlatform_CommClearInterrupt(void);
-int       __mriPlatform_CommIsSharedWithApplication(void);
+int       __mriPlatform_CommShouldWaitForGdbConnect(void);
+int       __mriPlatform_CommSharingWithApplication(void);
 void      __mriPlatform_CommPrepareToWaitForGdbConnection(void);
 int       __mriPlatform_CommIsWaitingForGdbToConnect(void);
 void      __mriPlatform_CommWaitForReceiveDataToStop(void);
@@ -102,7 +103,8 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_CommSendChar                               __mriPlatform_CommSendChar
 #define Platform_CommCausedInterrupt                        __mriPlatform_CommCausedInterrupt
 #define Platform_CommClearInterrupt                         __mriPlatform_CommClearInterrupt
-#define Platform_CommIsSharedWithApplication                __mriPlatform_CommIsSharedWithApplication
+#define Platform_CommShouldWaitForGdbConnect                __mriPlatform_CommShouldWaitForGdbConnect
+#define Platform_CommSharingWithApplication                 __mriPlatform_CommSharingWithApplication
 #define Platform_CommPrepareToWaitForGdbConnection          __mriPlatform_CommPrepareToWaitForGdbConnection
 #define Platform_CommIsWaitingForGdbToConnect               __mriPlatform_CommIsWaitingForGdbToConnect
 #define Platform_CommWaitForReceiveDataToStop               __mriPlatform_CommWaitForReceiveDataToStop

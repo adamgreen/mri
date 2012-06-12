@@ -26,7 +26,7 @@ static void writeStringToSharedCommChannel(const char* pString);
 static void writeStringToExclusiveGdbCommChannel(const char* pString);
 void WriteStringToGdbConsole(const char* pString)
 {
-    if (IsCommShared() && IsFirstException())
+    if (Platform_CommSharingWithApplication() && IsFirstException())
         writeStringToSharedCommChannel(pString);
     else
         writeStringToExclusiveGdbCommChannel(pString);

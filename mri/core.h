@@ -32,7 +32,6 @@ int     __mriCore_WasControlCFlagSentFromGdb(void);
 void    __mriCore_RecordControlCFlagSentFromGdb(int controlCFlag);
 int     __mriCore_WasSemihostCallCancelledByGdb(void);
 void    __mriCore_FlagSemihostCallAsHandled(void);
-int     __mriCore_IsCommShared(void);
 int     __mriCore_IsFirstException(void);
 int     __mriCore_WasSuccessfullyInit(void);
 int     __mriCore_IsWaitingForGdbToConnect(void);
@@ -55,7 +54,6 @@ void    __mriCore_GdbCommandHandlingLoop(void);
 #define RecordControlCFlagSentFromGdb   __mriCore_RecordControlCFlagSentFromGdb
 #define WasSemihostCallCancelledByGdb   __mriCore_WasSemihostCallCancelledByGdb
 #define FlagSemihostCallAsHandled       __mriCore_FlagSemihostCallAsHandled
-#define IsCommShared                    __mriCore_IsCommShared
 #define IsFirstException                __mriCore_IsFirstException
 #define WasSuccessfullyInit             __mriCore_WasSuccessfullyInit
 #define IsWaitingForGdbToConnect        __mriCore_IsWaitingForGdbToConnect

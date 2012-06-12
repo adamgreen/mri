@@ -21,6 +21,10 @@
 #include <token.h>
 #include "lpc176x_uart.h"
 
+/* Flags that can be set in Lpc176xState::flags */
+#define LPC176X_UART_FLAGS_SHARE        1
+#define LPC176X_UART_FLAGS_MANUAL_BAUD  2
+
 typedef struct
 {
     UartConfiguration*  pCurrentUart;

@@ -52,10 +52,9 @@ typedef struct
 static MriCore g_mri;
 
 /* MriCore::flags bit definitions. */
-#define MRI_FLAGS_COMM_SHARE            1
-#define MRI_FLAGS_SUCCESSFUL_INIT       2
-#define MRI_FLAGS_FIRST_EXCEPTION       4
-#define MRI_FLAGS_SEMIHOST_CTRL_C       8
+#define MRI_FLAGS_SUCCESSFUL_INIT   1
+#define MRI_FLAGS_FIRST_EXCEPTION   2
+#define MRI_FLAGS_SEMIHOST_CTRL_C   4
 
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
@@ -63,9 +62,6 @@ static MriCore g_mri;
 
 static void clearCoreStructure(void);
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters);
-static void configureCommShareFlag(void);
-static void setCommShareFlag(void);
-static void clearCommShareFlag(void);
 static void setFirstExceptionFlag(void);
 static void setSuccessfulInitFlag(void);
 void __mriInit(const char* pDebuggerParameters)
@@ -77,7 +73,6 @@ void __mriInit(const char* pDebuggerParameters)
     __catch
         return;
 
-    configureCommShareFlag();
     setFirstExceptionFlag();
     setSuccessfulInitFlag();
 }
@@ -102,24 +97,6 @@ static void initializePlatformSpecificModulesWithDebuggerParameters(const char* 
         __rethrow;
 }
 
-static void configureCommShareFlag(void)
-{
-    if (Platform_CommIsSharedWithApplication())
-        setCommShareFlag();
-    else
-        clearCommShareFlag();
-}
-
-static void setCommShareFlag(void)
-{
-    g_mri.flags |= MRI_FLAGS_COMM_SHARE;
-}
-
-static void clearCommShareFlag(void)
-{
-    g_mri.flags &= ~MRI_FLAGS_COMM_SHARE;
-}
-
 static void setFirstExceptionFlag(void)
 {
     g_mri.flags |= MRI_FLAGS_FIRST_EXCEPTION;
@@ -129,7 +106,6 @@ static void setSuccessfulInitFlag(void)
 {
     g_mri.flags |= MRI_FLAGS_SUCCESSFUL_INIT;
 }
-
 
 
 static void blockIfGdbHasNotConnected(void);
@@ -329,7 +305,7 @@ int WasControlCFlagSentFromGdb(void)
 
 int IsWaitingForGdbToConnect(void)
 {
-    return IsFirstException() && !IsCommShared();
+    return IsFirstException() && Platform_CommShouldWaitForGdbConnect();
 }
 
 
@@ -354,12 +330,6 @@ void FlagSemihostCallAsHandled(void)
     Platform_AdvanceProgramCounterToNextInstruction();
     Platform_SetSemihostCallReturnValue(g_mri.semihostReturnCode);
     (errno) = g_mri.semihostErrno;
-}
-
-
-int IsCommShared(void)
-{
-    return (int)(g_mri.flags & MRI_FLAGS_COMM_SHARE);
 }
 
 

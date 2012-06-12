@@ -87,7 +87,6 @@ TEST(Mri, __mriInit_MakeSureThatItSetsProperFlagsOnSuccessfulInit)
     CHECK_TRUE( IsWaitingForGdbToConnect() );
     CHECK_TRUE( IsFirstException() );
     CHECK_TRUE( WasSuccessfullyInit() );
-    CHECK_FALSE( IsCommShared() );
 }
 
 TEST(Mri, __mriInit_MriPlatformInitThrows)
@@ -99,12 +98,10 @@ TEST(Mri, __mriInit_MriPlatformInitThrows)
     CHECK_FALSE( IsWaitingForGdbToConnect() );
     CHECK_FALSE( IsFirstException() );
     CHECK_FALSE( WasSuccessfullyInit() );
-    CHECK_FALSE( IsCommShared() );
 }
 
 TEST(Mri, __mriInit_mriPlatformCommIsSharedWithApplicationReturnTrue)
 {
     platformMock_CommSetShareFlag(1);
     tryMriInit("MRI_UART_MBED_USB MRI_UART_SHARE");
-    CHECK_TRUE( IsCommShared() );
 }

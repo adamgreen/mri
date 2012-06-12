@@ -26,6 +26,7 @@
 #define invalidIndexException               6
 #define notFoundException                   7
 #define exceededHardwareResourcesException  8
+#define invalidDecDigitException            9
 
 extern int __mriExceptionCode;
 

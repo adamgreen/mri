@@ -141,7 +141,13 @@ void platformMock_CommSetShareFlag(int flag)
     g_commShareFlag = flag;
 }
 
-int Platform_CommIsSharedWithApplication(void)
+int Platform_CommShouldWaitForGdbConnect(void)
+{
+    return !g_commShareFlag;
+}
+
+
+int Platform_CommSharingWithApplication(void)
 {
     return g_commShareFlag;
 }
