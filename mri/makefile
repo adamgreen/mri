@@ -59,7 +59,7 @@ PLAT_OBJECTS = $(patsubst %.c,$(OUTDIR)/%.o,$(PLAT_CSRCS)) $(patsubst %.S,$(OUTD
 INCDIRS = ../external/inc ../external/inc/LPC17xx . stubs
 
 # DEFINEs to be used when building C/C++ code
-DEFINES = -DTARGET_LPC1768 
+DEFINES = -DTARGET_LPC1768
 
 # Optimization level
 OPTIMIZATION = s
@@ -83,17 +83,33 @@ AR = arm-none-eabi-ar
 OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
 SIZE = arm-none-eabi-size
+
+# Switch tools on Windows.
+ifeq "$(OS)" "Windows_NT"
+REMOVE = del /q
+REMOVE_DIR = rd /s /q
+COPY = copy
+CAT = type
+MKDIR = mkdir
+QUIET=>nul 2>nul & exit 0
+else
 REMOVE = rm
 REMOVE_DIR = rm -r -f
 COPY = cp
 CAT = cat
+MKDIR = mkdir -p
+QUIET=> /dev/null 2>&1 ; exit 0
+endif
 
-# Switch to cs-rm on Windows.
-ifeq "$(MAKE)" "cs-make"
-REMOVE = cs-rm
-REMOVE_DIR = rd /s /q
-COPY = copy
-CAT = type
+# Create macro which will convert / to \ on Windows.
+ifeq "$(OS)" "Windows_NT"
+define convert-slash
+$(subst /,\,$1)
+endef
+else
+define convert-slash
+$1
+endef
 endif
 
 #########################################################################
@@ -103,35 +119,40 @@ all:: $(OUTDIR) $(TARGET) $(DROPDIR) $(DROPDIR)/mri.h $(DROPDIR)/mri.ar $(DROPDI
 $(TARGET): $(OBJECTS) $(PLAT_OBJECTS)
 	$(AR) -rc $@ $?
 
-$(DROPDIR)/mri.h: mri.h version.h
-	$(CAT) $? >$@
-
 $(DROPDIR)/mri.ar:  $(TARGET)
-	$(COPY) $? $@
+	$(COPY) $(call convert-slash,$?) $(call convert-slash,$@)
 
 $(DROPDIR)/COPYING.LESSER: COPYING.LESSER
-	$(COPY) $? $@
+	$(COPY) $? $(call convert-slash,$@)
 
 $(OUTDIR):
-	mkdir $(OUTDIR)
+	$(MKDIR) $(call convert-slash,$(OUTDIR))
 
 $(DROPDIR):
-	mkdir $(DROPDIR)
+	$(MKDIR) $(call convert-slash,$(DROPDIR))
+
+ifeq "$(OS)" "Windows_NT"
+$(DROPDIR)/mri.h: mri.h version.h
+	$(COPY) /b mri.h + version.h $(call convert-slash,$@)
+else
+$(DROPDIR)/mri.h: mri.h version.h
+	$(CAT) $? >$@
+endif
 
 clean:
-	$(REMOVE_DIR) $(OUTDIR)
-	$(REMOVE_DIR) $(DROPDIR)
+	$(REMOVE_DIR) $(call convert-slash,$(OUTDIR)) $(QUIET)
+	$(REMOVE_DIR) $(call convert-slash,$(DROPDIR)) $(QUIET)
 
 #########################################################################
 #  Default rules to compile .c and .cpp file to .o
 #  and assemble .s files to .o
 
 $(OUTDIR)/%.o : %.c
-	mkdir -p $(dir $@)
+	$(MKDIR) $(call convert-slash,$(dir $@)) $(QUIET)
 	$(GCC) $(GCFLAGS) -c $< -o $@
 
 $(OUTDIR)/%.o : %.S
-	mkdir -p $(dir $@)
+	$(MKDIR) $(call convert-slash,$(dir $@)) $(QUIET)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 #########################################################################
