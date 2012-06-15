@@ -1,2 +1,2 @@
 #! /usr/bin/env bash
-arm-none-eabi-nm -g --defined-only ../mri/drop/mri.ar | grep "........ . .*" | grep -v "........ . __mri.*" | grep -v "........ . .*_.*Handler$"
+arm-none-eabi-nm -g --defined-only ../drop/mri.ar | grep "........ . .*" | grep -v "........ . __mri.*" | grep -v "........ . .*_.*Handler$"
