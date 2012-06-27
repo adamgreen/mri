@@ -12,19 +12,19 @@ flattenGcovOutput() {
 while read line1
 do
   read line2
-  echo $line2 " " $line1 
-  read junk
+  read line3
+  echo $line2 " " $line3 
   read junk
 done < ${INPUT_FILE}
 }
 
 getRidOfCruft() {
-sed '-e s/^Lines.*://g' \
+sed '-e s/^Lines executed://g' \
     '-e s/^[0-9]\./  &/g' \
     '-e s/^[0-9][0-9]\./ &/g' \
-    '-e s/of.*File/ /g' \
-    "-e s/'//g" \
     '-e s/^.*\/usr\/.*$//g' \
+    "-e s/of.*:creating '/ /g" \
+    "-e s/.gcov'//g" \
     '-e s/^.*\.$//g' 
 }
 
@@ -57,7 +57,10 @@ createHtmlOutput() {
 }
 
 flattenGcovOutput | getRidOfCruft | flattenPaths  > ${TEMP_FILE1}
-getFileNameRootFromErrorFile | writeEachNoTestCoverageFile | flattenPaths > ${TEMP_FILE2}
-cat ${TEMP_FILE1}  ${TEMP_FILE2} | sort | uniq > ${OUTPUT_FILE}
-createHtmlOutput < ${OUTPUT_FILE} > ${HTML_OUTPUT_FILE}
+#getFileNameRootFromErrorFile | writeEachNoTestCoverageFile | flattenPaths > ${TEMP_FILE2}
+#cat ${TEMP_FILE1}  ${TEMP_FILE2} | sort | uniq > ${OUTPUT_FILE}
+cat ${TEMP_FILE1} | sort | uniq > ${OUTPUT_FILE}
+#createHtmlOutput < ${OUTPUT_FILE} > ${HTML_OUTPUT_FILE}
+echo >> ${OUTPUT_FILE}
+cat ${ERROR_FILE} >> ${OUTPUT_FILE}
 rm -f ${TEMP_FILE1} ${TEMP_FILE2} 
