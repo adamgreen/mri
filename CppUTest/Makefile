@@ -1,5 +1,5 @@
 #Set this to @ to keep the makefile quiet
-#SILENCE = @
+SILENCE = @
 
 #--- Inputs ----#
 COMPONENT_NAME = CppUTest
