@@ -2,12 +2,12 @@
 
 #ifndef MRI_VERSION_STRING
 
-#define MRI_BRANCH "https://github.com/adamgreen/mri"
+#define MRI_BRANCH "https://github.com/adamgreen/mri/tree/version_0.3"
 
 #define MRI_VERSION_MAJOR       0
 #define MRI_VERSION_MINOR       3
 #define MRI_VERSION_BUILD       20120808
-#define MRI_VERSION_SUBBUILD    0
+#define MRI_VERSION_SUBBUILD    1
 
 #define MRI_STR(X) MRI_STR2(X)
 #define MRI_STR2(X) #X
