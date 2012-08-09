@@ -1,5 +1,5 @@
 ==Version Information
-**0.3-20120808.1**  This is the first alpha release of MRI to be used by the gcc4mbed project.
+**0.3-20120809.1**  This is the first alpha release of MRI to be used by the gcc4mbed project.
 
 
 ==MRI - Monitor for Remote Inspection
