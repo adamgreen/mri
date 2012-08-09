@@ -38,7 +38,7 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
     Buffer_WriteString(pBuffer, gdbOpenCommand);
     Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)(size_t)pParameters->pFilename);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength + 1);
     Buffer_WriteChar(pBuffer, ',');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->flags);
     Buffer_WriteChar(pBuffer, ',');
@@ -180,7 +180,7 @@ int IssueGdbFileUnlinkRequest(const RemoveParameters* pParameters)
     Buffer_WriteString(pBuffer, gdbUnlinkCommand);
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength + 1);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();
