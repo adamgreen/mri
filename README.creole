@@ -22,7 +22,7 @@ MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [
 ==More MRI Information
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-getting-started.creole#installation|Getting started with MRI in GCC4MBED]]:**  Documents how to setup the mbed device and GCC4MBED project to use MRI for debugging binaries.  Also provides a walk through of a debugging session with one of the GCC4MBED samples.\\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-platforms.creole#supported-host-platforms|Supported Host Platforms]]:**  Which platforms has GDB been run on while connected to MRI.\\
-**[[https://github.com/adamgreen/mri/blob/master/notes/mri-devices.creole#supported-devices]]:**  Which devices can currently be debugged with MRI.\\
+**[[https://github.com/adamgreen/mri/blob/master/notes/mri-devices.creole#supported-devices|Supported Devices]]:**  Which devices can currently be debugged with MRI.\\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-limitations.creole#limitations|Limitations]]:**  Lists the known limitations of the MRI debug monitor.  Especially noted are those limitations that it has when compared to a typical JTAG based debugger.\\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-issues.creole#known-issues|Issues]]:** Contains information about the currently known issues with the MRI debugging solution.\\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-report-problem.creole#hit-a-problem|Reporting a Problem]]:**  How to extract information from your PC to show what was happening at the time a problem occurs in a MRI debugging session.
