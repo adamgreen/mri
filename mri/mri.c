@@ -121,14 +121,13 @@ void __mriDebugException(void)
     int wasWaitingForGdbToConnect = IsWaitingForGdbToConnect();
     int justSingleStepped = Platform_IsSingleStepping();
     
-    blockIfGdbHasNotConnected();
-
     if (Platform_CommCausedInterrupt() && !Platform_CommHasReceiveData())
     {
         Platform_CommClearInterrupt();
         return;
     }
 
+    blockIfGdbHasNotConnected();
     Platform_EnteringDebugger();
     determineSignalValue();
     
