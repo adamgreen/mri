@@ -127,7 +127,6 @@ static void     selectPinForRx(void);
 static uint32_t calculatePinSelectionValue(uint32_t originalPinSelectionValue, uint32_t mask);
 static void     enableUartToInterruptOnReceivedChar(void);
 static void     configureNVICForUartInterrupt(void);
-static int      calculateUartIndex(void);
 void __mriLpc176xUart_Init(Token* pParameterTokens)
 {
     UartParameters parameters;
@@ -478,12 +477,13 @@ static void configureNVICForUartInterrupt(void)
     IRQn_Type uart0BaseIRQ = UART0_IRQn;
     IRQn_Type currentUartIRQ;
     
-    currentUartIRQ = (IRQn_Type)((int)uart0BaseIRQ + calculateUartIndex());
+    currentUartIRQ = (IRQn_Type)((int)uart0BaseIRQ + Platform_CommUartIndex());
     NVIC_SetPriority(currentUartIRQ, 0);
     NVIC_EnableIRQ(currentUartIRQ);
 }
 
-static int calculateUartIndex(void)
+
+int Platform_CommUartIndex(void)
 {
     return __mriLpc176xState.pCurrentUart - g_uartConfigurations;
 }
@@ -542,7 +542,7 @@ int Platform_CommCausedInterrupt(void)
     uint32_t       interruptSource = getCurrentlyExecutingExceptionNumber();
     uint32_t       currentUartExceptionId;
     
-    currentUartExceptionId = uart0BaseExceptionId + calculateUartIndex();
+    currentUartExceptionId = uart0BaseExceptionId + Platform_CommUartIndex();
     return interruptSource == currentUartExceptionId;
 }
 
