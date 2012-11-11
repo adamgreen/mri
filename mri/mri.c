@@ -59,6 +59,9 @@ static MriCore g_mri;
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
 
+/* Disable any macro used for errno and use the int global instead. */
+#undef errno
+extern int errno;
 
 static void clearCoreStructure(void);
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters);
@@ -328,7 +331,8 @@ void FlagSemihostCallAsHandled(void)
 {
     Platform_AdvanceProgramCounterToNextInstruction();
     Platform_SetSemihostCallReturnValue(g_mri.semihostReturnCode);
-    (errno) = g_mri.semihostErrno;
+    if (g_mri.semihostReturnCode)
+        errno = g_mri.semihostErrno;
 }
 
 
