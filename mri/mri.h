@@ -60,10 +60,18 @@ extern "C"
 void __mriInit(const char* pDebuggerParameters);
 
 
-/* Simple assembly language stubs that can be called from user's newlib _write and _read routines which will cause the 
-   reads and writes to be redirected to the gdb host via mri. */
+/* Simple assembly language stubs that can be called from user's newlib stubs routines which will cause the operations
+   to be redirected to the GDB host via MRI. */
+int __mriNewLib_SemihostOpen(const char *pFilename, int flags, int mode);
+int __mriNewLib_SemihostRename(const char *pOldFilename, const char *pNewFilename);
+int __mriNewLib_SemihostUnlink(const char *pFilename);
+int __mriNewLib_SemihostStat(const char *pFilename, void *pStat);
 int __mriNewlib_SemihostWrite(int file, const char *ptr, int len);
 int __mriNewlib_SemihostRead(int file, char *ptr, int len);
+int __mriNewlib_SemihostLSeek(int file, int offset, int whence);
+int __mriNewlib_SemihostClose(int file);
+int __mriNewlib_SemihostFStat(int file, void *pStat);
+
 
 
 /* Can be used by semihosting hooks to determine the index of the UART being used by MRI. */

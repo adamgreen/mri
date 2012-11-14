@@ -15,6 +15,7 @@
 */
 /* Handling and issuing routines for gdb file commands. */
 #include <signal.h>
+#include <string.h>
 #include "fileio.h"
 #include "core.h"
 #include "cmd_common.h"
@@ -134,9 +135,9 @@ int IssueGdbFileSeekRequest(const SeekParameters* pParameters)
     Buffer_WriteString(pBuffer, gdbSeekCommand);
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->fileDescriptor);
     Buffer_WriteChar(pBuffer, ',');
-    Buffer_WriteIntegerAsHex(pBuffer, pParameters->offsetFromStart);
+    Buffer_WriteIntegerAsHex(pBuffer, pParameters->offset);
     Buffer_WriteChar(pBuffer, ',');
-    Buffer_WriteIntegerAsHex(pBuffer, SEEK_SET);
+    Buffer_WriteIntegerAsHex(pBuffer, pParameters->whence);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();
@@ -145,12 +146,12 @@ int IssueGdbFileSeekRequest(const SeekParameters* pParameters)
 
 /* Send file stat request to gdb on behalf of mbed LocalFileSystem to get file length.
 
-    Data Format: Fstat,ff,bb
+    Data Format: Ffstat,ff,bb
     
     Where ff is the hex value of the file descriptor to be closed.
           bb is the hex representation of the address of the stat structure to be filled in.
 */
-int IssueGdbFileStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer)
+int IssueGdbFileFStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer)
 {
     static const char  gdbStatCommand[] = "Ffstat,";
     Buffer*            pBuffer = GetInitializedBuffer();
@@ -181,6 +182,59 @@ int IssueGdbFileUnlinkRequest(const RemoveParameters* pParameters)
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameAddress);
     Buffer_WriteChar(pBuffer, '/');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength + 1);
+    
+    SendPacketToGdb();
+    return processGdbFileResponseCommands();
+}
+
+
+/* Send file system level stat request to gdb.
+
+    Data Format: Fstat,ff/nn,bb
+    
+    Where ff is the hex representation of the address of the filename.
+          nn is the hex value of the count of characters in the filename pointed to by ff.
+          bb is the hex representation of the address of the stat structure to be filled in.
+*/
+int IssueGdbFileStatRequest(const char* pFilename, uint32_t fileStatBuffer)
+{
+    static const char  gdbStatCommand[] = "Fstat,";
+    Buffer*            pBuffer = GetInitializedBuffer();
+
+    Buffer_WriteString(pBuffer, gdbStatCommand);
+    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pFilename);
+    Buffer_WriteChar(pBuffer, '/');
+    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pFilename) + 1);
+    Buffer_WriteChar(pBuffer, ',');
+    Buffer_WriteUIntegerAsHex(pBuffer, fileStatBuffer);
+    
+    SendPacketToGdb();
+    return processGdbFileResponseCommands();
+}
+
+
+/* Send file rename request to gdb.
+
+    Data Format: Frename,oo/aa,nn/bb
+    
+    Where oo is the hex representation of the address of the original filename.
+          aa is the hex value of the count of characters in the original filename pointed to by oo.
+          nn is the hex representation of the address of the new filename.
+          bb is the hex value of the count of characters in the new filename pointed to by nn.
+*/
+int IssueGdbFileRenameRequest(const char* pOrigFilename, const char* pNewFilename)
+{
+    static const char  gdbCommand[] = "Frename,";
+    Buffer*            pBuffer = GetInitializedBuffer();
+
+    Buffer_WriteString(pBuffer, gdbCommand);
+    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pOrigFilename);
+    Buffer_WriteChar(pBuffer, '/');
+    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pOrigFilename) + 1);
+    Buffer_WriteChar(pBuffer, ',');
+    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pNewFilename);
+    Buffer_WriteChar(pBuffer, '/');
+    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pNewFilename) + 1);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();

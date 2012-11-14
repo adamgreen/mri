@@ -203,9 +203,18 @@ static int handleMbedSemihostCloseRequest(PlatformSemihostParameters* pSemihostP
 
 static int handleMbedSemihostSeekRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    const SeekParameters* pParameters = (const SeekParameters*)pSemihostParameters->parameter2;
+    typedef struct
+    {
+        uint32_t    fileDescriptor;
+        int32_t     offsetFromStart;
+    } MbedSeekParameters;
+    const MbedSeekParameters* pParameters = (const MbedSeekParameters*)pSemihostParameters->parameter2;
+    SeekParameters parameters;
     
-    return IssueGdbFileSeekRequest(pParameters);
+    parameters.fileDescriptor = pParameters->fileDescriptor;
+    parameters.offset = pParameters->offsetFromStart;
+    parameters.whence = SEEK_SET;
+    return IssueGdbFileSeekRequest(&parameters);
 }
 
 static int handleMbedSemihostFileLengthRequest(PlatformSemihostParameters* pSemihostParameters)
@@ -237,7 +246,7 @@ static int handleMbedSemihostFileLengthRequest(PlatformSemihostParameters* pSemi
     GdbStats                     gdbFileStats;
     int                          returnValue;
     
-    returnValue = IssueGdbFileStatRequest(pParameters->fileDescriptor, (uint32_t)&gdbFileStats);
+    returnValue = IssueGdbFileFStatRequest(pParameters->fileDescriptor, (uint32_t)&gdbFileStats);
     if (returnValue && GetSemihostReturnCode() == 0)
     {
         /* The stat command was successfully executed to set R0 to the file length field. */

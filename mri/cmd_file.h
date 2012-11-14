@@ -38,7 +38,8 @@ typedef struct
 typedef struct
 {
     uint32_t        fileDescriptor;
-    int32_t         offsetFromStart;
+    int32_t         offset;
+    int32_t         whence;
 } SeekParameters;
 
 typedef struct
@@ -53,8 +54,10 @@ int      __mriIssueGdbFileWriteRequest(const TransferParameters* pParameters);
 int      __mriIssueGdbFileReadRequest(const TransferParameters* pParameters);
 int      __mriIssueGdbFileCloseRequest(uint32_t fileDescriptor);
 int      __mriIssueGdbFileSeekRequest(const SeekParameters* pParameters);
-int      __mriIssueGdbFileStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer);
+int      __mriIssueGdbFileFStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer);
 int      __mriIssueGdbFileUnlinkRequest(const RemoveParameters* pParameters);
+int      __mriIssueGdbFileStatRequest(const char* pFilename, uint32_t fileStatBuffer);
+int      __mriIssueGdbFileRenameRequest(const char* pOrigFilename, const char* pNewFilename);
 uint32_t __mriHandleFileIOCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
@@ -63,8 +66,10 @@ uint32_t __mriHandleFileIOCommand(void);
 #define IssueGdbFileReadRequest     __mriIssueGdbFileReadRequest
 #define IssueGdbFileCloseRequest    __mriIssueGdbFileCloseRequest
 #define IssueGdbFileSeekRequest     __mriIssueGdbFileSeekRequest
-#define IssueGdbFileStatRequest     __mriIssueGdbFileStatRequest
+#define IssueGdbFileFStatRequest    __mriIssueGdbFileFStatRequest
 #define IssueGdbFileUnlinkRequest   __mriIssueGdbFileUnlinkRequest
+#define IssueGdbFileStatRequest     __mriIssueGdbFileStatRequest
+#define IssueGdbFileRenameRequest   __mriIssueGdbFileRenameRequest
 #define HandleFileIOCommand         __mriHandleFileIOCommand
 
 #endif /* _CMD_FILE_H_ */
