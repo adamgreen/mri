@@ -154,6 +154,14 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
         pParameters->uartIndex = 1;
     if (Token_MatchingString(pParameterTokens, "MRI_UART_MBED_P28_P27"))
         pParameters->uartIndex = 2;
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_0"))
+        pParameters->uartIndex = 0;
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_1"))
+        pParameters->uartIndex = 1;
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_2"))
+        pParameters->uartIndex = 2;
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_3"))
+        pParameters->uartIndex = 3;
         
     if ((pMatchingPrefix = Token_MatchingStringPrefix(pParameterTokens, baudRatePrefix)) != NULL)
         pParameters->baudRate = uint32FromString(pMatchingPrefix + sizeof(baudRatePrefix)-1);

@@ -43,6 +43,10 @@ extern "C"
         MRI_UART_MBED_P9_P10
         MRI_UART_MBED_P13_P14
         MRI_UART_MBED_P28_P27
+        MRI_UART_0
+        MRI_UART_1
+        MRI_UART_2
+        MRI_UART_3
         
     By default the debug monitor expects to take full control of the UART to configure baud rate, etc.  However 
     including the following option will tell the monitor to assume that the user's firmware will configure and use the
