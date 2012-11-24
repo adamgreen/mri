@@ -532,6 +532,7 @@ static void configureMpuToAccessAllMemoryWithNoCaching(void)
 static void saveOriginalMpuConfiguration(void)
 {
     __mriCortexMState.originalMPUControlValue = getMPUControlValue();
+    __mriCortexMState.originalMPURegionNumber = getCurrentMPURegionNumber();
     prepareToAccessMPURegion(getHighestMPUDataRegionIndex());
     __mriCortexMState.originalMPURegionAddress = getMPURegionAddress();
     __mriCortexMState.originalMPURegionAttributesAndSize = getMPURegionAttributeAndSize();
@@ -591,6 +592,7 @@ static void restoreMPUConfiguration(void)
     prepareToAccessMPURegion(getHighestMPUDataRegionIndex());
     setMPURegionAddress(__mriCortexMState.originalMPURegionAddress);
     setMPURegionAttributeAndSize(__mriCortexMState.originalMPURegionAttributesAndSize);
+    prepareToAccessMPURegion(__mriCortexMState.originalMPURegionNumber);
     setMPUControlValue(__mriCortexMState.originalMPUControlValue);
 }
 

@@ -86,6 +86,7 @@ typedef struct
     uint32_t            originalPC;
     uint32_t            originalPSRBitsToMaintain;
     uint32_t            originalMPUControlValue;
+    uint32_t            originalMPURegionNumber;
     uint32_t            originalMPURegionAddress;
     uint32_t            originalMPURegionAttributesAndSize;
     uint32_t            originalBasePriority;

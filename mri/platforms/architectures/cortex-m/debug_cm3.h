@@ -774,6 +774,11 @@ static __INLINE int prepareToAccessMPURegion(uint32_t regionNumber)
     return 1;
 }
 
+static __INLINE uint32_t getCurrentMPURegionNumber(void)
+{
+    return MPU->RNR;
+}
+
 static __INLINE void setMPURegionAddress(uint32_t address)
 {
     if (isMPUNotPresent())
