@@ -234,6 +234,14 @@ void Platform_LeavingDebugger(void)
 {
 }
 
+extern "C" void __mriPlatform_EnteringDebuggerHook(void)
+{
+}
+
+extern "C" void __mriPlatform_LeavingDebuggerHook(void)
+{
+}
+
 uint8_t Platform_DetermineCauseOfException(void)
 {
     return 0;

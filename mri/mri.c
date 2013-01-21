@@ -63,6 +63,13 @@ static MriCore g_mri;
 #undef errno
 extern int errno;
 
+/* These two routines can be provided by the debuggee to get notified on debugger entry/exit.  Can be used to safely
+   turn off some external hardware so that it doesn't keep running while sitting at a breakpoint. */
+void __mriPlatform_EnteringDebuggerHook(void) __attribute((weak));
+void __mriPlatform_LeavingDebuggerHook(void) __attribute((weak));
+#define Platform_EnteringDebuggerHook __mriPlatform_EnteringDebuggerHook
+#define Platform_LeavingDebuggerHook  __mriPlatform_LeavingDebuggerHook
+
 static void clearCoreStructure(void);
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters);
 static void setFirstExceptionFlag(void);
@@ -130,6 +137,7 @@ void __mriDebugException(void)
         return;
     }
 
+    Platform_EnteringDebuggerHook();
     blockIfGdbHasNotConnected();
     Platform_EnteringDebugger();
     determineSignalValue();
@@ -198,6 +206,7 @@ static int isDebugTrap(void)
 static void prepareForDebuggerExit(void)
 {
     Platform_LeavingDebugger();
+    Platform_LeavingDebuggerHook();
     clearFirstExceptionFlag();
 }
 
