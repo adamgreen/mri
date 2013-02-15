@@ -2,9 +2,9 @@
 There are a few things that you need to download and install before using MRI:
 * Follow the instructions at [[https://github.com/adamgreen/gcc4mbed#quick-start]] to install the latest version of the GCC4MBED project which includes the MRI debug monitor.
 * MRI doesn't work if the JTAG debug interface is actively being used on the device.  Any such JTAG usage will need to be disabled before you can use MRI.  What needs to be done will differ depending on your device:
-* **mbed 1768:**  Download [[http://mbed.org/media/uploads/simon/mbedmicrocontroller_21164.if]].  Copy this file to your mbed device and then reset it.  This will update the firmware on the interface chip so that its JTAG usage can be disabled when MRI is used.
-* **LPCXpresso 1769:**  Cut away the debugger portion of the device along the white line which separates the main LPC1769 device from the JTAG hardware.  You will now need to provide 3.3V of regulated power and a serial connection to UART0 on the LPC1769 portion of the board.
-* **Other:**  Remove JTAG debugger connection when using MRI and connect your PC to a UART on the device.  Typically this will be done with something like a [[https://www.sparkfun.com/products/9717|FTDI to USB to serial cable]].
+** **mbed 1768:**  Download [[http://mbed.org/media/uploads/simon/mbedmicrocontroller_21164.if]].  Copy this file to your mbed device and then reset it.  This will update the firmware on the interface chip so that its JTAG usage can be disabled when MRI is used.
+** **LPCXpresso 1769:**  Cut away the debugger portion of the device along the white line which separates the main LPC1769 device from the JTAG hardware.  You will now need to provide 3.3V of regulated power and a serial connection to UART0 on the LPC1769 portion of the board.
+** **Other:**  Remove JTAG debugger connection when using MRI and connect your PC to a UART on the device.  Typically this will be done with something like a [[https://www.sparkfun.com/products/9717|FTDI to USB to serial cable]].
 
 
 ==Getting Started
