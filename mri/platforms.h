@@ -29,6 +29,13 @@ uint32_t  __mriPlatform_GetPacketBufferSize(void);
 void      __mriPlatform_EnteringDebugger(void);
 void      __mriPlatform_LeavingDebugger(void);
 
+uint32_t  __mriPlatform_MemRead32(uint32_t address);
+uint16_t  __mriPlatform_MemRead16(uint32_t address);
+uint8_t   __mriPlatform_MemRead8(uint32_t address);
+void      __mriPlatform_MemWrite32(uint32_t address, uint32_t value);
+void      __mriPlatform_MemWrite16(uint32_t address, uint16_t value);
+void      __mriPlatform_MemWrite8(uint32_t address, uint8_t value);
+
 uint32_t  __mriPlatform_CommHasReceiveData(void);
 int       __mriPlatform_CommReceiveChar(void);
 void      __mriPlatform_CommSendChar(int character);
@@ -99,6 +106,12 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_GetPacketBufferSize                        __mriPlatform_GetPacketBufferSize
 #define Platform_EnteringDebugger                           __mriPlatform_EnteringDebugger
 #define Platform_LeavingDebugger                            __mriPlatform_LeavingDebugger
+#define Platform_MemRead32                                  __mriPlatform_MemRead32
+#define Platform_MemRead16                                  __mriPlatform_MemRead16
+#define Platform_MemRead8                                   __mriPlatform_MemRead8
+#define Platform_MemWrite32                                 __mriPlatform_MemWrite32
+#define Platform_MemWrite16                                 __mriPlatform_MemWrite16
+#define Platform_MemWrite8                                  __mriPlatform_MemWrite8
 #define Platform_CommHasReceiveData                         __mriPlatform_CommHasReceiveData
 #define Platform_CommReceiveChar                            __mriPlatform_CommReceiveChar
 #define Platform_CommSendChar                               __mriPlatform_CommSendChar

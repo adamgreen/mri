@@ -36,13 +36,13 @@ int ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t read
 
 static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount)
 {
-    const volatile uint8_t* pMemory = (const volatile uint8_t*) pvMemory;
+    uint32_t address = (uint32_t) pvMemory;
     
     while (readByteCount-- > 0)
     {
         uint8_t byte;
         
-        byte = *pMemory++;
+        byte = Platform_MemRead8(address++);
         if (Platform_WasMemoryFaultEncountered())
             return 0;
 
@@ -54,10 +54,7 @@ static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, 
 
 static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
 {
-    const volatile uint16_t* pMemory = (const volatile uint16_t*) pvMemory;
-    uint16_t                 value;
-    
-    value = *pMemory;
+    uint16_t value = Platform_MemRead16((uint32_t) pvMemory);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
     readMemoryBytesIntoHexBuffer(pBuffer, &value, sizeof(value));
@@ -67,10 +64,7 @@ static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory
 
 static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
 {
-    const volatile uint32_t* pMemory = (const volatile uint32_t*) pvMemory;
-    uint32_t                 value;
-    
-    value = *pMemory;
+    uint32_t value = Platform_MemRead32((uint32_t) pvMemory);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
     readMemoryBytesIntoHexBuffer(pBuffer, &value, sizeof(value));
@@ -97,7 +91,7 @@ int WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCo
 
 static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
 {
-    volatile uint8_t* pMemory = (volatile uint8_t*)pvMemory;
+    uint32_t address = (uint32_t) pvMemory;
 
     while (writeByteCount-- > 0)
     {
@@ -108,7 +102,7 @@ static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t 
         __catch
             __rethrow_and_return(0);
 
-        *pMemory++ = byte;
+        Platform_MemWrite8(address++, byte);
         if (Platform_WasMemoryFaultEncountered())
             return 0;
     }
@@ -118,13 +112,12 @@ static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t 
 
 static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
 {
-    volatile uint16_t* pMemory = (volatile uint16_t*)pvMemory;
-    uint16_t           value;
+    uint16_t value;
 
     if (!writeHexBufferToByteMemory(pBuffer, &value, sizeof(value)))
         return 0;
 
-    *pMemory = value;
+    Platform_MemWrite16((uint32_t) pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
@@ -133,13 +126,12 @@ static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
 
 static int writeHexBufferToWordMemory(Buffer* pBuffer, void* pvMemory)
 {
-    volatile uint32_t* pMemory = (volatile uint32_t*)pvMemory;
-    uint32_t           value;
+    uint32_t value;
 
     if (!writeHexBufferToByteMemory(pBuffer, &value, sizeof(value)))
         return 0;
 
-    *pMemory = value;
+    Platform_MemWrite32((uint32_t) pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
@@ -169,7 +161,7 @@ int WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByt
 
 static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount)
 {
-    volatile uint8_t* pMemory = (volatile uint8_t*)pvMemory;
+    uint32_t address = (uint32_t) pvMemory;
 
     while (writeByteCount-- > 0)
     {
@@ -185,7 +177,7 @@ static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint3
             __rethrow_and_return(0);
         }
 
-        *pMemory++ = (uint8_t)currChar;
+        Platform_MemWrite8(address++, (uint8_t)currChar);
         if (Platform_WasMemoryFaultEncountered())
             return 0;
     }
@@ -225,13 +217,12 @@ static char unescapeByte(char charToUnescape)
 
 static int writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory) 
 {
-    volatile uint16_t* pMemory = (volatile uint16_t*)pvMemory;
-    uint16_t           value;
+    uint16_t value;
 
     if (!writeBinaryBufferToByteMemory(pBuffer, &value, sizeof(value)))
         return 0;
 
-    *pMemory = value;
+    Platform_MemWrite16((uint32_t) pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
@@ -240,13 +231,12 @@ static int writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
 
 static int writeBinaryBufferToWordMemory(Buffer* pBuffer, void* pvMemory) 
 {
-    volatile uint32_t* pMemory = (volatile uint32_t*)pvMemory;
-    uint32_t           value;
+    uint32_t value;
 
     if (!writeBinaryBufferToByteMemory(pBuffer, &value, sizeof(value)))
         return 0;
 
-    *pMemory = value;
+    Platform_MemWrite32((uint32_t) pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 

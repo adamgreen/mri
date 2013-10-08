@@ -39,6 +39,7 @@ CSRCS = $(wildcard *.c)
 ASRCS =  $(wildcard *.S)
 
 PLAT_CSRCS = platforms/architectures/cortex-m/cortex-m.c
+PLAT_CSRCS += platforms/memory/native/native-mem.c
 PLAT_CSRCS += platforms/devices/lpc176x/lpc176x_uart.c
 PLAT_CSRCS += platforms/devices/lpc176x/lpc176x.c
 PLAT_CSRCS += platforms/boards/mbed1768/mbed1768.c

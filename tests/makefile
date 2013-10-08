@@ -28,6 +28,7 @@ CPPUTEST_CFLAGS += -Wstrict-prototypes
 
 SRC_DIRS =                                      \
 	../mri                                      \
+	../mri/platforms/memory/native              \
 
 TEST_SRC_DIRS = \
 	tests \
