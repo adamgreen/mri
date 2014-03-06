@@ -1,3 +1,3 @@
 [submodule "CppUTest"]
 	path = CppUTest
-	url = file:///depots/CppUTest
+	url = https://github.com/adamgreen/CppUTest.git
