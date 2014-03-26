@@ -19,6 +19,24 @@ MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [
 * open source (LGPL)
 
 
+==How to Clone
+This project uses submodules (CppUTest for unit testing).  Cloning requires a few more steps to get all of the necessary
+code.
+
+{{{
+git clone git@github.com:adamgreen/mri.git
+cd mri
+git submodule init
+git submodule update
+}}}
+
+**- or -**
+
+{{{
+git clone --recursive git@github.com:adamgreen/mri.git
+}}}
+
+
 ==More MRI Information
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-getting-started.creole#installation|Getting started with MRI in GCC4MBED]]:**  Documents how to setup the mbed device and GCC4MBED project to use MRI for debugging binaries.  Also provides a walk through of a debugging session with one of the GCC4MBED samples.\\
 \\
