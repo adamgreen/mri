@@ -29,12 +29,12 @@ uint32_t  __mriPlatform_GetPacketBufferSize(void);
 void      __mriPlatform_EnteringDebugger(void);
 void      __mriPlatform_LeavingDebugger(void);
 
-uint32_t  __mriPlatform_MemRead32(uint32_t address);
-uint16_t  __mriPlatform_MemRead16(uint32_t address);
-uint8_t   __mriPlatform_MemRead8(uint32_t address);
-void      __mriPlatform_MemWrite32(uint32_t address, uint32_t value);
-void      __mriPlatform_MemWrite16(uint32_t address, uint16_t value);
-void      __mriPlatform_MemWrite8(uint32_t address, uint8_t value);
+uint32_t  __mriPlatform_MemRead32(const void* pv);
+uint16_t  __mriPlatform_MemRead16(const void* pv);
+uint8_t   __mriPlatform_MemRead8(const void* pv);
+void      __mriPlatform_MemWrite32(void* pv, uint32_t value);
+void      __mriPlatform_MemWrite16(void* pv, uint16_t value);
+void      __mriPlatform_MemWrite8(void* pv, uint8_t value);
 
 uint32_t  __mriPlatform_CommHasReceiveData(void);
 int       __mriPlatform_CommReceiveChar(void);
