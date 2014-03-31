@@ -280,7 +280,7 @@ uint8_t Platform_DetermineCauseOfException(void)
         /* UART* */
         return SIGINT;
     default:
-        /* NOTE: Catch all signal will be SEGSTOP. */
+        /* NOTE: Catch all signal will be SIGSTOP. */
         return SIGSTOP;
     }
 }
@@ -584,6 +584,7 @@ void Platform_LeavingDebugger(void)
 {
     restoreMPUConfiguration();
     checkStack();
+    clearMonitorPending();
 }
 
 static void restoreMPUConfiguration(void)
