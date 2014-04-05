@@ -511,7 +511,6 @@ void Platform_EnteringDebugger(void)
 {
     clearMemoryFaultFlag();
     __mriCortexMState.originalPC = __mriCortexMState.context.PC;
-    __mriCortexMState.originalPSRBitsToMaintain = __mriCortexMState.context.CPSR & PSR_STACK_ALIGN;
     configureMpuToAccessAllMemoryWithNoCaching();
     cleanupIfSingleStepping();
 }
@@ -764,11 +763,7 @@ void Platform_CopyContextToBuffer(Buffer* pBuffer)
 static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 void Platform_CopyContextFromBuffer(Buffer* pBuffer)
 {
-    uint32_t newPSR;
-    
     readBytesFromBufferAsHex(pBuffer, &__mriCortexMState.context, sizeof(__mriCortexMState.context));
-    newPSR = __mriCortexMState.context.CPSR & (~PSR_STACK_ALIGN);
-    __mriCortexMState.context.CPSR = newPSR | __mriCortexMState.originalPSRBitsToMaintain;
 }
 
 static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount)

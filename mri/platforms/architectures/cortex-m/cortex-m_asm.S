@@ -23,6 +23,7 @@
     .equ CFSR,                   0xE000ED28
     .equ CFSR_STACK_ERROR_BITS,  0x00001818
     .equ CFSR_BUS_IMPRECISE_BIT, 0x00000400
+    .equ PSR_STACK_ALIGN,        0x00000200
     
     .global __mriGetIPSR
     .thumb_func
@@ -204,7 +205,7 @@ mriSaveRestoreContext:
     /* Store LR, PC, and PSR to context. */
     stmia   r0!, {r3, r4, r5}
     /* R1 will now be pointing to the task's SP at interrupt time unless the stack was 8-byte aligned. */
-    tst     r5, #0x200
+    tst     r5, #PSR_STACK_ALIGN
     it      ne
     addne   r1, r1, #4
     /* Jump back past the PSR, PC and LR that were placed in context to store the potentially updated SP. */
@@ -218,11 +219,9 @@ mriSaveRestoreContext:
     ldr     r0, =(__mriCortexMState + CORTEXM_STATE_CONTEXT_OFFSET + 16*4)
     /* Retrieve value of task's SP at time of interrupt.  May have been changed by debug client. */
     ldr     r1, [r0, #-(3*4)]
-    /* Does it need to be 8-byte aligned? Fetch PSR and check bit 9. */
+    /* Force double word stack alignment off in PSR. */
     ldr     r2, [r0]
-    tst     r2, #0x200
-    it      ne
-    subne   r1, r1, #4
+    bic     r2, #PSR_STACK_ALIGN
     /* Store PSR on task stack. */
     str     r2, [r1, #-4]!
     /* Copy PC and LR from context to task stack. */
