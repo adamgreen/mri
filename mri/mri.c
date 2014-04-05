@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -90,7 +90,6 @@ void __mriInit(const char* pDebuggerParameters)
 static void clearCoreStructure(void)
 {
     memset(&g_mri, 0, sizeof(g_mri));
-    Packet_Init(&g_mri.packet);
 }
 
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters)

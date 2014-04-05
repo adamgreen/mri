@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -29,7 +29,6 @@ typedef struct
 } Packet;
 
 /* Real name of functions are in __mri namespace. */
-void    __mriPacket_Init(Packet* pPacket);
 void    __mriPacket_GetFromGDB(Packet* pPacket, Buffer* pBuffer);
 void    __mriPacket_SendToGDB(Packet* pPacket, Buffer* pBuffer);
 

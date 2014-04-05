@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -21,13 +21,7 @@
 #include "packet.h"
 
 
-void Packet_Init(Packet* pPacket)
-{
-    memset(pPacket, 0, sizeof(*pPacket));
-}
-
-
-static void rememberBufferToUseForPacketData(Packet* pPacket, Buffer* pBuffer);
+static void initPacketStructure(Packet* pPacket, Buffer* pBuffer);
 static void getMostRecentPacket(Packet* pPacket);
 static void getPacketDataAndExpectedChecksum(Packet* pPacket);
 static void waitForStartOfNextPacket(Packet* pPacket);
@@ -42,7 +36,7 @@ static void sendNAKToGDB(void);
 static void resetBufferToEnableFutureReadingOfValidPacketData(Packet* pPacket);
 void Packet_GetFromGDB(Packet* pPacket, Buffer* pBuffer)
 {
-    rememberBufferToUseForPacketData(pPacket, pBuffer);
+    initPacketStructure(pPacket, pBuffer);
     do
     {
         getMostRecentPacket(pPacket);
@@ -51,8 +45,9 @@ void Packet_GetFromGDB(Packet* pPacket, Buffer* pBuffer)
     resetBufferToEnableFutureReadingOfValidPacketData(pPacket);
 }
 
-static void rememberBufferToUseForPacketData(Packet* pPacket, Buffer* pBuffer)
+static void initPacketStructure(Packet* pPacket, Buffer* pBuffer)
 {
+    memset(pPacket, 0, sizeof(*pPacket));
     pPacket->pBuffer = pBuffer;
 }
 
@@ -171,7 +166,7 @@ void Packet_SendToGDB(Packet* pPacket, Buffer* pBuffer)
     
     /* Keeps looping until GDB sends back the '+' packet acknowledge character.  If GDB sends a '$' then it is trying
        to send a packet so cancel this send attempt. */
-    rememberBufferToUseForPacketData(pPacket, pBuffer);
+    initPacketStructure(pPacket, pBuffer);
     do
     {
         sendPacket(pPacket);
@@ -181,7 +176,7 @@ void Packet_SendToGDB(Packet* pPacket, Buffer* pBuffer)
 
 static void sendPacket(Packet* pPacket)
 {
-    /* Send packet of format: "$<DataInHex>#<1ByteChecksumInHex> */
+    /* Send packet of format: "$<DataInHex>#<1ByteChecksumInHex>" */
     Buffer_Reset(pPacket->pBuffer);
     clearChecksum(pPacket);
 
