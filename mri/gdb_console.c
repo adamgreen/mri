@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -45,7 +45,7 @@ static void writeStringToSharedCommChannel(const char* pString)
 */
 static void writeStringToExclusiveGdbCommChannel(const char* pString)
 {
-    Buffer* pBuffer =GetInitializedBuffer();
+    Buffer* pBuffer = GetInitializedBuffer();
 
     Buffer_WriteChar(pBuffer, 'O');
     ReadMemoryIntoHexBuffer(pBuffer, pString, strlen(pString));

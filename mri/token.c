@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -33,6 +33,13 @@ void Token_InitWith(Token* pToken, const char* pTheseTokenSeparators)
     pToken->pTokenSeparators = pTheseTokenSeparators;
 }
 
+static void clearTokenObject(Token* pToken)
+{
+    memset(pToken->tokenPointers, 0, sizeof(pToken->tokenPointers));
+    pToken->tokenCount = 0;
+    pToken->copyOfString[0] = '\0';
+}
+
 
 static void copyStringIntoToken(Token* pToken, const char* pStringToCopy);
 static void splitStringCopyIntoTokens(Token* pToken);
@@ -52,13 +59,6 @@ void Token_SplitString(Token* pToken, const char* pStringToSplit)
     {
         __rethrow;
     }
-}
-
-static void clearTokenObject(Token* pToken)
-{
-    memset(pToken->tokenPointers, 0, sizeof(pToken->tokenPointers));
-    pToken->tokenCount = 0;
-    pToken->copyOfString[0] = '\0';
 }
 
 static void copyStringIntoToken(Token* pToken, const char* pStringToCopy)
