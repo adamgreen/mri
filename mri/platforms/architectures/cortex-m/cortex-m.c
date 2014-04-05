@@ -138,6 +138,7 @@ static void     recordCurrentBasePriorityAndSwitchToPriority1(void);
 static int      doesPCPointToBASEPRIUpdateInstruction(void);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
 static uint16_t getSecondHalfWordOfCurrentInstruction(void);
+static uint16_t throwingMemRead16(uint32_t address);
 static int      isFirstHalfWordOfMSR(uint16_t instructionHalfWord0);
 static int      isSecondHalfWordOfMSRModifyingBASEPRI(uint16_t instructionHalfWord1);
 static int      isSecondHalfWordOfMSR_BASEPRI(uint16_t instructionHalfWord1);
@@ -185,15 +186,17 @@ static int doesPCPointToBASEPRIUpdateInstruction(void)
 
 static uint16_t getFirstHalfWordOfCurrentInstruction(void)
 {
-    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)__mriCortexMState.context.PC);
-    if (Platform_WasMemoryFaultEncountered())
-        __throw_and_return(memFaultException, 0);
-    return instructionWord;
+    return throwingMemRead16(__mriCortexMState.context.PC);
 }
 
 static uint16_t getSecondHalfWordOfCurrentInstruction(void)
 {
-    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)(__mriCortexMState.context.PC + sizeof(uint16_t)));
+    return throwingMemRead16(__mriCortexMState.context.PC + sizeof(uint16_t));
+}
+
+static uint16_t throwingMemRead16(uint32_t address)
+{
+    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)address);
     if (Platform_WasMemoryFaultEncountered())
         __throw_and_return(memFaultException, 0);
     return instructionWord;
