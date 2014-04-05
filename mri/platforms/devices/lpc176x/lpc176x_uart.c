@@ -21,7 +21,7 @@
 #include "lpc176x.h"
 
 
-static UartConfiguration g_uartConfigurations[] =
+static const UartConfiguration g_uartConfigurations[] =
 {
     {
         &(LPC_SC->PCLKSEL0),

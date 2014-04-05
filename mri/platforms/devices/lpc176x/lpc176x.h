@@ -27,8 +27,8 @@
 
 typedef struct
 {
-    UartConfiguration*  pCurrentUart;
-    uint32_t            flags;
+    const UartConfiguration*  pCurrentUart;
+    uint32_t                  flags;
 } Lpc176xState;
 
 extern Lpc176xState __mriLpc176xState;
