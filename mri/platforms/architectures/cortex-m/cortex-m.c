@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -166,22 +166,37 @@ static void recordCurrentBasePriorityAndSwitchToPriority1(void)
 
 static int doesPCPointToBASEPRIUpdateInstruction(void)
 {
-    return isFirstHalfWordOfMSR(getFirstHalfWordOfCurrentInstruction()) &&
-           isSecondHalfWordOfMSRModifyingBASEPRI(getSecondHalfWordOfCurrentInstruction());
+    uint16_t firstWord = 0;
+    uint16_t secondWord = 0;
+    
+    __try
+    {
+        __throwing_func( firstWord = getFirstHalfWordOfCurrentInstruction() );
+        __throwing_func( secondWord = getSecondHalfWordOfCurrentInstruction() );
+    }
+    __catch
+    {
+        clearExceptionCode();
+        return 0;
+    }
+    
+    return isFirstHalfWordOfMSR(firstWord) && isSecondHalfWordOfMSRModifyingBASEPRI(secondWord);
 }
 
 static uint16_t getFirstHalfWordOfCurrentInstruction(void)
 {
-    const uint16_t* pInstructionHalfWord0 = (const uint16_t*)__mriCortexMState.context.PC;
-
-    return *pInstructionHalfWord0;
+    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)__mriCortexMState.context.PC);
+    if (Platform_WasMemoryFaultEncountered())
+        __throw_and_return(memFaultException, 0);
+    return instructionWord;
 }
 
 static uint16_t getSecondHalfWordOfCurrentInstruction(void)
 {
-    const uint16_t* pInstructionHalfWord1 = ((const uint16_t*)__mriCortexMState.context.PC) + 1;
-
-    return *pInstructionHalfWord1;
+    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)(__mriCortexMState.context.PC + sizeof(uint16_t)));
+    if (Platform_WasMemoryFaultEncountered())
+        __throw_and_return(memFaultException, 0);
+    return instructionWord;
 }
 
 static int isFirstHalfWordOfMSR(uint16_t instructionHalfWord0)
@@ -626,7 +641,18 @@ void Platform_SetProgramCounter(uint32_t newPC)
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 void Platform_AdvanceProgramCounterToNextInstruction(void)
 {
-    uint16_t  firstWordOfCurrentInstruction = getFirstHalfWordOfCurrentInstruction();
+    uint16_t  firstWordOfCurrentInstruction;
+    
+    __try
+    {
+        firstWordOfCurrentInstruction = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so don't bother to advance. */
+        clearExceptionCode();
+        return;
+    }
     
     if (isInstruction32Bit(firstWordOfCurrentInstruction))
     {
@@ -655,8 +681,20 @@ static int isInstruction32Bit(uint16_t firstWordOfInstruction)
 int Platform_IsCurrentInstructionHardcodedBreakpoint(void)
 {
     static const uint16_t hardCodedBreakpointMachineCode = 0xbe00;
+    uint16_t              firstWord;
     
-    return hardCodedBreakpointMachineCode == getFirstHalfWordOfCurrentInstruction();
+    __try
+    {
+        firstWord = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so can't be breakpoint. */
+        clearExceptionCode();
+        return 0;
+    }
+    
+    return hardCodedBreakpointMachineCode == firstWord;
 }
 
 
@@ -670,7 +708,18 @@ static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
 PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
 {
-    uint16_t currentInstruction = getFirstHalfWordOfCurrentInstruction();
+    uint16_t currentInstruction;
+    
+    __try
+    {
+        currentInstruction = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so treat as other. */
+        clearExceptionCode();
+        return MRI_PLATFORM_INSTRUCTION_OTHER;
+    }
     
     if (isInstructionMbedSemihostBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;

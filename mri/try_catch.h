@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -27,6 +27,7 @@
 #define notFoundException                   7
 #define exceededHardwareResourcesException  8
 #define invalidDecDigitException            9
+#define memFaultException                   10
 
 extern int __mriExceptionCode;
 
