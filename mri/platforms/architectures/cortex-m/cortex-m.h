@@ -24,6 +24,7 @@
 #define CORTEXM_FLAGS_FAULT_DURING_DEBUG    2
 #define CORTEXM_FLAGS_SINGLE_STEPPING       4
 #define CORTEXM_FLAGS_RESTORE_BASEPRI       8
+#define CORTEXM_FLAGS_SVC_STEP              16
 
 /* Constants related to special memory area used by the debugger for its stack so that it doesn't interferes with
    the task's stack contents. */

@@ -133,6 +133,11 @@ static void clearSingleSteppingFlag(void)
 }
 
 
+static int      doesPCPointToSVCInstruction(void);
+static void     setHardwareBreakpointOnSvcHandler(void);
+static uint32_t getNvicVector(IRQn_Type irq);
+static void     setSvcStepFlag(void);
+static void     setSingleSteppingFlag(void);
 static void     setSingleSteppingFlag(void);
 static void     recordCurrentBasePriorityAndSwitchToPriority1(void);
 static int      doesPCPointToBASEPRIUpdateInstruction(void);
@@ -148,9 +153,64 @@ static void     setRestoreBasePriorityFlag(void);
 static uint32_t calculateBasePriorityForThisCPU(uint32_t basePriority);
 void Platform_EnableSingleStep(void)
 {
-    setSingleSteppingFlag();
-    recordCurrentBasePriorityAndSwitchToPriority1();
-    enableSingleStep();
+    if (!doesPCPointToSVCInstruction())
+    {
+        setSingleSteppingFlag();
+        recordCurrentBasePriorityAndSwitchToPriority1();
+        enableSingleStep();
+        return;
+    }
+    
+    __try
+    {
+        __throwing_func( setHardwareBreakpointOnSvcHandler() );
+        setSvcStepFlag();
+    }
+    __catch
+    {
+        /* Failed to set hardware breakpoint so single step without modifying priority since the priority
+           elevation leads SVC to escalate to Hard Fault. */
+        clearExceptionCode();
+        setSingleSteppingFlag();
+        enableSingleStep();
+    }
+    return;
+}
+
+static int doesPCPointToSVCInstruction(void)
+{
+    static const uint16_t svcMachineCodeMask = 0xff00;
+    static const uint16_t svcMachineCode = 0xdf00;
+    uint16_t              instructionWord;
+    
+    __try
+    {
+        instructionWord = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        clearExceptionCode();
+        return 0;
+    }
+    
+    return ((instructionWord & svcMachineCodeMask) == svcMachineCode);
+}
+
+static void setHardwareBreakpointOnSvcHandler(void)
+{
+    Platform_SetHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1, 2);
+}
+
+static uint32_t getNvicVector(IRQn_Type irq)
+{
+    const uint32_t           nvicBaseVectorOffset = 16;
+    volatile const uint32_t* pVectors = (volatile const uint32_t*)SCB->VTOR;
+    return pVectors[irq + nvicBaseVectorOffset];
+}
+
+static void setSvcStepFlag(void)
+{
+    __mriCortexMState.flags |= CORTEXM_FLAGS_SVC_STEP;
 }
 
 static void setSingleSteppingFlag(void)
@@ -525,6 +585,10 @@ static void     cleanupIfSingleStepping(void);
 static void     restoreBasePriorityIfNeeded(void);
 static uint32_t shouldRestoreBasePriority(void);
 static void     clearRestoreBasePriorityFlag(void);
+static void     removeHardwareBreakpointOnSvcHandlerIfNeeded(void);
+static int      shouldRemoveHardwareBreakpointOnSvcHandler(void);
+static void     clearSvcStepFlag(void);
+static void     clearHardwareBreakpointOnSvcHandler(void);
 void Platform_EnteringDebugger(void)
 {
     clearMemoryFaultFlag();
@@ -571,6 +635,7 @@ static void configureHighestMpuRegionToAccessAllMemoryWithNoCaching(void)
 static void cleanupIfSingleStepping(void)
 {
     restoreBasePriorityIfNeeded();
+    removeHardwareBreakpointOnSvcHandlerIfNeeded();
     Platform_DisableSingleStep();
 }
 
@@ -592,6 +657,30 @@ static uint32_t shouldRestoreBasePriority(void)
 static void clearRestoreBasePriorityFlag(void)
 {
     __mriCortexMState.flags &= ~CORTEXM_FLAGS_RESTORE_BASEPRI;
+}
+
+static void removeHardwareBreakpointOnSvcHandlerIfNeeded(void)
+{
+    if (shouldRemoveHardwareBreakpointOnSvcHandler())
+    {
+        clearSvcStepFlag();
+        clearHardwareBreakpointOnSvcHandler();
+    }
+}
+
+static int shouldRemoveHardwareBreakpointOnSvcHandler(void)
+{
+    return __mriCortexMState.flags & CORTEXM_FLAGS_SVC_STEP;
+}
+
+static void clearSvcStepFlag(void)
+{
+    __mriCortexMState.flags &= ~CORTEXM_FLAGS_SVC_STEP;
+}
+
+static void clearHardwareBreakpointOnSvcHandler(void)
+{
+    Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1, 2);
 }
 
 
