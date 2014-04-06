@@ -770,26 +770,6 @@ static int isInstruction32Bit(uint16_t firstWordOfInstruction)
 }
 
 
-int Platform_IsCurrentInstructionHardcodedBreakpoint(void)
-{
-    static const uint16_t hardCodedBreakpointMachineCode = 0xbe00;
-    uint16_t              firstWord;
-    
-    __try
-    {
-        firstWord = getFirstHalfWordOfCurrentInstruction();
-    }
-    __catch
-    {
-        /* Will get here if PC isn't pointing to valid memory so can't be breakpoint. */
-        clearExceptionCode();
-        return 0;
-    }
-    
-    return hardCodedBreakpointMachineCode == firstWord;
-}
-
-
 int Platform_WasProgramCounterModifiedByUser(void)
 {
     return __mriCortexMState.context.PC != __mriCortexMState.originalPC;
@@ -798,6 +778,7 @@ int Platform_WasProgramCounterModifiedByUser(void)
 
 static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
+static int isInstructionHardcodedBreakpoint(uint16_t instruction);
 PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
 {
     uint16_t currentInstruction;
@@ -817,6 +798,8 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
         return MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
     else if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL;
+    else if (isInstructionHardcodedBreakpoint(currentInstruction))
+        return MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT;
     else
         return MRI_PLATFORM_INSTRUCTION_OTHER;
 }
@@ -833,6 +816,13 @@ static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
     static const uint16_t newlibSemihostBreakpointMachineCode = 0xbeff;
 
     return (newlibSemihostBreakpointMachineCode == instruction);
+}
+
+static int isInstructionHardcodedBreakpoint(uint16_t instruction)
+{
+    static const uint16_t hardCodedBreakpointMachineCode = 0xbe00;
+
+    return (hardCodedBreakpointMachineCode == instruction);
 }
 
 

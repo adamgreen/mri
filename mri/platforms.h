@@ -56,7 +56,6 @@ int       __mriPlatform_IsSingleStepping(void);
 uint32_t  __mriPlatform_GetProgramCounter(void);
 void      __mriPlatform_SetProgramCounter(uint32_t newPC);
 void      __mriPlatform_AdvanceProgramCounterToNextInstruction(void);
-int       __mriPlatform_IsCurrentInstructionHardcodedBreakpoint(void);
 int       __mriPlatform_WasProgramCounterModifiedByUser(void);
 int       __mriPlatform_WasMemoryFaultEncountered(void);
 
@@ -85,7 +84,8 @@ typedef enum
 {
     MRI_PLATFORM_INSTRUCTION_OTHER = 0,
     MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL,
-    MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL
+    MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL,
+    MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT,
 }  PlatformInstructionType;
 
 typedef struct
@@ -131,7 +131,6 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_GetProgramCounter                          __mriPlatform_GetProgramCounter
 #define Platform_SetProgramCounter                          __mriPlatform_SetProgramCounter
 #define Platform_AdvanceProgramCounterToNextInstruction     __mriPlatform_AdvanceProgramCounterToNextInstruction
-#define Platform_IsCurrentInstructionHardcodedBreakpoint    __mriPlatform_IsCurrentInstructionHardcodedBreakpoint
 #define Platform_WasProgramCounterModifiedByUser            __mriPlatform_WasProgramCounterModifiedByUser
 #define Platform_WasMemoryFaultEncountered                  __mriPlatform_WasMemoryFaultEncountered
 #define Platform_WriteTResponseRegistersToBuffer            __mriPlatform_WriteTResponseRegistersToBuffer

@@ -21,7 +21,8 @@
 #include "cmd_continue.h"
 
 
-static int  shouldSkipHardcodedBreakpoint(void);
+static int shouldSkipHardcodedBreakpoint(void);
+static int isCurrentInstructionHardcodedBreakpoint(void);
 /* Handle the 'c' command which is sent from gdb to tell the debugger to continue execution of the currently halted
    program.
    
@@ -57,6 +58,10 @@ uint32_t HandleContinueCommand(void)
 
 static int shouldSkipHardcodedBreakpoint(void)
 {
-    return !Platform_WasProgramCounterModifiedByUser() && Platform_IsCurrentInstructionHardcodedBreakpoint();
+    return !Platform_WasProgramCounterModifiedByUser() && isCurrentInstructionHardcodedBreakpoint();
 }
 
+static int isCurrentInstructionHardcodedBreakpoint(void)
+{
+    return Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT;
+}
