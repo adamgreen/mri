@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "platforms.h"
-#include "../../architectures/cortex-m/debug_cm3.h"
+#include "../../architectures/armv7-m/debug_cm3.h"
 #include "lpc176x.h"
 
 

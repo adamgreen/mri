@@ -38,7 +38,7 @@ TARGET=$(OUTDIR)/$(PROJECT).ar
 CSRCS = $(wildcard *.c)
 ASRCS =  $(wildcard *.S)
 
-PLAT_CSRCS = platforms/architectures/cortex-m/cortex-m.c
+PLAT_CSRCS = platforms/architectures/armv7-m/armv7-m.c
 PLAT_CSRCS += platforms/memory/native/native-mem.c
 PLAT_CSRCS += platforms/devices/lpc176x/lpc176x_uart.c
 PLAT_CSRCS += platforms/devices/lpc176x/lpc176x.c
@@ -47,7 +47,7 @@ PLAT_CSRCS += platforms/semihost/semihost.c
 PLAT_CSRCS += platforms/semihost/newlib/semihost_newlib.c
 PLAT_CSRCS += platforms/semihost/mbed/semihost_mbed.c
 
-PLAT_ASRCS = platforms/architectures/cortex-m/cortex-m_asm.S
+PLAT_ASRCS = platforms/architectures/armv7-m/armv7-m_asm.S
 PLAT_ASRCS += platforms/boards/mbed1768/mbed1768_asm.S
 PLAT_ASRCS += platforms/semihost/newlib/newlib_asm.S
 

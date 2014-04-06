@@ -17,7 +17,7 @@
 #include <string.h>
 #include <platforms.h>
 #include <try_catch.h>
-#include "../../architectures/cortex-m/debug_cm3.h"
+#include "../../architectures/armv7-m/debug_cm3.h"
 #include "../../devices/lpc176x/lpc176x.h"
 #include "mbed1768_asm.h"
 #include "mbed1768.h"

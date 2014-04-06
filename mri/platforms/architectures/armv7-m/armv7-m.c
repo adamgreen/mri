@@ -19,7 +19,7 @@
 #include <platforms.h>
 #include <gdb_console.h>
 #include "debug_cm3.h"
-#include "cortex-m.h"
+#include "armv7-m.h"
 
 /* Fake stack used when task encounters stacking/unstacking fault. */
 const uint32_t  __mriCortexMFakeStack[8] = { 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD,

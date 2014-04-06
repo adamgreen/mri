@@ -18,7 +18,7 @@
     .code 16
     .syntax unified
     
-    #include "cortex-m.h"
+    #include "armv7-m.h"
 
     .equ CFSR,                   0xE000ED28
     .equ CFSR_STACK_ERROR_BITS,  0x00001818

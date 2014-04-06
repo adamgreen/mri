@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <LPC17xx.h>
 #include <try_catch.h>
-#include "cortex-m.h"
+#include "armv7-m.h"
 
 /* Data Watchpoint and Trace Registers */
 typedef struct
