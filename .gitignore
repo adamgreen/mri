@@ -1,6 +1,7 @@
 .DS_Store
 *.o
 *.ar
+*_tests.txt
 CppUTest/CppUTest_tests
 CppUTest/lib/libCppUTest.a
 CppUTest/objs/
@@ -10,3 +11,4 @@ tests/mri/
 tests/mri_tests
 drop/
 mri/obj
+gcov/
