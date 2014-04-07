@@ -31,10 +31,10 @@ CPPUTEST_USE_VPATH = Y
 SRC_DIRS =                                      \
 	../mri                                      \
 	../mri/platforms/memory/native              \
+	mocks                                       \
 
-TEST_SRC_DIRS = \
-	tests \
-	mocks \
+TEST_SRC_DIRS =                                 \
+	tests                                       \
 	
 INCLUDE_DIRS =\
   $(CPPUTEST_HOME)/include          \
