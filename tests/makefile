@@ -26,6 +26,8 @@ CPPUTEST_CFLAGS += -std=c99
 CPPUTEST_CFLAGS += -Wextra 
 CPPUTEST_CFLAGS += -Wstrict-prototypes
 
+CPPUTEST_USE_VPATH = Y
+
 SRC_DIRS =                                      \
 	../mri                                      \
 	../mri/platforms/memory/native              \
