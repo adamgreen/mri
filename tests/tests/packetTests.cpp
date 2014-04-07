@@ -185,4 +185,3 @@ TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
     tryPacketSend();
     CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("$OK#9a") );
 }
-   

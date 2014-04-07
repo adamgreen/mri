@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -15,6 +15,9 @@
 */
 #ifndef _PLATFORM_MOCK_H_
 #define _PLATFORM_MOCK_H_
+
+void        platformMock_Init(void);
+void        platformMock_Uninit(void);
 
 void        platformMock_CommInitReceiveData(const char* pDataToReceive);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);

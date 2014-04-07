@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -29,51 +29,36 @@ extern "C"
 
 TEST_GROUP(Mri)
 {
-    int     m_exceptionThrown;
-    int     m_expectExceptionToBeThrown;            
+    int     m_expectException;            
     
     void setup()
     {
-        m_exceptionThrown = 0;
-        m_expectExceptionToBeThrown = 0;
-        platformMock_ClearDisableSingleStepCount();
+        m_expectException = noException;
+        platformMock_Init();
     }
 
     void teardown()
     {
-        LONGS_EQUAL ( m_expectExceptionToBeThrown, m_exceptionThrown );
+        LONGS_EQUAL ( m_expectException, getExceptionCode() );
         clearExceptionCode();
-        platformMock_SetInitException(noException);
-        platformMock_CommSetShareFlag(0);
-    }
-    
-    void tryMriInit(const char* pDebuggerParameters)
-    {
-        __try
-            __mriInit(pDebuggerParameters);
-        __catch
-            m_exceptionThrown = 1;
     }
     
     void validateExceptionCode(int expectedExceptionCode)
     {
-        m_expectExceptionToBeThrown = 1;
+        m_expectException = expectedExceptionCode;
         LONGS_EQUAL ( expectedExceptionCode, getExceptionCode() );
     }
 };
 
 TEST(Mri, __mriInit_MakeSureThatItCallsMriPlatformInit)
 {
-    platformMock_ClearInitCount();
-    
-    tryMriInit("MRI_UART_MBED_USB");
-    
+    __mriInit("MRI_UART_MBED_USB");
     LONGS_EQUAL( 1, platformMock_GetInitCount() );
 }
 
 TEST(Mri, __mriInit_MakeSureThatItPassesTokenizedStringIntoMriPlatformInit)
 {
-    tryMriInit("MRI_UART_MBED_USB MRI_UART_SHARE");
+    __mriInit("MRI_UART_MBED_USB MRI_UART_SHARE");
     
     Token* pInitTokens = platformMock_GetInitTokenCopy();
     LONGS_EQUAL( 2, Token_GetTokenCount(pInitTokens) );
@@ -83,25 +68,16 @@ TEST(Mri, __mriInit_MakeSureThatItPassesTokenizedStringIntoMriPlatformInit)
 
 TEST(Mri, __mriInit_MakeSureThatItSetsProperFlagsOnSuccessfulInit)
 {
-    tryMriInit("MRI_UART_MBED_USB");
-    CHECK_TRUE( IsWaitingForGdbToConnect() );
+    __mriInit("MRI_UART_MBED_USB");
     CHECK_TRUE( IsFirstException() );
     CHECK_TRUE( WasSuccessfullyInit() );
 }
 
-TEST(Mri, __mriInit_MriPlatformInitThrows)
+TEST(Mri, __mriInit_HandlesMriPlatformInitThrowingException)
 {
     platformMock_SetInitException(timeoutException);
-    tryMriInit("MRI_UART_MBED_USB");
+    __mriInit("MRI_UART_MBED_USB");
     validateExceptionCode(timeoutException);
-    LONGS_EQUAL( 0 , platformMock_GetDisableSingleStepCount() );
-    CHECK_FALSE( IsWaitingForGdbToConnect() );
     CHECK_FALSE( IsFirstException() );
     CHECK_FALSE( WasSuccessfullyInit() );
-}
-
-TEST(Mri, __mriInit_mriPlatformCommIsSharedWithApplicationReturnTrue)
-{
-    platformMock_CommSetShareFlag(1);
-    tryMriInit("MRI_UART_MBED_USB MRI_UART_SHARE");
 }

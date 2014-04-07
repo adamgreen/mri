@@ -64,8 +64,8 @@ extern int errno;
 
 /* These two routines can be provided by the debuggee to get notified on debugger entry/exit.  Can be used to safely
    turn off some external hardware so that it doesn't keep running while sitting at a breakpoint. */
-void __mriPlatform_EnteringDebuggerHook(void) __attribute((weak));
-void __mriPlatform_LeavingDebuggerHook(void) __attribute((weak));
+void __mriPlatform_EnteringDebuggerHook(void) __attribute__((weak));
+void __mriPlatform_LeavingDebuggerHook(void) __attribute__((weak));
 #define Platform_EnteringDebuggerHook __mriPlatform_EnteringDebuggerHook
 #define Platform_LeavingDebuggerHook  __mriPlatform_LeavingDebuggerHook
 

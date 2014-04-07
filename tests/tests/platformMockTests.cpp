@@ -32,15 +32,14 @@ TEST_GROUP(platformMock)
     
     void setup()
     {
-        clearExceptionCode();
+        platformMock_Init();
         Token_Init(&m_token);
     }
 
     void teardown()
     {
         LONGS_EQUAL( noException , getExceptionCode() );
-        platformMock_CommUninitTransmitDataBuffer();
-        platformMock_SetInitException(noException);
+        platformMock_Uninit();
         clearExceptionCode();
     }
 
@@ -204,12 +203,4 @@ TEST(platformMock, platformMockInit_GetInitTokenCopy)
     
     Token* pTokenCopy = platformMock_GetInitTokenCopy();
     validateTokenCopy(pTokenCopy);
-}
-
-TEST(platformMock, platformMock_GetDisableSingleStepCount)
-{
-    platformMock_ClearDisableSingleStepCount();
-    LONGS_EQUAL( 0, platformMock_GetDisableSingleStepCount() );
-    Platform_DisableSingleStep();
-    LONGS_EQUAL( 1, platformMock_GetDisableSingleStepCount() );
 }
