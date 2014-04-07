@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -731,8 +731,8 @@ static __INLINE void setMPUControlValue(uint32_t newControlValue)
         return;
     
     MPU->CTRL = newControlValue;
-    __mriDSB();
-    __mriISB();
+    __DSB();
+    __ISB();
 }
 
 static __INLINE void disableMPU(void)
@@ -741,8 +741,8 @@ static __INLINE void disableMPU(void)
         return;
     
     MPU->CTRL &= ~MPU_CTRL_ENABLE;
-    __mriDSB();
-    __mriISB();
+    __DSB();
+    __ISB();
 }
 
 static __INLINE void enableMPU(void)
@@ -751,8 +751,8 @@ static __INLINE void enableMPU(void)
         return;
     
     MPU->CTRL |= MPU_CTRL_ENABLE;
-    __mriDSB();
-    __mriISB();
+    __DSB();
+    __ISB();
 }
 
 static __INLINE void enableMPUWithHardAndNMIFaults(void)
@@ -761,8 +761,8 @@ static __INLINE void enableMPUWithHardAndNMIFaults(void)
         return;
     
     MPU->CTRL |= MPU_CTRL_ENABLE | MPU_CTRL_HFNMIENA;
-    __mriDSB();
-    __mriISB();
+    __DSB();
+    __ISB();
 }
 
 static __INLINE int prepareToAccessMPURegion(uint32_t regionNumber)
@@ -813,7 +813,7 @@ static __INLINE uint32_t getMPURegionAttributeAndSize(void)
 
 static __INLINE uint32_t getCurrentlyExecutingExceptionNumber(void)
 {
-    return (__mriGetIPSR() & 0xFF);
+    return (__get_IPSR() & 0xFF);
 }
 
 

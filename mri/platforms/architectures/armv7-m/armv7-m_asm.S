@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -25,52 +25,16 @@
     .equ CFSR_BUS_IMPRECISE_BIT, 0x00000400
     .equ PSR_STACK_ALIGN,        0x00000200
     
-    .global __mriGetIPSR
+    .global __mriARMv7MAsmInit
+    .type __mriARMv7MAsmInit, function
     .thumb_func
-    /* extern "C" uint32_t __mriGetIPSR(void)
-       Returns the current value of the IPSR register.
+    /* extern "C" void __mriARMv7MAsmInit(void);
+       This routine is called when ARMv7-M platform code is used by MRI.  It does nothing but just return
+       because its main purpose is to make sure that the linker pulls in this object file.
     */
-__mriGetIPSR:
-    mrs     r0, ipsr
-    bx      lr
-    
-    
-    .global __mriSetBASEPRI
-    .thumb_func
-    /* extern "C" void __mriSetBASEPRI(uint32_t BasePriority)
-       Sets the BASEPRI register.
-    */
-__mriSetBASEPRI:
-    msr     basepri, r0
-    bx      lr
-    
-    
-    .global __mriGetBASEPRI
-    .thumb_func
-    /* extern "C" uint32_t __mriGetBASEPRI(void)
-       Gets the BASEPRI register.
-    */
-__mriGetBASEPRI:
-    mrs     r0, basepri
-    bx      lr
-    
-    .global __mriDSB
-    .thumb_func
-    /* extern "C" void __mriDSB(void)
-        Data synchronization barrier.
-    */
-__mriDSB:
-    dsb
+__mriARMv7MAsmInit:
     bx      lr
 
-    .global __mriISB
-    .thumb_func
-    /* extern "C" void __mriISB(void)
-        Instruction synchronization barrier.
-    */
-__mriISB:
-    isb
-    bx      lr
 
     /* Saves task SP in R1 and g_MriTaskSP before saving context and calling main mri debugger entry point. */
 mriExceptionHandler:

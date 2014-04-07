@@ -9,6 +9,9 @@
 
 #include "cmsis.h"
 
+#define NVIC_NUM_VECTORS      (16 + 33)
+#define NVIC_USER_IRQ_OFFSET  16
+
 #ifdef __cplusplus
 extern "C" {
 #endif

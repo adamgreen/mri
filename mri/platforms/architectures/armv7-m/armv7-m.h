@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -97,11 +97,7 @@ typedef struct
 extern CortexMState     __mriCortexMState;
 extern const uint32_t   __mriCortexMFakeStack[8];
 
-uint32_t __mriGetIPSR(void);
-void     __mriSetBASEPRI(uint32_t basePriority);
-uint32_t __mriGetBASEPRI(void);
-void     __mriDSB(void);
-void     __mriISB(void);
+void     __mriARMv7MAsmInit(void);
 
 void     __mriCortexMInit(Token* pParameterTokens);
 

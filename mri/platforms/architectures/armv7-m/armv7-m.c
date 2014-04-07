@@ -92,6 +92,7 @@ void __mriCortexMInit(Token* pParameterTokens)
 {
     (void)pParameterTokens;
     
+    __mriARMv7MAsmInit();
     clearState();
     configureDWTandFPB();    
     defaultSvcAndSysTickInterruptsToPriority1();
@@ -222,7 +223,7 @@ static void recordCurrentBasePriorityAndSwitchToPriority1(void)
 {
     if (!doesPCPointToBASEPRIUpdateInstruction())
         recordCurrentBasePriority();
-    __mriSetBASEPRI(calculateBasePriorityForThisCPU(1));
+    __set_BASEPRI(calculateBasePriorityForThisCPU(1));
 }
 
 static int doesPCPointToBASEPRIUpdateInstruction(void)
@@ -292,7 +293,7 @@ static int isSecondHalfWordOfMSR_BASEPRI_MAX(uint16_t instructionHalfWord1)
 
 static void recordCurrentBasePriority(void)
 {
-    __mriCortexMState.originalBasePriority = __mriGetBASEPRI();
+    __mriCortexMState.originalBasePriority = __get_BASEPRI();
     setRestoreBasePriorityFlag();
 }
 
@@ -644,7 +645,7 @@ static void restoreBasePriorityIfNeeded(void)
     if (shouldRestoreBasePriority())
     {
         clearRestoreBasePriorityFlag();
-        __mriSetBASEPRI(__mriCortexMState.originalBasePriority);
+        __set_BASEPRI(__mriCortexMState.originalBasePriority);
         __mriCortexMState.originalBasePriority = 0;
     }
 }
@@ -849,7 +850,7 @@ int Platform_WasMemoryFaultEncountered(void)
 {
     int wasFaultEncountered;
     
-    __mriDSB();
+    __DSB();
     wasFaultEncountered = __mriCortexMState.flags & CORTEXM_FLAGS_FAULT_DURING_DEBUG;
     clearMemoryFaultFlag();
     
