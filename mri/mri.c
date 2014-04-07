@@ -36,7 +36,6 @@
 #include "cmd_break_watch.h"
 #include "cmd_step.h"
 #include "memory.h"
-#include <mriTests.h>
 
 
 typedef struct

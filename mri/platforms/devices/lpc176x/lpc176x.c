@@ -20,7 +20,6 @@
 #include "../../architectures/armv7-m/debug_cm3.h"
 #include "lpc176x_uart.h"
 #include "lpc176x.h"
-#include <lpc176xTests.h>
 
 
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"

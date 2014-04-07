@@ -74,11 +74,6 @@ typedef struct
 #define FPB             ((FPB_Type*) FPB_BASE)
 #define FPB_COMP_ARRAY  ((uint32_t*) FPB_COMP_BASE)
 
-
-/* Give unit test mocks an attempt to get in and redefine locations for peripheral registers. */
-#include <debug_cm3MockPre.h>
-
-
 /* Debug Halting Control and Status Register Bits */
 /*  Enable halt mode debug.  If set to 1 then JTAG debugging is being used. */
 #define CoreDebug_DHCSR_C_DEBUGEN   (1 << 0)
@@ -875,10 +870,6 @@ static __INLINE int has10MillisecondSysTickExpired(void)
 /* Program Status Register Bits. */
 /*  Was the stack 8-byte aligned during auto stacking. */
 #define PSR_STACK_ALIGN     (1 << 9)
-
-
-/* Give unit test mocks an attempt to define things differently when unit testing. */
-#include <debug_cm3MockPost.h>
 
 
 #endif /* _DEBUG_CM3_H_ */
