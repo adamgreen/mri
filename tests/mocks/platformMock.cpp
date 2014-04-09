@@ -88,6 +88,7 @@ static int         g_commShouldWaitForGdbConnect;
 static int         g_commIsWaitingForGdbToConnect;
 static int         g_commWaitForReceiveDataToStopCount;
 static int         g_commPrepareToWaitForGdbConnectionCount;
+static int         g_commSharingWithApplication;
 
 void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
@@ -215,6 +216,11 @@ int platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void)
     return g_commPrepareToWaitForGdbConnectionCount;
 }
 
+void platformMock_SetCommSharingWithApplication(int setValue)
+{
+    g_commSharingWithApplication = setValue;
+}
+
 // Platform_Comm* stubs called by MRI core.
 uint32_t Platform_CommHasReceiveData(void)
 {
@@ -290,6 +296,11 @@ void __mriPlatform_CommWaitForReceiveDataToStop(void)
 void __mriPlatform_CommPrepareToWaitForGdbConnection(void)
 {
     g_commPrepareToWaitForGdbConnectionCount++;
+}
+
+int __mriPlatform_CommSharingWithApplication(void)
+{
+    return g_commSharingWithApplication;
 }
 
 
@@ -402,6 +413,7 @@ void platformMock_Init(void)
     g_commIsWaitingForGdbToConnect = 0;
     g_commWaitForReceiveDataToStopCount = 0;
     g_commPrepareToWaitForGdbConnectionCount = 0;
+    g_commSharingWithApplication = FALSE;
     g_initCount = 0;
     g_enteringDebuggerCount = 0;
     g_leavingDebuggerCount = 0;

@@ -387,3 +387,14 @@ TEST(platformMock, Platform_GetPacketBufferSize_SetSmallSize)
     platformMock_SetPacketBufferSize(2);
     CHECK_EQUAL (2, Platform_GetPacketBufferSize() );
 }
+
+TEST(platformMock, Platform_CommSharingWithApplication_DefaultsToFalse)
+{
+    CHECK_FALSE ( Platform_CommSharingWithApplication() );
+}
+
+TEST(platformMock, Platform_CommSharingWithApplication_SetToReturnTrue)
+{
+    platformMock_SetCommSharingWithApplication(1);
+    CHECK_TRUE ( Platform_CommSharingWithApplication() );
+}

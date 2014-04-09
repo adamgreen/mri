@@ -16,6 +16,8 @@
 #ifndef _PLATFORM_MOCK_H_
 #define _PLATFORM_MOCK_H_
 
+#include <token.h>
+
 void        platformMock_Init(void);
 void        platformMock_Uninit(void);
 
@@ -28,6 +30,7 @@ void        platformMock_CommSetShouldWaitForGdbConnect(int setValue);
 void        platformMock_CommSetIsWaitingForGdbToConnectIterations(int iterations);
 int         platformMock_GetCommWaitForReceiveDataToStopCalls(void);
 int         platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void);
+void        platformMock_SetCommSharingWithApplication(int setValue);
 
 void        platformMock_SetInitException(int exceptionToThrow);
 int         platformMock_GetInitCount(void);
