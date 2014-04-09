@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -18,6 +18,7 @@
 extern "C"
 {
 #include "platforms.h"
+#include "semihost.h"
 #include "try_catch.h"
 #include "token.h"
 }
@@ -134,6 +135,62 @@ TEST(platformMock, platformMock_CommReceiveEmptyGdbPacket)
     CHECK( 0 == memcmp(emptyGdbPacket, buffer, strlen(emptyGdbPacket)) );
 }
 
+TEST(platformMock, platformMock_CommReceive_TwoGdbPackets)
+{
+    static const char packet1[] = "$packet1#00";
+    static const char packet2[] = "$packet2#ff";
+    char              buffer[16];
+    char*             p = buffer;
+    
+    platformMock_CommInitReceiveData(packet1, packet2);
+    
+    while (Platform_CommHasReceiveData())
+    {
+        *p++ = (char)Platform_CommReceiveChar();
+    }
+    LONGS_EQUAL ( strlen(packet1), (p - buffer) );
+    CHECK( 0 == memcmp(packet1, buffer, strlen(packet1)) );
+
+    p = buffer;
+    while (Platform_CommHasReceiveData())
+    {
+        *p++ = (char)Platform_CommReceiveChar();
+    }
+    LONGS_EQUAL ( strlen(packet2), (p - buffer) );
+    CHECK( 0 == memcmp(packet2, buffer, strlen(packet2)) );
+
+    CHECK_FALSE( Platform_CommHasReceiveData() );
+}
+
+TEST(platformMock, platformMock_CommReceive_TwoGdbPacketsWithCalculatedCRC)
+{
+    static const char packet1[] = "$packet1#";
+    static const char packet2[] = "$packet2#";
+    static const char checksummedPacket1[] = "$packet1#a9";
+    static const char checksummedPacket2[] = "$packet2#aa";
+    char              buffer[16];
+    char*             p = buffer;
+    
+    platformMock_CommInitReceiveChecksummedData(packet1, packet2);
+    
+    while (Platform_CommHasReceiveData())
+    {
+        *p++ = (char)Platform_CommReceiveChar();
+    }
+    LONGS_EQUAL ( strlen(checksummedPacket1), (p - buffer) );
+    CHECK( 0 == memcmp(checksummedPacket1, buffer, strlen(checksummedPacket1)) );
+
+    p = buffer;
+    while (Platform_CommHasReceiveData())
+    {
+        *p++ = (char)Platform_CommReceiveChar();
+    }
+    LONGS_EQUAL ( strlen(checksummedPacket2), (p - buffer) );
+    CHECK( 0 == memcmp(checksummedPacket2, buffer, strlen(checksummedPacket2)) );
+
+    CHECK_FALSE( Platform_CommHasReceiveData() );
+}
+
 TEST(platformMock, TransmitAndCapture1Byte)
 {
     platformMock_CommInitTransmitDataBuffer(2);
@@ -189,7 +246,6 @@ TEST(platformMock, platformMockInit_ThrowException)
 
 TEST(platformMock, platformMockInit_GetCallCount)
 {
-    platformMock_ClearInitCount();
     LONGS_EQUAL( 0, platformMock_GetInitCount() );
     Platform_Init(&m_token);
     LONGS_EQUAL( 1, platformMock_GetInitCount() );
@@ -203,4 +259,131 @@ TEST(platformMock, platformMockInit_GetInitTokenCopy)
     
     Token* pTokenCopy = platformMock_GetInitTokenCopy();
     validateTokenCopy(pTokenCopy);
+}
+
+TEST(platformMock, Platform_CommCausedInterruptReturnsFalseByDefault)
+{
+    CHECK_FALSE( Platform_CommCausedInterrupt() );
+}
+
+TEST(platformMock, Platform_CommCausedInterruptReturnsTrueAfterSettingInMock)
+{
+    platformMock_CommSetInterruptBit(1);
+    CHECK_TRUE( Platform_CommCausedInterrupt() );
+}
+
+TEST(platformMock, Platform_CommCausedInterruptReturnsFalseAfterClearing)
+{
+    platformMock_CommSetInterruptBit(1);
+    CHECK_TRUE( Platform_CommCausedInterrupt() );
+    Platform_CommClearInterrupt();
+    CHECK_FALSE( Platform_CommCausedInterrupt() );
+}
+
+TEST(platformMock, Platform_EnteringDebugger_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetEnteringDebuggerCalls() );
+        Platform_EnteringDebugger();
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+        Platform_EnteringDebugger();
+    CHECK_EQUAL( 2, platformMock_GetEnteringDebuggerCalls() );
+}
+
+TEST(platformMock, Platform_LeavingDebugger_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetLeavingDebuggerCalls() );
+        Platform_LeavingDebugger();
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+        Platform_LeavingDebugger();
+    CHECK_EQUAL( 2, platformMock_GetLeavingDebuggerCalls() );
+}
+
+TEST(platformMock, Platform_CommShouldWaitForGdbConnect_ReturnsFalseByDefault)
+{
+    CHECK_FALSE( Platform_CommShouldWaitForGdbConnect() );
+}
+
+TEST(platformMock, Platform_CommShouldWaitForGdbConnect_ReturnsTrueAfterSettingInMock)
+{
+    CHECK_FALSE( Platform_CommShouldWaitForGdbConnect() );
+        platformMock_CommSetShouldWaitForGdbConnect(1);
+    CHECK_TRUE( Platform_CommShouldWaitForGdbConnect() );
+}
+
+TEST(platformMock, Platform_CommIsWaitingForGdbToConnect_ReturnsFalseByDefault)
+{
+    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
+}
+
+TEST(platformMock, Platform_CommIsWaitingForGdbToConnect_ReturnsTrueDefinedNumberOfTimes)
+{
+    platformMock_CommSetIsWaitingForGdbToConnectIterations(2);
+    CHECK_TRUE( Platform_CommIsWaitingForGdbToConnect() );
+    CHECK_TRUE( Platform_CommIsWaitingForGdbToConnect() );
+    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
+    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
+}
+
+TEST(platformMock, Platform_CommWaitForReceiveDataToStop_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+        Platform_CommWaitForReceiveDataToStop();
+    CHECK_EQUAL( 1, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+        Platform_CommWaitForReceiveDataToStop();
+    CHECK_EQUAL( 2, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+}
+
+TEST(platformMock, Platform_CommPrepareToWaitForGdbConnection_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+        Platform_CommPrepareToWaitForGdbConnection();
+    CHECK_EQUAL( 1, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+        Platform_CommPrepareToWaitForGdbConnection();
+    CHECK_EQUAL( 2, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+}
+
+TEST(platformMock, Semihost_HandleSemihostRequest_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
+        CHECK_TRUE( Semihost_HandleSemihostRequest() );
+    CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
+        CHECK_TRUE( Semihost_HandleSemihostRequest() );
+    CHECK_EQUAL( 2, platformMock_GetHandleSemihostRequestCalls() );
+}
+
+TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsTrueByDefault)
+{
+    CHECK_TRUE( Semihost_IsDebuggeeMakingSemihostCall() );
+}
+
+TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsFalseAfterSettingMock)
+{
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    CHECK_FALSE( Semihost_IsDebuggeeMakingSemihostCall() );
+}
+
+TEST(platformMock, Platform_DisplayFaultCauseToGdbConsole_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+        Platform_DisplayFaultCauseToGdbConsole();
+    CHECK_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+        Platform_DisplayFaultCauseToGdbConsole();
+    CHECK_EQUAL( 2, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+}
+
+TEST(platformMock, Platform_GetPacketBuffer_DefaultNoReturnNull)
+{
+    CHECK_TRUE ( Platform_GetPacketBuffer() != NULL );
+}
+
+TEST(platformMock, Platform_GetPacketBufferSize_DefaultFitsARMContext)
+{
+    static const uint32_t expectedSize = 1 + 17 * sizeof(uint32_t) * 2;
+    CHECK_EQUAL (expectedSize, Platform_GetPacketBufferSize() );
+}
+
+TEST(platformMock, Platform_GetPacketBufferSize_SetSmallSize)
+{
+    platformMock_SetPacketBufferSize(2);
+    CHECK_EQUAL (2, Platform_GetPacketBufferSize() );
 }

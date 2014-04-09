@@ -45,7 +45,7 @@ TEST_GROUP(Packet)
     void teardown()
     {
         validateNoExceptionThrown();
-        platformMock_CommUninitTransmitDataBuffer();
+        platformMock_Uninit();
         free(m_pCharacterArray);
     }
     

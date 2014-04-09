@@ -19,18 +19,28 @@
 void        platformMock_Init(void);
 void        platformMock_Uninit(void);
 
-void        platformMock_CommInitReceiveData(const char* pDataToReceive);
+void        platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
+void        platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
-void        platformMock_CommUninitTransmitDataBuffer(void);
 int         platformMock_CommDoesTransmittedDataEqual(const char* thisString);
-void        platformMock_CommSetShareFlag(int flag);
+void        platformMock_CommSetInterruptBit(int setValue);
+void        platformMock_CommSetShouldWaitForGdbConnect(int setValue);
+void        platformMock_CommSetIsWaitingForGdbToConnectIterations(int iterations);
+int         platformMock_GetCommWaitForReceiveDataToStopCalls(void);
+int         platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void);
 
 void        platformMock_SetInitException(int exceptionToThrow);
-void        platformMock_ClearInitCount(void);
 int         platformMock_GetInitCount(void);
 Token*      platformMock_GetInitTokenCopy(void);
 
-void        platformMock_ClearDisableSingleStepCount(void);
-int         platformMock_GetDisableSingleStepCount(void);
+int         platformMock_GetEnteringDebuggerCalls(void);
+int         platformMock_GetLeavingDebuggerCalls(void);
+
+void        platformMock_SetIsDebuggeeMakingSemihostCall(int setValue);
+int         platformMock_GetHandleSemihostRequestCalls(void);
+
+int         platformMock_DisplayFaultCauseToGdbConsoleCalls(void);
+
+void        platformMock_SetPacketBufferSize(uint32_t setValue);
 
 #endif /* _PLATFORM_MOCK_H_ */

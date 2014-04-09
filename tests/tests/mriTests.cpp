@@ -20,6 +20,9 @@ extern "C"
 #include <mri.h>
 #include <core.h>
 #include <token.h>
+#include <platforms.h>
+
+void __mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -41,6 +44,7 @@ TEST_GROUP(Mri)
     {
         LONGS_EQUAL ( m_expectException, getExceptionCode() );
         clearExceptionCode();
+        platformMock_Uninit();
     }
     
     void validateExceptionCode(int expectedExceptionCode)
@@ -80,4 +84,124 @@ TEST(Mri, __mriInit_HandlesMriPlatformInitThrowingException)
     validateExceptionCode(timeoutException);
     CHECK_FALSE( IsFirstException() );
     CHECK_FALSE( WasSuccessfullyInit() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldJustClearCommInterruptAndReturnWithoutEnteringDebuggerIfInterruptActiveAndNoData)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_CommInitReceiveData("");
+    platformMock_CommSetInterruptBit(1);
+        __mriDebugException();
+    CHECK_FALSE( Platform_CommCausedInterrupt() );
+    CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 0, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 0, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_TRUE( IsFirstException() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_NoWaitForGdbToConnect)
+{
+    __mriInit("MRI_UART_MBED_USB");
+        __mriDebugException();
+    CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_FALSE( IsFirstException() );
+    CHECK_EQUAL( 0, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+    CHECK_EQUAL( 0, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+    CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAndHaveGdbConnectOnFirstByte)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_CommSetShouldWaitForGdbConnect(1);
+    platformMock_CommInitReceiveData("+");
+        __mriDebugException();
+    CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_FALSE( IsFirstException() );
+    CHECK_EQUAL( 0, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+    CHECK_EQUAL( 0, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+    CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAndHaveGdbConnectOnFourthByte)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_CommSetShouldWaitForGdbConnect(1);
+    platformMock_CommSetIsWaitingForGdbToConnectIterations(2);
+    platformMock_CommInitReceiveData("123+");
+        __mriDebugException();
+    CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_FALSE( IsFirstException() );
+    CHECK_EQUAL( 3, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+    CHECK_EQUAL( 3, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+    CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldDumpExceptionResultAndTResponseAndParseCommands_NoWaitForGdbToConnect_SentContinueCommand)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 0, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+    CHECK_EQUAL( 0, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+    CHECK_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_FALSE( IsFirstException() );
+}
+
+TEST(Mri, __mriDebugExceptionShouldSkipExceptionDumpAndTResponseSinceWaitingForGdbToConnect_SentContinueCommand)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    platformMock_CommSetShouldWaitForGdbConnect(1);
+    platformMock_CommInitReceiveChecksummedData("123+$c#");
+        __mriDebugException();
+    CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
+    CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
+    CHECK_EQUAL( 3, platformMock_GetCommWaitForReceiveDataToStopCalls() );
+    CHECK_EQUAL( 3, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
+    CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("+") );
+    CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
+    CHECK_FALSE( IsFirstException() );
+}
+
+TEST(Mri, __mriDebugException_SentStatusAndContinueCommands)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$T05responseT#7c" "+") );
+}
+
+TEST(Mri, __mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    platformMock_CommInitReceiveChecksummedData("+$*#", "+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$#00" "+") );
+}
+
+
+TEST(Mri, __mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunError)
+{
+    __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(0);
+    platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
+    platformMock_SetPacketBufferSize(11);
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$" MRI_ERROR_BUFFER_OVERRUN "#a9" 
+                                                           "+$" MRI_ERROR_BUFFER_OVERRUN "#a9" "+") );
 }

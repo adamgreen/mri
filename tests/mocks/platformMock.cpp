@@ -13,6 +13,7 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
+#include <assert.h>
 #include <string.h>
 
 extern "C"
@@ -21,14 +22,20 @@ extern "C"
 #include "semihost.h"
 #include "buffer.h"
 #include "try_catch.h"
+#include "hex_convert.h"
 }
 #include "platformMock.h"
 
 #define TRUE 1
 #define FALSE 0
+#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
 
 
 // Forward Function Declarations.
+static char*    allocateAndCopyChecksummedData(const char* pData);
+static size_t   countPoundSigns(const char* p);
+static void     copyChecksummedData(char* pDest, const char* pSrc);
+static void     commUninitTransmitDataBuffer();
 static uint32_t isReceiveBufferEmpty();
 static void     waitForReceiveData();
 static size_t   getTransmitDataBufferSize();
@@ -43,11 +50,6 @@ static Token g_initTokenCopy;
 void platformMock_SetInitException(int exceptionToThrow)
 {
     g_initException = exceptionToThrow;
-}
-
-void platformMock_ClearInitCount()
-{
-    g_initCount = 0;
 }
 
 int platformMock_GetInitCount()
@@ -74,24 +76,99 @@ void Platform_Init(Token* pParameterTokens)
 
 // Platform_Comm* Instrumentation
 static const char  g_emptyPacket[] = "$#00";
-static Buffer      g_receiveBuffer;
+static Buffer      g_receiveBuffers[2];
+static int         g_receiveIndex;
+static char*       g_pAlloc1;
+static char*       g_pAlloc2;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
-void platformMock_CommInitReceiveData(const char* pDataToReceive)
+static int         g_commInterruptBit;
+static int         g_commShouldWaitForGdbConnect;
+static int         g_commIsWaitingForGdbToConnect;
+static int         g_commWaitForReceiveDataToStopCount;
+static int         g_commPrepareToWaitForGdbConnectionCount;
+
+void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
-    Buffer_Init(&g_receiveBuffer, (char*)pDataToReceive, strlen(pDataToReceive));
+    Buffer_Init(&g_receiveBuffers[0], (char*)pDataToReceive1, strlen(pDataToReceive1));
+    if (pDataToReceive2)
+        Buffer_Init(&g_receiveBuffers[1], (char*)pDataToReceive2, strlen(pDataToReceive2));
+    else
+        Buffer_Init(&g_receiveBuffers[1], (char*)g_emptyPacket, strlen(g_emptyPacket));
+    g_receiveIndex = 0;
+}
+
+void platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
+{
+    g_pAlloc1 = allocateAndCopyChecksummedData(pDataToReceive1);
+    Buffer_Init(&g_receiveBuffers[0], g_pAlloc1, strlen(g_pAlloc1));
+    if (pDataToReceive2)
+    {
+        g_pAlloc2 = allocateAndCopyChecksummedData(pDataToReceive2);
+        Buffer_Init(&g_receiveBuffers[1], g_pAlloc2, strlen(g_pAlloc2));
+    }
+    else
+    {
+        Buffer_Init(&g_receiveBuffers[1], (char*)g_emptyPacket, strlen(g_emptyPacket));
+    }
+    g_receiveIndex = 0;
+}
+
+static char* allocateAndCopyChecksummedData(const char* pData)
+{
+    size_t len = strlen(pData) + 2 * countPoundSigns(pData) + 1;
+    char*  pAlloc = (char*) malloc(len);
+    copyChecksummedData(pAlloc, pData);
+    return pAlloc;
+}
+
+static size_t countPoundSigns(const char* p)
+{
+    size_t count = 0;
+    while (*p)
+    {
+        if (*p++ == '#')
+            count++;
+    }
+    return count;
+}
+
+static void copyChecksummedData(char* pDest, const char* pSrc)
+{
+    char checksum;
+    
+    while (*pSrc)
+    {
+        char curr = *pSrc++;
+        
+        *pDest++ = curr;
+        switch (curr)
+        {
+        case '$':
+            checksum = 0;
+            break;
+        case '#':
+            *pDest++ = NibbleToHexChar[EXTRACT_HI_NIBBLE(checksum)];
+            *pDest++ = NibbleToHexChar[EXTRACT_LO_NIBBLE(checksum)];
+            break;
+        default:
+            checksum += curr;
+            break;
+        }
+    }
+    *pDest++ = '\0';
 }
 
 void platformMock_CommInitTransmitDataBuffer(size_t Size)
 {
-    platformMock_CommUninitTransmitDataBuffer();
+    commUninitTransmitDataBuffer();
     g_pTransmitDataBufferStart = (char*)malloc(Size);
     g_pTransmitDataBufferCurr = g_pTransmitDataBufferStart;
     g_pTransmitDataBufferEnd = g_pTransmitDataBufferStart + Size;
 }
 
-void platformMock_CommUninitTransmitDataBuffer()
+static void commUninitTransmitDataBuffer()
 {
     free(g_pTransmitDataBufferStart);
     g_pTransmitDataBufferStart = NULL;
@@ -113,12 +190,38 @@ static size_t getTransmitDataBufferSize()
     return g_pTransmitDataBufferCurr - g_pTransmitDataBufferStart;
 }
 
+void platformMock_CommSetInterruptBit(int setValue)
+{
+    g_commInterruptBit = setValue;
+}
+
+void platformMock_CommSetShouldWaitForGdbConnect(int setValue)
+{
+    g_commShouldWaitForGdbConnect = setValue;
+}
+
+void platformMock_CommSetIsWaitingForGdbToConnectIterations(int iterations)
+{
+    g_commIsWaitingForGdbToConnect = iterations;
+}
+
+int platformMock_GetCommWaitForReceiveDataToStopCalls(void)
+{
+    return g_commWaitForReceiveDataToStopCount;
+}
+
+int platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void)
+{
+    return g_commPrepareToWaitForGdbConnectionCount;
+}
+
 // Platform_Comm* stubs called by MRI core.
 uint32_t Platform_CommHasReceiveData(void)
 {
     if (isReceiveBufferEmpty())
     {
-        Buffer_Init(&g_receiveBuffer, (char*)g_emptyPacket, strlen(g_emptyPacket));
+        if (g_receiveIndex < ARRAY_SIZE(g_receiveBuffers))
+            g_receiveIndex++;
         return 0;
     }
     
@@ -127,14 +230,16 @@ uint32_t Platform_CommHasReceiveData(void)
 
 static uint32_t isReceiveBufferEmpty()
 {
-    return (uint32_t)(Buffer_BytesLeft(&g_receiveBuffer) == 0);
+    if (g_receiveIndex >= ARRAY_SIZE(g_receiveBuffers))
+        return TRUE;
+    return (uint32_t)(Buffer_BytesLeft(&g_receiveBuffers[g_receiveIndex]) == 0);
 }
 
 int Platform_CommReceiveChar(void)
 {
     waitForReceiveData();
 
-    int character = Buffer_ReadChar(&g_receiveBuffer);
+    int character = Buffer_ReadChar(&g_receiveBuffers[g_receiveIndex]);
 
     clearExceptionCode();
 
@@ -154,79 +259,173 @@ void Platform_CommSendChar(int character)
         *g_pTransmitDataBufferCurr++ = (char)character;
 }
 
+int __mriPlatform_CommCausedInterrupt(void)
+{
+    return g_commInterruptBit;
+}
+
+void __mriPlatform_CommClearInterrupt(void)
+{
+    g_commInterruptBit = FALSE;
+}
+
+int __mriPlatform_CommShouldWaitForGdbConnect(void)
+{
+    return g_commShouldWaitForGdbConnect;
+}
+
+int __mriPlatform_CommIsWaitingForGdbToConnect(void)
+{
+    int returnValue = g_commIsWaitingForGdbToConnect;
+    if (returnValue)
+        g_commIsWaitingForGdbToConnect--;
+    return returnValue;
+}
+
+void __mriPlatform_CommWaitForReceiveDataToStop(void)
+{
+    g_commWaitForReceiveDataToStopCount++;
+}
+
+void __mriPlatform_CommPrepareToWaitForGdbConnection(void)
+{
+    g_commPrepareToWaitForGdbConnectionCount++;
+}
+
+
+
+// Instrumentation to entering and leaving of debugger.
+static int g_enteringDebuggerCount;
+static int g_leavingDebuggerCount;
+
+int platformMock_GetEnteringDebuggerCalls(void)
+{
+    return g_enteringDebuggerCount;
+}
+
+int platformMock_GetLeavingDebuggerCalls(void)
+{
+    return g_leavingDebuggerCount;
+}
+
+// Stubs called by MRI core.
+void __mriPlatform_EnteringDebugger(void)
+{
+    g_enteringDebuggerCount++;
+}
+
+void __mriPlatform_LeavingDebugger(void)
+{
+    g_leavingDebuggerCount++;
+}
+
+
+
+// Packet Buffer Instrumentation.
+// NOTE: Packet must be big enough for g/G packets to hold 16 general purpose registers + PSR with 2 hex digits per
+//       byte + 1 more byte for the g/G command character.
+static char     g_packetBuffer[1 + (16 + 1) * (sizeof(uint32_t) * 2)];
+static uint32_t g_packetBufferSize;
+
+void        platformMock_SetPacketBufferSize(uint32_t setValue)
+{
+    assert ( setValue <= sizeof(g_packetBuffer) );
+    g_packetBufferSize = setValue;
+}
+
+// Packet Buffer stubs called by MRI core.
+char* __mriPlatform_GetPacketBuffer(void)
+{
+    return g_packetBuffer;
+}
+
+uint32_t  __mriPlatform_GetPacketBufferSize(void)
+{
+    return g_packetBufferSize;
+}
+
+
+
+// Semihost Instrumentation
+static int g_isDebuggeeMakingSemihostCall;
+static int g_getHandleSemihostRequestCount;
+
+void platformMock_SetIsDebuggeeMakingSemihostCall(int setValue)
+{
+    g_isDebuggeeMakingSemihostCall = setValue;
+}
+
+int platformMock_GetHandleSemihostRequestCalls(void)
+{
+    return g_getHandleSemihostRequestCount;
+}
+
+// Semihost stubs called by MRI core.
+int __mriSemihost_IsDebuggeeMakingSemihostCall(void)
+{
+    return g_isDebuggeeMakingSemihostCall;
+}
+
+int __mriSemihost_HandleSemihostRequest(void)
+{
+    g_getHandleSemihostRequestCount++;
+    return TRUE;
+}
+
+
+
+// Fault/Exception Related Instrumentation
+static int g_displayFaultCauseToGdbConsoleCount;
+
+int platformMock_DisplayFaultCauseToGdbConsoleCalls(void)
+{
+    return g_displayFaultCauseToGdbConsoleCount;
+}
+
+// Fault/Semihost stubs called by MRI core.
+void __mriPlatform_DisplayFaultCauseToGdbConsole(void)
+{
+    g_displayFaultCauseToGdbConsoleCount++;
+}
+
 
 
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
     platformMock_CommInitReceiveData(g_emptyPacket);
+    platformMock_CommInitTransmitDataBuffer(2 * sizeof(g_packetBuffer));
     platformMock_SetInitException(noException);
-    platformMock_ClearInitCount();
     memset(&g_initTokenCopy, 0, sizeof(g_initTokenCopy));
+    g_commInterruptBit = FALSE;
+    g_commShouldWaitForGdbConnect = FALSE;
+    g_commIsWaitingForGdbToConnect = 0;
+    g_commWaitForReceiveDataToStopCount = 0;
+    g_commPrepareToWaitForGdbConnectionCount = 0;
+    g_initCount = 0;
+    g_enteringDebuggerCount = 0;
+    g_leavingDebuggerCount = 0;
+    g_isDebuggeeMakingSemihostCall = TRUE;
+    g_getHandleSemihostRequestCount = 0;
+    g_displayFaultCauseToGdbConsoleCount = 0;
+    g_packetBufferSize = sizeof(g_packetBuffer);
 }
 
 void platformMock_Uninit(void)
 {
-    platformMock_CommUninitTransmitDataBuffer();
+    free(g_pAlloc1);
+    free(g_pAlloc2);
+    g_pAlloc1 = NULL;
+    g_pAlloc2 = NULL;
+    commUninitTransmitDataBuffer();
 }
 
 
 
 // Stubs for Platform APIs that act as NOPs when called from mriCore during testing.
-char*     __mriPlatform_GetPacketBuffer(void)
-{
-    return NULL;
-}
-
-uint32_t  __mriPlatform_GetPacketBufferSize(void)
-{
-    return 0;
-}
-
-void      __mriPlatform_EnteringDebugger(void)
-{
-}
-
-void      __mriPlatform_LeavingDebugger(void)
-{
-}
-
-
-int       __mriPlatform_CommCausedInterrupt(void)
-{
-    return FALSE;
-}
-
-void      __mriPlatform_CommClearInterrupt(void)
-{
-}
-
-int       __mriPlatform_CommShouldWaitForGdbConnect(void)
-{
-    return FALSE;
-}
-
-void      __mriPlatform_CommPrepareToWaitForGdbConnection(void)
-{
-}
-
-int       __mriPlatform_CommIsWaitingForGdbToConnect(void)
-{
-    return FALSE;
-}
-
-void      __mriPlatform_CommWaitForReceiveDataToStop(void)
-{
-}
-
-
 uint8_t   __mriPlatform_DetermineCauseOfException(void)
 {
-    return 0;
-}
-
-void      __mriPlatform_DisplayFaultCauseToGdbConsole(void)
-{
+    return SIGTRAP;
 }
 
 void      __mriPlatform_EnableSingleStep(void)
@@ -257,8 +456,9 @@ int       __mriPlatform_WasMemoryFaultEncountered(void)
 }
 
 
-void      __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
+void __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
+    Buffer_WriteString(pBuffer, "responseT");
 }
 
 void      __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
@@ -315,17 +515,6 @@ PlatformInstructionType     __mriPlatform_TypeOfCurrentInstruction(void)
 
 void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
 {
-}
-
-
-int __mriSemihost_IsDebuggeeMakingSemihostCall(void)
-{
-    return 0;
-}
-
-int __mriSemihost_HandleSemihostRequest(void)
-{
-    return 0;
 }
 
 
