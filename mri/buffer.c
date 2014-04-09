@@ -37,7 +37,8 @@ void Buffer_Reset(Buffer* pBuffer)
 
 void Buffer_SetEndOfBuffer(Buffer* pBuffer)
 {
-    pBuffer->pEnd = pBuffer->pCurrent;
+    if (pBuffer->pCurrent < pBuffer->pEnd)
+        pBuffer->pEnd = pBuffer->pCurrent;
 }
 
 

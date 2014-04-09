@@ -171,6 +171,32 @@ TEST(Buffer, Buffer_SetEndOfBuffer)
     m_validateBufferLimits = 0;
 }
 
+TEST(Buffer, Buffer_SetEndOfBuffer_OnFullBuffer)
+{
+    allocateBuffer(128);
+    
+    writeSpaces(128);
+    
+    Buffer_SetEndOfBuffer(&m_buffer);
+    LONGS_EQUAL( 128, Buffer_GetLength(&m_buffer) );
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+}
+
+TEST(Buffer, Buffer_SetEndOfBuffer_OnOverflownBuffer)
+{
+    allocateBuffer(1);
+
+    __try
+        writeSpaces(2);
+    __catch
+        m_exceptionThrown = 1;
+
+    validateDepletedBufferWithOverrun();
+    Buffer_SetEndOfBuffer(&m_buffer);
+    LONGS_EQUAL( 1, Buffer_GetLength(&m_buffer) );
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+}
+
 TEST(Buffer, Buffer_GetArray)
 {
     allocateBuffer(1);
