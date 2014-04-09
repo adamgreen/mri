@@ -51,6 +51,7 @@ uint32_t HandleContinueCommand(void)
     }
     __catch
     {
+        clearExceptionCode();
     }
     
     return (returnValue | HANDLER_RETURN_RESUME_PROGRAM | HANDLER_RETURN_RETURN_IMMEDIATELY);
