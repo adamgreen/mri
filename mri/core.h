@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -64,5 +64,14 @@ void    __mriCore_GdbCommandHandlingLoop(void);
 #define GetSemihostErrno                __mriCore_GetSemihostErrno
 #define SendPacketToGdb                 __mriCore_SendPacketToGdb
 #define GdbCommandHandlingLoop          __mriCore_GdbCommandHandlingLoop
+
+/* Macro to convert 32-bit addresses sent from GDB to pointer. */
+#if _LP64
+    /* When unit testing on 64-bit, address will be from stack so grab upper 32-bit from stack address. */
+    /* NOTE: This is for unit testing only.  It would never work on real 64-bit systems. */
+    #define ADDR32_TO_POINTER(X) (void*)((size_t)(X) | ((size_t)(&pBuffer) & 0xFFFFFFFF00000000ULL))
+#else
+    #define ADDR32_TO_POINTER(X) (void*)(X)
+#endif /* _LP64 */
 
 #endif /* _CORE_H_ */

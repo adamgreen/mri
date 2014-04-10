@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -48,7 +48,7 @@ uint32_t HandleMemoryReadCommand(void)
     }
 
     InitBuffer();
-    ReadMemoryIntoHexBuffer(pBuffer, (void *)(size_t)addressLength.address, addressLength.length);
+    ReadMemoryIntoHexBuffer(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length);
 
     return 0;
 }
@@ -79,16 +79,22 @@ uint32_t HandleMemoryWriteCommand(void)
         return 0;
     }
     
-    if (WriteHexBufferToMemory(pBuffer, (void *)(size_t)addressLength.address, addressLength.length))
+    if (WriteHexBufferToMemory(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length))
+    {
         PrepareStringResponse("OK");
+    }
     else
-        PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
+    {
+        if (Buffer_OverrunDetected(pBuffer))
+            PrepareStringResponse( MRI_ERROR_BUFFER_OVERRUN);
+        else
+            PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
+    }
 
     return 0;
 }
 
 
-static void readBinaryMemoryWriteArguments(Buffer* pBuffer, AddressLength* pAddressLength);
 /* Handle the 'X' command which is to write to the specified address range in memory.
 
     Command Format:     XAAAAAAAA,LLLLLLLL:xx...
@@ -106,7 +112,7 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
 
     __try
     {
-        readBinaryMemoryWriteArguments(pBuffer, &addressLength);
+        ReadAddressAndLengthArgumentsWithColon(pBuffer, &addressLength);
     }
     __catch
     {
@@ -114,7 +120,7 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
         return 0;
     }
     
-    if (WriteBinaryBufferToMemory(pBuffer, (void *)(size_t)addressLength.address, addressLength.length))
+    if (WriteBinaryBufferToMemory(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length))
     {
         PrepareStringResponse("OK");
     }
@@ -127,17 +133,4 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
     }
 
     return 0;
-}
-
-static void readBinaryMemoryWriteArguments(Buffer* pBuffer, AddressLength* pAddressLength)
-{
-    __try
-    {
-        __throwing_func( ReadAddressAndLengthArguments(pBuffer, pAddressLength) );
-        __throwing_func( ThrowIfNextCharIsNotEqualTo(pBuffer, ':') );
-    }
-    __catch
-    {
-        __rethrow;
-    }
 }
