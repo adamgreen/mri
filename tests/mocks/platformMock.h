@@ -17,6 +17,7 @@
 #define _PLATFORM_MOCK_H_
 
 #include <token.h>
+#include <platforms.h>
 
 void        platformMock_Init(void);
 void        platformMock_Uninit(void);
@@ -45,5 +46,10 @@ int         platformMock_GetHandleSemihostRequestCalls(void);
 int         platformMock_DisplayFaultCauseToGdbConsoleCalls(void);
 
 void        platformMock_SetPacketBufferSize(uint32_t setValue);
+
+void        platformMock_SetTypeOfCurrentInstruction(PlatformInstructionType setValue);
+int         platformMock_AdvanceProgramCounterToNextInstructionCalls(void);
+int         platformMock_SetProgramCounterCalls(void);
+uint32_t    platformMock_GetProgramCounterValue(void);
 
 #endif /* _PLATFORM_MOCK_H_ */

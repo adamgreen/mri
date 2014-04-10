@@ -401,6 +401,52 @@ void __mriPlatform_DisplayFaultCauseToGdbConsole(void)
 
 
 
+// Current Instruction Related Instrumentation
+PlatformInstructionType g_instructionType;
+int                     g_advanceProgramCounterToNextInstruction;
+int                     g_setProgramCounterCalls;
+uint32_t                g_programCounter;
+
+void platformMock_SetTypeOfCurrentInstruction(PlatformInstructionType setValue)
+{
+    g_instructionType = setValue;
+}
+
+int platformMock_AdvanceProgramCounterToNextInstructionCalls(void)
+{
+    return g_advanceProgramCounterToNextInstruction;
+}
+
+int platformMock_SetProgramCounterCalls(void)
+{
+    return g_setProgramCounterCalls;
+}
+
+uint32_t platformMock_GetProgramCounterValue(void)
+{
+    return g_programCounter;
+}
+
+// Stubs called by MRI core.
+PlatformInstructionType __mriPlatform_TypeOfCurrentInstruction(void)
+{
+    return g_instructionType;
+}
+
+void __mriPlatform_AdvanceProgramCounterToNextInstruction(void)
+{
+    g_advanceProgramCounterToNextInstruction++;
+    g_programCounter += 4;
+}
+
+void __mriPlatform_SetProgramCounter(uint32_t newPC)
+{
+    g_programCounter = newPC;
+    g_setProgramCounterCalls++;
+}
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -417,10 +463,14 @@ void platformMock_Init(void)
     g_initCount = 0;
     g_enteringDebuggerCount = 0;
     g_leavingDebuggerCount = 0;
-    g_isDebuggeeMakingSemihostCall = TRUE;
+    g_isDebuggeeMakingSemihostCall = FALSE;
     g_getHandleSemihostRequestCount = 0;
     g_displayFaultCauseToGdbConsoleCount = 0;
     g_packetBufferSize = sizeof(g_packetBuffer);
+    g_instructionType = MRI_PLATFORM_INSTRUCTION_OTHER;
+    g_advanceProgramCounterToNextInstruction = 0;
+    g_setProgramCounterCalls = 0;
+    g_programCounter = 0;
 }
 
 void platformMock_Uninit(void)
@@ -447,14 +497,6 @@ void      __mriPlatform_EnableSingleStep(void)
 int       __mriPlatform_IsSingleStepping(void)
 {
     return FALSE;
-}
-
-void      __mriPlatform_SetProgramCounter(uint32_t newPC)
-{
-}
-
-void      __mriPlatform_AdvanceProgramCounterToNextInstruction(void)
-{
 }
 
 int       __mriPlatform_WasProgramCounterModifiedByUser(void)
@@ -517,12 +559,6 @@ __throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t si
 
 __throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
 {
-}
-
-
-PlatformInstructionType     __mriPlatform_TypeOfCurrentInstruction(void)
-{
-    return MRI_PLATFORM_INSTRUCTION_OTHER;
 }
 
 void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)

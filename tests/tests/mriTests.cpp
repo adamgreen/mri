@@ -102,6 +102,7 @@ TEST(Mri, __mriDebugExceptionShouldJustClearCommInterruptAndReturnWithoutEnterin
 TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_NoWaitForGdbToConnect)
 {
     __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(1);
         __mriDebugException();
     CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
@@ -115,6 +116,7 @@ TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_NoWait
 TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAndHaveGdbConnectOnFirstByte)
 {
     __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(1);
     platformMock_CommSetShouldWaitForGdbConnect(1);
     platformMock_CommInitReceiveData("+");
         __mriDebugException();
@@ -130,6 +132,7 @@ TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAn
 TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAndHaveGdbConnectOnFourthByte)
 {
     __mriInit("MRI_UART_MBED_USB");
+    platformMock_SetIsDebuggeeMakingSemihostCall(1);
     platformMock_CommSetShouldWaitForGdbConnect(1);
     platformMock_CommSetIsWaitingForGdbToConnectIterations(2);
     platformMock_CommInitReceiveData("123+");
@@ -146,7 +149,6 @@ TEST(Mri, __mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_WaitAn
 TEST(Mri, __mriDebugExceptionShouldDumpExceptionResultAndTResponseAndParseCommands_NoWaitForGdbToConnect_SentContinueCommand)
 {
     __mriInit("MRI_UART_MBED_USB");
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         __mriDebugException();
     CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
@@ -162,7 +164,6 @@ TEST(Mri, __mriDebugExceptionShouldDumpExceptionResultAndTResponseAndParseComman
 TEST(Mri, __mriDebugExceptionShouldSkipExceptionDumpAndTResponseSinceWaitingForGdbToConnect_SentContinueCommand)
 {
     __mriInit("MRI_UART_MBED_USB");
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
     platformMock_CommSetShouldWaitForGdbConnect(1);
     platformMock_CommInitReceiveChecksummedData("123+$c#");
         __mriDebugException();
@@ -179,7 +180,6 @@ TEST(Mri, __mriDebugExceptionShouldSkipExceptionDumpAndTResponseSinceWaitingForG
 TEST(Mri, __mriDebugException_SentStatusAndContinueCommands)
 {
     __mriInit("MRI_UART_MBED_USB");
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$T05responseT#7c" "+") );
@@ -188,7 +188,6 @@ TEST(Mri, __mriDebugException_SentStatusAndContinueCommands)
 TEST(Mri, __mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
 {
     __mriInit("MRI_UART_MBED_USB");
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
     platformMock_CommInitReceiveChecksummedData("+$*#", "+$c#");
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$#00" "+") );
@@ -198,7 +197,6 @@ TEST(Mri, __mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
 TEST(Mri, __mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunError)
 {
     __mriInit("MRI_UART_MBED_USB");
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
     platformMock_SetPacketBufferSize(11);
         __mriDebugException();

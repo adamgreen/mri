@@ -351,15 +351,15 @@ TEST(platformMock, Semihost_HandleSemihostRequest_CountCalls)
     CHECK_EQUAL( 2, platformMock_GetHandleSemihostRequestCalls() );
 }
 
-TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsTrueByDefault)
+TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsFalseByDefault)
 {
-    CHECK_TRUE( Semihost_IsDebuggeeMakingSemihostCall() );
+    CHECK_FALSE( Semihost_IsDebuggeeMakingSemihostCall() );
 }
 
-TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsFalseAfterSettingMock)
+TEST(platformMock, Semihost_IsDebuggeeMakingSemihostCall_ReturnsTrueAfterSettingMock)
 {
-    platformMock_SetIsDebuggeeMakingSemihostCall(0);
-    CHECK_FALSE( Semihost_IsDebuggeeMakingSemihostCall() );
+    platformMock_SetIsDebuggeeMakingSemihostCall(1);
+    CHECK_TRUE( Semihost_IsDebuggeeMakingSemihostCall() );
 }
 
 TEST(platformMock, Platform_DisplayFaultCauseToGdbConsole_CountCalls)
@@ -397,4 +397,42 @@ TEST(platformMock, Platform_CommSharingWithApplication_SetToReturnTrue)
 {
     platformMock_SetCommSharingWithApplication(1);
     CHECK_TRUE ( Platform_CommSharingWithApplication() );
+}
+
+TEST(platformMock, Platform_TypeOfCurrentInstruction_DefaultsToOther)
+{
+    CHECK_EQUAL ( MRI_PLATFORM_INSTRUCTION_OTHER, Platform_TypeOfCurrentInstruction() );
+}
+
+TEST(platformMock, Platform_TypeOfCurrentInstruction_SetToReturnHardcodedBreakpoint)
+{
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    CHECK_EQUAL ( MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT, Platform_TypeOfCurrentInstruction() );
+}
+
+TEST(platformMock, Platform_AdvanceProgramCounterToNextInstruction_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+        Platform_AdvanceProgramCounterToNextInstruction();
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+        Platform_AdvanceProgramCounterToNextInstruction();
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+}
+
+TEST(platformMock, Platform_SetProgramCounter_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_SetProgramCounterCalls() );
+        Platform_SetProgramCounter(0);
+    CHECK_EQUAL( 1, platformMock_SetProgramCounterCalls() );
+        Platform_SetProgramCounter(0);
+    CHECK_EQUAL( 2, platformMock_SetProgramCounterCalls() );
+}
+
+TEST(platformMock, Platform_GetProgramCounterValue_AfterSetAndAdvance)
+{
+    CHECK_EQUAL( 0, platformMock_GetProgramCounterValue() );
+        Platform_SetProgramCounter(0x10008000);
+    CHECK_EQUAL( 0x10008000, platformMock_GetProgramCounterValue() );
+        Platform_AdvanceProgramCounterToNextInstruction();
+    CHECK_EQUAL( 0x10008004, platformMock_GetProgramCounterValue() );
 }
