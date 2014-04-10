@@ -19,6 +19,8 @@
 #include <token.h>
 #include <platforms.h>
 
+#define INITIAL_PC 0x10000000
+
 void        platformMock_Init(void);
 void        platformMock_Uninit(void);
 

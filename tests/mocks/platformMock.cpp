@@ -447,6 +447,22 @@ void __mriPlatform_SetProgramCounter(uint32_t newPC)
 
 
 
+// Single Stepping stubs called by MRI core.
+static int g_singleStepping;
+
+void      __mriPlatform_EnableSingleStep(void)
+{
+    g_singleStepping = TRUE;
+}
+
+int       __mriPlatform_IsSingleStepping(void)
+{
+    return g_singleStepping;
+}
+
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -470,7 +486,8 @@ void platformMock_Init(void)
     g_instructionType = MRI_PLATFORM_INSTRUCTION_OTHER;
     g_advanceProgramCounterToNextInstruction = 0;
     g_setProgramCounterCalls = 0;
-    g_programCounter = 0;
+    g_programCounter = INITIAL_PC;
+    g_singleStepping = FALSE;
 }
 
 void platformMock_Uninit(void)
@@ -488,15 +505,6 @@ void platformMock_Uninit(void)
 uint8_t   __mriPlatform_DetermineCauseOfException(void)
 {
     return SIGTRAP;
-}
-
-void      __mriPlatform_EnableSingleStep(void)
-{
-}
-
-int       __mriPlatform_IsSingleStepping(void)
-{
-    return FALSE;
 }
 
 int       __mriPlatform_WasProgramCounterModifiedByUser(void)

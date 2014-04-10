@@ -430,9 +430,16 @@ TEST(platformMock, Platform_SetProgramCounter_CountCalls)
 
 TEST(platformMock, Platform_GetProgramCounterValue_AfterSetAndAdvance)
 {
-    CHECK_EQUAL( 0, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
         Platform_SetProgramCounter(0x10008000);
     CHECK_EQUAL( 0x10008000, platformMock_GetProgramCounterValue() );
         Platform_AdvanceProgramCounterToNextInstruction();
     CHECK_EQUAL( 0x10008004, platformMock_GetProgramCounterValue() );
+}
+
+TEST(platformMock, Platform_EnableSingleStep)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+        Platform_EnableSingleStep();
+    CHECK_TRUE ( Platform_IsSingleStepping() ); 
 }

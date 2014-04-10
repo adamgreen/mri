@@ -18,6 +18,7 @@ extern "C"
 {
 #include <try_catch.h>
 #include <mri.h>
+#include <platforms.h>
 
 void __mriDebugException(void);
 }
@@ -27,7 +28,7 @@ void __mriDebugException(void);
 #include "CppUTest/TestHarness.h"
 
 
-TEST_GROUP(cmdContinue)
+TEST_GROUP(cmdStep)
 {
     int     m_expectedException;            
     
@@ -52,21 +53,22 @@ TEST_GROUP(cmdContinue)
     }
 };
 
-TEST(cmdContinue, SkipOverHardcodedBreakpoints)
+TEST(cmdStep, BasicSingleStep)
 {
-    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
-    platformMock_CommInitReceiveChecksummedData("+$c#");
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$s#");
         __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
-    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
-    CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
-}
-
-TEST(cmdContinue, SetProgramCountWithContinueCommand)
-{
-    platformMock_CommInitReceiveChecksummedData("+$cf00d#");
-        __mriDebugException();
+    CHECK_TRUE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
-    CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdStep, SingleStepOverHardcodedBreakpoints_MustContinueAfterToExit)
+{
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$s#", "+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$T05responseT#7c+") );
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC + 8, platformMock_GetProgramCounterValue() );
 }
