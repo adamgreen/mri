@@ -23,6 +23,7 @@ extern "C"
 #include "buffer.h"
 #include "try_catch.h"
 #include "hex_convert.h"
+#include "memory.h"
 }
 #include "platformMock.h"
 
@@ -482,6 +483,26 @@ int __mriPlatform_WasMemoryFaultEncountered(void)
 
 
 
+// Context Related Instrumentation.
+static uint32_t g_context[4];
+
+uint32_t* platformMock_GetContext(void)
+{
+    return g_context;
+}
+
+void __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
+{
+    ReadMemoryIntoHexBuffer(pBuffer, &g_context, sizeof(g_context));
+}
+
+void __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
+{
+    WriteHexBufferToMemory(pBuffer, &g_context, sizeof(g_context));
+}
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -508,6 +529,7 @@ void platformMock_Init(void)
     g_programCounter = INITIAL_PC;
     g_singleStepping = FALSE;
     g_callToFail = 0;
+    memset(&g_context, 0xff, sizeof(g_context));
 }
 
 void platformMock_Uninit(void)
@@ -536,14 +558,6 @@ int       __mriPlatform_WasProgramCounterModifiedByUser(void)
 void __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
     Buffer_WriteString(pBuffer, "responseT");
-}
-
-void      __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
-{
-}
-
-void      __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
-{
 }
 
 

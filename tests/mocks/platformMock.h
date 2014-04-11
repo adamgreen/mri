@@ -56,4 +56,6 @@ uint32_t    platformMock_GetProgramCounterValue(void);
 
 void        platformMock_FaultOnSpecificMemoryCall(int callToFail);
 
+uint32_t*   platformMock_GetContext(void);
+
 #endif /* _PLATFORM_MOCK_H_ */

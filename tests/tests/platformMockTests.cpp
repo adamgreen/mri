@@ -463,3 +463,39 @@ TEST(platformMock, Platform_WasMemoryFaultEncountered_FailSecondCallOnly)
     CHECK_TRUE ( Platform_WasMemoryFaultEncountered() );
     CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
 }
+
+TEST(platformMock, Platform_CopyContextFromBuffer)
+{
+    const char data[] = "11111111222222223333333344444444";
+    Buffer     buffer;
+    uint32_t*  pContext;
+    
+    Buffer_Init(&buffer, (char*)data, sizeof(data)-1);
+        Platform_CopyContextFromBuffer(&buffer);
+    pContext = platformMock_GetContext();
+    CHECK_EQUAL ( 0x11111111, pContext[0] );
+    CHECK_EQUAL ( 0x22222222, pContext[1] );
+    CHECK_EQUAL ( 0x33333333, pContext[2] );
+    CHECK_EQUAL ( 0x44444444, pContext[3] );
+}
+
+TEST(platformMock, Platform_CopyContextToBuffer)
+{
+    char       data[128];
+    Buffer     buffer;
+    uint32_t*  pContext;
+    
+    pContext = platformMock_GetContext();
+    pContext[0] = 0x11111111;
+    pContext[1] = 0x22222222;
+    pContext[2] = 0x33333333;
+    pContext[3] = 0x44444444;
+    Buffer_Init(&buffer, data, sizeof(data));
+        Platform_CopyContextToBuffer(&buffer);
+    Buffer_SetEndOfBuffer(&buffer);
+    Buffer_Reset(&buffer);
+    CHECK_TRUE ( Buffer_MatchesString(&buffer, "11111111"
+                                               "22222222"
+                                               "33333333"
+                                               "44444444", 32) );
+}
