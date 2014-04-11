@@ -443,3 +443,23 @@ TEST(platformMock, Platform_EnableSingleStep)
         Platform_EnableSingleStep();
     CHECK_TRUE ( Platform_IsSingleStepping() ); 
 }
+
+TEST(platformMock, Platform_WasMemoryFaultEncountered_DefaultToFalse)
+{
+    CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
+}
+
+TEST(platformMock, Platform_WasMemoryFaultEncountered_FailFirstCallOnly)
+{
+    platformMock_FaultOnSpecificMemoryCall(1);
+    CHECK_TRUE ( Platform_WasMemoryFaultEncountered() );
+    CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
+}
+
+TEST(platformMock, Platform_WasMemoryFaultEncountered_FailSecondCallOnly)
+{
+    platformMock_FaultOnSpecificMemoryCall(2);
+    CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
+    CHECK_TRUE ( Platform_WasMemoryFaultEncountered() );
+    CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
+}

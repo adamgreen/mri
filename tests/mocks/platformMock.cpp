@@ -450,16 +450,35 @@ void __mriPlatform_SetProgramCounter(uint32_t newPC)
 // Single Stepping stubs called by MRI core.
 static int g_singleStepping;
 
-void      __mriPlatform_EnableSingleStep(void)
+void __mriPlatform_EnableSingleStep(void)
 {
     g_singleStepping = TRUE;
 }
 
-int       __mriPlatform_IsSingleStepping(void)
+int __mriPlatform_IsSingleStepping(void)
 {
     return g_singleStepping;
 }
 
+
+// Memory Fault Test Instrumentation.
+static int g_callToFail;
+
+void platformMock_FaultOnSpecificMemoryCall(int callToFail)
+{
+    g_callToFail = callToFail;
+}
+
+// Stub called by MRI core.
+int __mriPlatform_WasMemoryFaultEncountered(void)
+{
+    if (g_callToFail == 0)
+        return FALSE;
+    g_callToFail--;
+    if (g_callToFail == 0)
+        return TRUE;
+    return FALSE;
+}
 
 
 
@@ -488,6 +507,7 @@ void platformMock_Init(void)
     g_setProgramCounterCalls = 0;
     g_programCounter = INITIAL_PC;
     g_singleStepping = FALSE;
+    g_callToFail = 0;
 }
 
 void platformMock_Uninit(void)
@@ -508,11 +528,6 @@ uint8_t   __mriPlatform_DetermineCauseOfException(void)
 }
 
 int       __mriPlatform_WasProgramCounterModifiedByUser(void)
-{
-    return FALSE;
-}
-
-int       __mriPlatform_WasMemoryFaultEncountered(void)
 {
     return FALSE;
 }
@@ -569,7 +584,7 @@ __throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t 
 {
 }
 
-void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
+void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
 {
 }
 

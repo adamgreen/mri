@@ -54,4 +54,6 @@ int         platformMock_AdvanceProgramCounterToNextInstructionCalls(void);
 int         platformMock_SetProgramCounterCalls(void);
 uint32_t    platformMock_GetProgramCounterValue(void);
 
+void        platformMock_FaultOnSpecificMemoryCall(int callToFail);
+
 #endif /* _PLATFORM_MOCK_H_ */
