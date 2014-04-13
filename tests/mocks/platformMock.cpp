@@ -665,6 +665,32 @@ __throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t 
 
 
 
+// Query memory map and feature XML test instrumentation.
+static char g_deviceMemoryMapXml[] = "TEST";
+static char g_targetXml[] = "test!";
+
+// Stubs called by MRI core.
+uint32_t __mriPlatform_GetDeviceMemoryMapXmlSize(void)
+{
+    return sizeof(g_deviceMemoryMapXml) - 1;
+}
+
+const char*  __mriPlatform_GetDeviceMemoryMapXml(void)
+{
+    return g_deviceMemoryMapXml;
+}
+
+uint32_t __mriPlatform_GetTargetXmlSize(void)
+{
+    return sizeof(g_targetXml) - 1;
+}
+
+const char*  __mriPlatform_GetTargetXml(void)
+{
+    return g_targetXml;
+}
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -728,28 +754,6 @@ uint8_t __mriPlatform_DetermineCauseOfException(void)
 {
     return SIGTRAP;
 }
-
-
-uint32_t __mriPlatform_GetDeviceMemoryMapXmlSize(void)
-{
-    return 0;
-}
-
-const char*  __mriPlatform_GetDeviceMemoryMapXml(void)
-{
-    return NULL;
-}
-
-uint32_t __mriPlatform_GetTargetXmlSize(void)
-{
-    return 0;
-}
-
-const char*  __mriPlatform_GetTargetXml(void)
-{
-    return NULL;
-}
-
 
 void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
 {

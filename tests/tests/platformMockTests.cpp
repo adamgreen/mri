@@ -597,3 +597,23 @@ TEST(platformMock, Platform_ClearHardwareWatchpoint_Throwing)
     CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
     clearExceptionCode();
 }
+
+TEST(platformMock, Platform_GetDeviceMemoryMapXmlSize_Returns4)
+{
+    CHECK_EQUAL ( 4, Platform_GetDeviceMemoryMapXmlSize() );
+}
+
+TEST(platformMock, Platform_GetDeviceMemoryMapXml)
+{
+    CHECK_EQUAL ( 0, strcmp("TEST", Platform_GetDeviceMemoryMapXml()) );
+}
+
+TEST(platformMock, Platform_GetTargetXmlSize_Returns5)
+{
+    CHECK_EQUAL ( 5, Platform_GetTargetXmlSize() );
+}
+
+TEST(platformMock, Platform_GetTargetXml)
+{
+    CHECK_EQUAL ( 0, strcmp("test!", Platform_GetTargetXml()) );
+}

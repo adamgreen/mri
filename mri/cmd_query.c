@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -266,6 +266,6 @@ static uint32_t handleQueryTransferFeaturesCommand(void)
 
 static void validateAnnexIs(const char* pAnnex, const char* pExpected)
 {
-    if (0 != strcmp(pAnnex, pExpected))
+    if (pAnnex == NULL || 0 != strcmp(pAnnex, pExpected))
         __throw(invalidArgumentException);
 }
