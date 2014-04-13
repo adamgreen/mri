@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -121,9 +121,8 @@ static void handleBreakpointWatchpointException(void)
         PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
         break;
     case exceededHardwareResourcesException:
-        PrepareStringResponse(MRI_ERROR_NO_FREE_BREAKPOINT);
-        break;
     default:
+        PrepareStringResponse(MRI_ERROR_NO_FREE_BREAKPOINT);
         break;
     }
     

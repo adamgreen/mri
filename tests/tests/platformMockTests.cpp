@@ -499,3 +499,101 @@ TEST(platformMock, Platform_CopyContextToBuffer)
                                                "33333333"
                                                "44444444", 32) );
 }
+
+TEST(platformMock, Platform_SetHardwareBreakpoint_CountCallsAndLastArgs)
+{
+    CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointKindArg() );
+        Platform_SetHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+    CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareBreakpointKindArg() );
+        Platform_SetHardwareBreakpoint(0xBAADF00D, 0xDEADBEEF);
+    CHECK_EQUAL( 2, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareBreakpointKindArg() );
+}
+
+TEST(platformMock, Platform_SetHardwareBreakpoint_Throwing)
+{
+    platformMock_SetHardwareBreakpointException(invalidArgumentException);
+        Platform_SetHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+    CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
+    clearExceptionCode();
+}
+
+TEST(platformMock, Platform_ClearHardwareBreakpoint_CountCallsAndLastArgs)
+{
+    CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointKindArg() );
+        Platform_ClearHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+    CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareBreakpointKindArg() );
+        Platform_ClearHardwareBreakpoint(0xBAADF00D, 0xDEADBEEF);
+    CHECK_EQUAL( 2, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareBreakpointKindArg() );
+}
+
+TEST(platformMock, Platform_ClearHardwareBreakpoint_Throwing)
+{
+    platformMock_ClearHardwareBreakpointException(invalidArgumentException);
+        Platform_ClearHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+    CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
+    clearExceptionCode();
+}
+
+TEST(platformMock, Platform_SetHardwareWatchpoint_CountCallsAndLastArgs)
+{
+    CHECK_EQUAL( 0, platformMock_SetHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_WRITE_WATCHPOINT, platformMock_SetHardwareWatchpointTypeArg() );
+        Platform_SetHardwareWatchpoint(0xDEADBEEF, 0xBAADF00D, MRI_PLATFORM_READ_WATCHPOINT);
+    CHECK_EQUAL( 1, platformMock_SetHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_READ_WATCHPOINT, platformMock_SetHardwareWatchpointTypeArg() );
+        Platform_SetHardwareWatchpoint(0xBAADF00D, 0xDEADBEEF, MRI_PLATFORM_READWRITE_WATCHPOINT);
+    CHECK_EQUAL( 2, platformMock_SetHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_READWRITE_WATCHPOINT, platformMock_SetHardwareWatchpointTypeArg() );
+}
+
+TEST(platformMock, Platform_SetHardwareWatchpoint_Throwing)
+{
+    platformMock_SetHardwareWatchpointException(invalidArgumentException);
+        Platform_SetHardwareWatchpoint(0xDEADBEEF, 0xBAADF00D, MRI_PLATFORM_READWRITE_WATCHPOINT);
+    CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
+    clearExceptionCode();
+}
+
+TEST(platformMock, Platform_ClearHardwareWatchpoint_CountCallsAndLastArgs)
+{
+    CHECK_EQUAL( 0, platformMock_ClearHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_WRITE_WATCHPOINT, platformMock_ClearHardwareWatchpointTypeArg() );
+        Platform_ClearHardwareWatchpoint(0xDEADBEEF, 0xBAADF00D, MRI_PLATFORM_READ_WATCHPOINT);
+    CHECK_EQUAL( 1, platformMock_ClearHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_READ_WATCHPOINT, platformMock_ClearHardwareWatchpointTypeArg() );
+        Platform_ClearHardwareWatchpoint(0xBAADF00D, 0xDEADBEEF, MRI_PLATFORM_READWRITE_WATCHPOINT);
+    CHECK_EQUAL( 2, platformMock_ClearHardwareWatchpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareWatchpointAddressArg() );
+    CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareWatchpointSizeArg() );
+    CHECK_EQUAL( MRI_PLATFORM_READWRITE_WATCHPOINT, platformMock_ClearHardwareWatchpointTypeArg() );
+}
+
+TEST(platformMock, Platform_ClearHardwareWatchpoint_Throwing)
+{
+    platformMock_ClearHardwareWatchpointException(invalidArgumentException);
+        Platform_ClearHardwareWatchpoint(0xDEADBEEF, 0xBAADF00D, MRI_PLATFORM_READWRITE_WATCHPOINT);
+    CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
+    clearExceptionCode();
+}

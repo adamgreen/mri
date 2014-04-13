@@ -446,6 +446,11 @@ void __mriPlatform_SetProgramCounter(uint32_t newPC)
     g_setProgramCounterCalls++;
 }
 
+int __mriPlatform_WasProgramCounterModifiedByUser(void)
+{
+    return FALSE;
+}
+
 
 
 // Single Stepping stubs called by MRI core.
@@ -491,6 +496,7 @@ uint32_t* platformMock_GetContext(void)
     return g_context;
 }
 
+// Stubs called from MRI core.
 void __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
 {
     ReadMemoryIntoHexBuffer(pBuffer, &g_context, sizeof(g_context));
@@ -499,6 +505,162 @@ void __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
 void __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
 {
     WriteHexBufferToMemory(pBuffer, &g_context, sizeof(g_context));
+}
+
+void __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
+{
+    Buffer_WriteString(pBuffer, "responseT");
+}
+
+
+
+// Hardware Breakpoint / Watchpoint Instrumentation.
+int                    g_setHardwareBreakpointCalls;
+uint32_t               g_setHardwareBreakpointAddressArg;
+uint32_t               g_setHardwareBreakpointKindArg;
+uint32_t               g_setHardwareBreakpointException;
+int                    g_clearHardwareBreakpointCalls;
+uint32_t               g_clearHardwareBreakpointAddressArg;
+uint32_t               g_clearHardwareBreakpointKindArg;
+uint32_t               g_clearHardwareBreakpointException;
+int                    g_setHardwareWatchpointCalls;
+uint32_t               g_setHardwareWatchpointAddressArg;
+uint32_t               g_setHardwareWatchpointSizeArg;
+PlatformWatchpointType g_setHardwareWatchpointTypeArg;
+uint32_t               g_setHardwareWatchpointException;
+int                    g_clearHardwareWatchpointCalls;
+uint32_t               g_clearHardwareWatchpointAddressArg;
+uint32_t               g_clearHardwareWatchpointSizeArg;
+PlatformWatchpointType g_clearHardwareWatchpointTypeArg;
+uint32_t               g_clearHardwareWatchpointException;
+
+int platformMock_SetHardwareBreakpointCalls(void)
+{
+    return g_setHardwareBreakpointCalls;
+}
+
+uint32_t platformMock_SetHardwareBreakpointAddressArg(void)
+{
+    return g_setHardwareBreakpointAddressArg;
+}
+
+uint32_t platformMock_SetHardwareBreakpointKindArg(void)
+{
+    return g_setHardwareBreakpointKindArg;
+}
+
+void platformMock_SetHardwareBreakpointException(uint32_t exceptionToThrow)
+{
+    g_setHardwareBreakpointException = exceptionToThrow;    
+}
+
+int platformMock_ClearHardwareBreakpointCalls(void)
+{
+    return g_clearHardwareBreakpointCalls;
+}
+
+uint32_t platformMock_ClearHardwareBreakpointAddressArg(void)
+{
+    return g_clearHardwareBreakpointAddressArg;
+}
+
+uint32_t platformMock_ClearHardwareBreakpointKindArg(void)
+{
+    return g_clearHardwareBreakpointKindArg;
+}
+
+void platformMock_ClearHardwareBreakpointException(uint32_t exceptionToThrow)
+{
+    g_clearHardwareBreakpointException = exceptionToThrow;    
+}
+
+int platformMock_SetHardwareWatchpointCalls(void)
+{
+    return g_setHardwareWatchpointCalls;
+}
+
+uint32_t platformMock_SetHardwareWatchpointAddressArg(void)
+{
+    return g_setHardwareWatchpointAddressArg;
+}
+
+uint32_t platformMock_SetHardwareWatchpointSizeArg(void)
+{
+    return g_setHardwareWatchpointSizeArg;
+}
+
+PlatformWatchpointType platformMock_SetHardwareWatchpointTypeArg(void)
+{
+    return g_setHardwareWatchpointTypeArg;
+}
+
+void platformMock_SetHardwareWatchpointException(uint32_t exceptionToThrow)
+{
+    g_setHardwareWatchpointException = exceptionToThrow;    
+}
+
+int platformMock_ClearHardwareWatchpointCalls(void)
+{
+    return g_clearHardwareWatchpointCalls;
+}
+
+uint32_t platformMock_ClearHardwareWatchpointAddressArg(void)
+{
+    return g_clearHardwareWatchpointAddressArg;
+}
+
+uint32_t platformMock_ClearHardwareWatchpointSizeArg(void)
+{
+    return g_clearHardwareWatchpointSizeArg;
+}
+
+PlatformWatchpointType platformMock_ClearHardwareWatchpointTypeArg(void)
+{
+    return g_clearHardwareWatchpointTypeArg;
+}
+
+void platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow)
+{
+    g_clearHardwareWatchpointException = exceptionToThrow;    
+}
+
+// Stubs called from MRI core.
+__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
+{
+    g_setHardwareBreakpointCalls++;
+    g_setHardwareBreakpointAddressArg = address;
+    g_setHardwareBreakpointKindArg = kind;
+    if (g_setHardwareBreakpointException)
+        __throw(g_setHardwareBreakpointException);
+}
+
+__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
+{
+    g_clearHardwareBreakpointCalls++;
+    g_clearHardwareBreakpointAddressArg = address;
+    g_clearHardwareBreakpointKindArg = kind;
+    if (g_clearHardwareBreakpointException)
+        __throw(g_clearHardwareBreakpointException);
+}
+
+__throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+{
+    g_setHardwareWatchpointCalls++;
+    g_setHardwareWatchpointAddressArg = address;
+    g_setHardwareWatchpointSizeArg = size;
+    g_setHardwareWatchpointTypeArg = type;
+    if (g_setHardwareWatchpointException)
+        __throw(g_setHardwareWatchpointException);
+}
+
+__throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+{
+    g_clearHardwareWatchpointCalls++;
+    g_clearHardwareWatchpointAddressArg = address;
+    g_clearHardwareWatchpointSizeArg = size;
+    g_clearHardwareWatchpointTypeArg = type;
+    if (g_clearHardwareWatchpointException)
+        __throw(g_clearHardwareWatchpointException);
 }
 
 
@@ -530,6 +692,24 @@ void platformMock_Init(void)
     g_singleStepping = FALSE;
     g_callToFail = 0;
     memset(&g_context, 0xff, sizeof(g_context));
+    g_setHardwareBreakpointCalls = 0;
+    g_setHardwareBreakpointAddressArg = 0;
+    g_setHardwareBreakpointKindArg = 0;
+    g_setHardwareBreakpointException = noException;
+    g_clearHardwareBreakpointCalls = 0;
+    g_clearHardwareBreakpointAddressArg = 0;
+    g_clearHardwareBreakpointKindArg = 0;
+    g_clearHardwareBreakpointException = noException;
+    g_setHardwareWatchpointCalls = 0;
+    g_setHardwareWatchpointAddressArg = 0;
+    g_setHardwareWatchpointSizeArg = 0;
+    g_setHardwareWatchpointTypeArg = MRI_PLATFORM_WRITE_WATCHPOINT;
+    g_setHardwareWatchpointException = noException;
+    g_clearHardwareWatchpointCalls = 0;
+    g_clearHardwareWatchpointAddressArg = 0;
+    g_clearHardwareWatchpointSizeArg = 0;
+    g_clearHardwareWatchpointTypeArg = MRI_PLATFORM_WRITE_WATCHPOINT;
+    g_clearHardwareWatchpointException = noException;
 }
 
 void platformMock_Uninit(void)
@@ -544,24 +724,13 @@ void platformMock_Uninit(void)
 
 
 // Stubs for Platform APIs that act as NOPs when called from mriCore during testing.
-uint8_t   __mriPlatform_DetermineCauseOfException(void)
+uint8_t __mriPlatform_DetermineCauseOfException(void)
 {
     return SIGTRAP;
 }
 
-int       __mriPlatform_WasProgramCounterModifiedByUser(void)
-{
-    return FALSE;
-}
 
-
-void __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
-{
-    Buffer_WriteString(pBuffer, "responseT");
-}
-
-
-uint32_t     __mriPlatform_GetDeviceMemoryMapXmlSize(void)
+uint32_t __mriPlatform_GetDeviceMemoryMapXmlSize(void)
 {
     return 0;
 }
@@ -571,7 +740,7 @@ const char*  __mriPlatform_GetDeviceMemoryMapXml(void)
     return NULL;
 }
 
-uint32_t     __mriPlatform_GetTargetXmlSize(void)
+uint32_t __mriPlatform_GetTargetXmlSize(void)
 {
     return 0;
 }
@@ -581,22 +750,6 @@ const char*  __mriPlatform_GetTargetXml(void)
     return NULL;
 }
 
-
-__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
-{
-}
-
-__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
-{
-}
-
-__throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
-{
-}
-
-__throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
-{
-}
 
 void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
 {

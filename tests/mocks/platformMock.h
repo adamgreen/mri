@@ -58,4 +58,26 @@ void        platformMock_FaultOnSpecificMemoryCall(int callToFail);
 
 uint32_t*   platformMock_GetContext(void);
 
+int         platformMock_SetHardwareBreakpointCalls(void);
+uint32_t    platformMock_SetHardwareBreakpointAddressArg(void);
+uint32_t    platformMock_SetHardwareBreakpointKindArg(void);
+void        platformMock_SetHardwareBreakpointException(uint32_t exceptionToThrow);
+
+int         platformMock_ClearHardwareBreakpointCalls(void);
+uint32_t    platformMock_ClearHardwareBreakpointAddressArg(void);
+uint32_t    platformMock_ClearHardwareBreakpointKindArg(void);
+void        platformMock_ClearHardwareBreakpointException(uint32_t exceptionToThrow);
+
+int                    platformMock_SetHardwareWatchpointCalls(void);
+uint32_t               platformMock_SetHardwareWatchpointAddressArg(void);
+uint32_t               platformMock_SetHardwareWatchpointSizeArg(void);
+PlatformWatchpointType platformMock_SetHardwareWatchpointTypeArg(void);
+void                   platformMock_SetHardwareWatchpointException(uint32_t exceptionToThrow);
+
+int                    platformMock_ClearHardwareWatchpointCalls(void);
+uint32_t               platformMock_ClearHardwareWatchpointAddressArg(void);
+uint32_t               platformMock_ClearHardwareWatchpointSizeArg(void);
+PlatformWatchpointType platformMock_ClearHardwareWatchpointTypeArg(void);
+void                   platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow);
+
 #endif /* _PLATFORM_MOCK_H_ */
