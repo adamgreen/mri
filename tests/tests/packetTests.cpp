@@ -113,9 +113,25 @@ TEST(Packet, PacketGetFromGDB_Short)
     CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
 }
 
+TEST(Packet, PacketGetFromGDB_ShortWithUpperCaseHexDigits)
+{
+    platformMock_CommInitReceiveData("$?#3F");
+    tryPacketGet();
+    validateBufferMatches("?");
+    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+}
+
 TEST(Packet, PacketGetFromGDB_BadChecksum)
 {
     platformMock_CommInitReceiveData("$?#f3");
+    tryPacketGet();
+    validateThatEmptyGdbPacketWasRead();
+    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-+") ); 
+}
+
+TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
+{
+    platformMock_CommInitReceiveData("$?#g3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
     CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-+") ); 
