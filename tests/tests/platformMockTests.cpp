@@ -617,3 +617,10 @@ TEST(platformMock, Platform_GetTargetXml)
 {
     CHECK_EQUAL ( 0, strcmp("test!", Platform_GetTargetXml()) );
 }
+
+TEST(platformMock, Platform_SetSemihostCallReturnValue_GetValue)
+{
+    CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
+        Platform_SetSemihostCallReturnValue(0x12345678);
+    CHECK_EQUAL ( 0x12345678, platformMock_GetSemihostCallReturnValue() );
+}

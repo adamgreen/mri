@@ -80,4 +80,6 @@ uint32_t               platformMock_ClearHardwareWatchpointSizeArg(void);
 PlatformWatchpointType platformMock_ClearHardwareWatchpointTypeArg(void);
 void                   platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow);
 
+uint32_t platformMock_GetSemihostCallReturnValue(void);
+
 #endif /* _PLATFORM_MOCK_H_ */

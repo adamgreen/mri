@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -25,10 +25,11 @@
 static int processGdbFileResponseCommands(void);
 /* Send file open request to gdb on behalf of mbed LocalFileSystem.
 
-    Data Format: Fopen,ff/nn,mm
+    Data Format: Fopen,ff/nn,gg,mm
     
     Where ff is the hex representation of the address of the filename to be opened.
           nn is the hex value of the count of characters in the filename pointed to by ff.
+          gg is the hex value of the flags to be used for the file open.
           mm is the hex value of the mode to be used for the file open.
 */
 int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
@@ -245,8 +246,8 @@ int IssueGdbFileRenameRequest(const char* pOrigFilename, const char* pNewFilenam
    
     Command Format:     Frr[,ee[,C]]
 
-    Where rr is the hexadecimal representation of the return code from the last requested file I/O command.
-          ee is the optional hexadecimal value for the errorno associated with the call if rr indicates error.
+    Where rr is the signed hexadecimal representation of the return code from the last requested file I/O command.
+          ee is the optional signed hexadecimal value for the errorno associated with the call if rr indicates error.
           C is the optional 'C' character sent by gdb to indicate that CTRL+C was pressed by user while gdb
             was processing the current file I/O request.
 */
@@ -267,6 +268,7 @@ uint32_t HandleFileIOCommand(void)
     
     SetSemihostReturnValues(returnCode, errNo);
     RecordControlCFlagSentFromGdb(controlC);
+    clearExceptionCode();
 
     return (HANDLER_RETURN_RESUME_PROGRAM | HANDLER_RETURN_RETURN_IMMEDIATELY);
 }

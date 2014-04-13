@@ -691,6 +691,23 @@ const char*  __mriPlatform_GetTargetXml(void)
 }
 
 
+
+// Semihost Test Instrumentation.
+static uint32_t g_semihostCallReturnValue;
+
+uint32_t platformMock_GetSemihostCallReturnValue(void)
+{
+    return g_semihostCallReturnValue;
+}
+
+// Stubs called MRI core.
+void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
+{
+    g_semihostCallReturnValue = returnValue;
+}
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -736,6 +753,7 @@ void platformMock_Init(void)
     g_clearHardwareWatchpointSizeArg = 0;
     g_clearHardwareWatchpointTypeArg = MRI_PLATFORM_WRITE_WATCHPOINT;
     g_clearHardwareWatchpointException = noException;
+    g_semihostCallReturnValue = 0;
 }
 
 void platformMock_Uninit(void)
@@ -754,11 +772,6 @@ uint8_t __mriPlatform_DetermineCauseOfException(void)
 {
     return SIGTRAP;
 }
-
-void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
-{
-}
-
 
 extern "C" void __mriPlatform_EnteringDebuggerHook(void)
 {
