@@ -1,3 +1,2 @@
 =Known Issues
-* Can't dump objects from the mbed SDK since they don't provide symbols for their GCC built libraries.  This includes objects like DigitalIn, DigitalOut, Timer, etc.
 * Data watchpoints on the LPC17XX are imprecise.  This means that the line of code on which the debugger stops may be a line or two after the actual line of code which accessed the watched variable.

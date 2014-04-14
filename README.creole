@@ -1,7 +1,7 @@
 ==MRI - Monitor for Remote Inspection
-MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]].  This makes it possible to debug applications running on the mbed device using a full featured source level debugger.  MRI is able to communicate with GDB through the convenient USB based serial port on the mbed or any of the device's other 3 available serial ports (incase the application requires exclusive access to the USB based serial port.)
+MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]].  This makes it possible to debug applications running on LPC176X devices using a full featured source level debugger with no extra hardware other than a serial connection.  MRI is able to communicate with GDB through the convenient USB based serial port on the mbed or any of the device's other 3 available serial ports (incase the application requires exclusive access to the USB based serial port.)
 
-**Please Note:**  This project just contains the sources to build the MRI debug monitor library but doesn't show how to link it into your program and make use of it.  Such an example is provided by the [[https://github.com/adamgreen/gcc4mbed|gcc4mbed project.]]
+**Please Note:**  This project just contains the sources to build the MRI debug monitor library but doesn't show how to link it into your program and make use of it.  Such an example is provided by the [[https://github.com/adamgreen/gcc4mbed|GCC4MBED project.]]
 
 
 ==MRI Features on mbed 1768
@@ -12,7 +12,7 @@ MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [
 * baud rate is determined at runtime (through GDB command line)
 * semi-host functionality:
 ** stdout/stderr/stdin are redirected to/from the GDB console
-** minimal mbed LocalFileSystem semi-host support (fopen, fwrite, fread, fseek, and fclose)
+** mbed LocalFileSystem semi-host support (fopen, fwrite, fread, fseek, and fclose)
 ** maintains access to mbed device's unique ethernet address
 * works with free [[https://launchpad.net/gcc-arm-embedded|GNU Tools for ARM Embedded Processors]]
 * no program binary size limitations
@@ -44,7 +44,7 @@ git clone --recursive git@github.com:adamgreen/mri.git
 \\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-devices.creole#supported-devices|Supported Devices]]:**  Which devices can currently be debugged with MRI.\\
 \\
-**[[https://github.com/adamgreen/mri/blob/master/notes/mri-limitations.creole#limitations|Limitations]]:**  Lists the known limitations of the MRI debug monitor.  Especially noted are those limitations that it has when compared to a typical JTAG based debugger.\\
+**[[https://github.com/adamgreen/mri/blob/master/notes/mri-pros-cons.creole|Why use MRI]]:**  Documents the advantages of using a debug monitor like MRI and its known limitations.\\
 \\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-issues.creole#known-issues|Issues]]:** Contains information about the currently known issues with the MRI debugging solution.\\
 \\
