@@ -78,7 +78,7 @@ void Platform_Init(Token* pParameterTokens)
 // Platform_Comm* Instrumentation
 static const char  g_emptyPacket[] = "$#00";
 static Buffer      g_receiveBuffers[2];
-static int         g_receiveIndex;
+static size_t      g_receiveIndex;
 static char*       g_pAlloc1;
 static char*       g_pAlloc2;
 static char*       g_pTransmitDataBufferStart;

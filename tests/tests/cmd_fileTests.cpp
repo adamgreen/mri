@@ -75,7 +75,7 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnError)
     CHECK_EQUAL ( 0xFFFFFFFF, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
-    CHECK_EQUAL ( 0xFFFFFFFF, GetSemihostReturnCode() );
+    CHECK_EQUAL ( -1, GetSemihostReturnCode() );
     CHECK_EQUAL ( 0x12345678, GetSemihostErrno() );
     CHECK_EQUAL ( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
 }
@@ -89,7 +89,7 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnErrorAndControlC)
     CHECK_EQUAL ( 0xFFFFFFFF, platformMock_GetSemihostCallReturnValue() );
     CHECK_TRUE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
-    CHECK_EQUAL ( 0xFFFFFFFF, GetSemihostReturnCode() );
+    CHECK_EQUAL ( -1, GetSemihostReturnCode() );
     CHECK_EQUAL ( 0x12345678, GetSemihostErrno() );
     CHECK_EQUAL ( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
 }
@@ -102,7 +102,7 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnInterruptErrorAndControlC)
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fopen,11111111/22222223,33333333,44444444#fc+") );
     CHECK_TRUE ( WasControlCFlagSentFromGdb() );
     CHECK_TRUE ( WasSemihostCallCancelledByGdb() );
-    CHECK_EQUAL ( 0xFFFFFFFF, GetSemihostReturnCode() );
+    CHECK_EQUAL ( -1, GetSemihostReturnCode() );
     CHECK_EQUAL ( 4, GetSemihostErrno() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() ); // Doesn't call in this scenario.
     CHECK_EQUAL ( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
