@@ -32,7 +32,7 @@ endif
 # *** High Level Make Rules ***
 .PHONY : arm clean host all gcov
 
-arm : $(ARMV7M_MBED1768_LIB)
+arm : ARM_BOARDS
 
 host : RUN_CPPUTEST_TESTS RUN_CORE_TESTS
 
@@ -172,13 +172,18 @@ DEPS += $(call add_deps,NATIVE_MEM)
 ARMV7M_LPC176X_OBJ := $(call armv7m_objs,devices/lpc176x)
 DEPS += $(call add_deps,LPC176X)
 
+
 # mbed 1768 board
 ARMV7M_MBED1768_OBJ := $(call armv7m_objs,boards/mbed1768)
-ARMV7M_MBED1768_LIB := $(ARMV7M_LIBDIR)/libmri_mbed1768.a
+ARMV7M_MBED1768_LIB = $(ARMV7M_LIBDIR)/libmri_mbed1768.a
 $(ARMV7M_MBED1768_LIB) : INCLUDES := $(INCLUDES) boards/mbed1768 devices/lpc176x architecture/armv7-m cmsis/LPC17xx
 $(ARMV7M_MBED1768_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC176X_OBJ) $(ARMV7M_MBED1768_OBJ)
 	$(call build_lib,ARMV7M)
 DEPS += $(call add_deps,MBED1768)
+
+# All boards to be built for ARM target.
+ARM_BOARDS : $(ARMV7M_MBED1768_LIB)
+
 
 # Build CppUTest library which runs on host machine.
 HOST_CPPUTEST_OBJ := $(call host_objs,CppUTest/src/CppUTest) $(call host_objs,CppUTest/src/Platforms/Gcc)
