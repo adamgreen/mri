@@ -41,7 +41,7 @@ int main(void)
 
 === I press CTRL+C to break into a running program but it doesn't stop.
 There are two main causes that I have seen for this:
-* The first is that gdb is busy talking to the MRI debug monitor and just doesn't send the CTRL+C stop byte as expected.  This can happen for example during a **next** or **step** command that results in a lot chatter on the serial line.  Usually this problem can be solved by just continuing to press CTRL+C keys and at some point GDB will oblige and send it.
+* The first is that gdb is busy talking to the MRI debug monitor and just doesn't send the CTRL+C stop byte as expected.  This can happen for example during a **next** or **step** command that results in a lot chatter on the serial line.  Usually this problem can be solved by just continuing to press the CTRL+C keys and at some point GDB will oblige and send the break request.
 
 * Another reason this can happen is if you have manually changed the priority of one of your interrupt service routines to be level 0.  If such an ISR enters an infinite loop, then MRI can't interrupt it because it too runs at priority 0 and only a hard fault or NMI trap would be of high enough priority to break into it.  You should use interrupt levels 1 and higher for your ISRs and reserve level 0 for the debugger so that it can have the highest possible priority.
 
