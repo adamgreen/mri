@@ -20,7 +20,9 @@
 #include <stdint.h>
 
 /* Used to insert hardcoded breakpoint into user's code. */
-#define __debugbreak()  { __asm volatile ("bkpt #0"); }
+#ifndef __debugbreak
+    #define __debugbreak()  { __asm volatile ("bkpt #0"); }
+#endif
 
 /* Error strings that can be returned to GDB. */
 #define     MRI_ERROR_INVALID_ARGUMENT      "E01"   /* Encountered error when parsing command arguments. */
