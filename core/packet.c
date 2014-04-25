@@ -126,10 +126,22 @@ static void updateChecksum(Packet* pPacket, char nextChar)
 
 static void extractExpectedChecksum(Packet* pPacket)
 {
-    unsigned char expectedChecksumHiNibble = HexCharToNibble(getNextCharFromGdb(pPacket));
-    unsigned char expectedChecksumLoNibble = HexCharToNibble(getNextCharFromGdb(pPacket));
-
-    pPacket->expectedChecksum = (expectedChecksumHiNibble << 4) | expectedChecksumLoNibble;
+    __try
+    {
+        char char1 = getNextCharFromGdb(pPacket);
+        char char2 = getNextCharFromGdb(pPacket);
+        unsigned char expectedChecksumHiNibble;
+        unsigned char expectedChecksumLoNibble;
+        
+        __throwing_func( expectedChecksumHiNibble = HexCharToNibble(char1) );
+        __throwing_func( expectedChecksumLoNibble = HexCharToNibble(char2) );
+        pPacket->expectedChecksum = (expectedChecksumHiNibble << 4) | expectedChecksumLoNibble;
+    }
+    __catch
+    {
+        /* Force the checksum to mismatch if invalid hex digit was encountered. */
+        pPacket->expectedChecksum = ~pPacket->calculatedChecksum;
+    }
 }
 
 static int isChecksumValid(Packet* pPacket)
