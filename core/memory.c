@@ -195,6 +195,7 @@ static int  isEscapePrefixChar(char charToCheck);
 static char readNextCharAndUnescape(Buffer* pBuffer);
 static char unescapeByte(char charToUnescape);
 static int  writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory);
+static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount);
 static int  writeBinaryBufferToWordMemory(Buffer* pBuffer, void* pvMemory);
 int WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
 {
@@ -272,12 +273,34 @@ static int writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
     if (isNotHalfWordAligned(pvMemory))
         return writeBinaryBufferToByteMemory(pBuffer, pvMemory, 2);
         
-    if (!writeBinaryBufferToByteMemory(pBuffer, &value, sizeof(value)))
+    if (!readBytesFromBinaryBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
     Platform_MemWrite16(pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
+
+    return 1;
+}
+
+static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount)
+{
+    uint8_t* p = (uint8_t*) pvMemory;
+
+    while (writeByteCount-- > 0)
+    {
+        char currChar;
+        __try
+        {
+            __throwing_func( currChar = Buffer_ReadChar(pBuffer) );
+            __throwing_func( currChar = unescapeCharIfNecessary(pBuffer, currChar) );
+        }
+        __catch
+        {
+            __rethrow_and_return(0);
+        }
+        *p++ = (uint8_t)currChar;
+    }
 
     return 1;
 }
@@ -289,7 +312,7 @@ static int writeBinaryBufferToWordMemory(Buffer* pBuffer, void* pvMemory)
     if (isNotWordAligned(pvMemory))
         return writeBinaryBufferToByteMemory(pBuffer, pvMemory, 4);
 
-    if (!writeBinaryBufferToByteMemory(pBuffer, &value, sizeof(value)))
+    if (!readBytesFromBinaryBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
     Platform_MemWrite32(pvMemory, value);
