@@ -14,8 +14,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
 /* Very rough exception handling like macros for C. */
-#ifndef _TRY_CATCH_H_
-#define _TRY_CATCH_H_
+#ifndef _MRI_TRY_CATCH_H_
+#define _MRI_TRY_CATCH_H_
 
 #define noException                         0
 #define bufferOverrunException              1
@@ -28,8 +28,13 @@
 #define exceededHardwareResourcesException  8
 #define invalidDecDigitException            9
 #define memFaultException                   10
+#define mriMaxException                     15
 
 extern int __mriExceptionCode;
+
+
+/* Allow an application including MRI to extend with their own exception codes and replace the below declarations. */
+#ifndef MRI_SKIP_TRY_CATCH_MACRO_DEFINES
 
 /* On Linux, it is possible that __try and __catch are already defined. */
 #undef __try
@@ -74,4 +79,5 @@ static inline void clearExceptionCode(void)
     __mriExceptionCode = noException;
 }
 
-#endif /* _TRY_CATCH_H_ */
+#endif /* MRI_SKIP_TRY_CATCH_MACRO_DEFINES */
+#endif /* _MRI_TRY_CATCH_H_ */
