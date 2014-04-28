@@ -21,6 +21,7 @@
 static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount);
 static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory);
 static int isNotHalfWordAligned(const void* pvMemory);
+static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t length);
 static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory);
 static int isNotWordAligned(const void* pvMemory);
 int ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount)
@@ -64,7 +65,7 @@ static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory
     value = Platform_MemRead16(pvMemory);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
-    readMemoryBytesIntoHexBuffer(pBuffer, &value, sizeof(value));
+    writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
 
     return 1;
 }
@@ -72,6 +73,13 @@ static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory
 static int isNotHalfWordAligned(const void* pvMemory)
 {
     return (size_t)pvMemory & 1;
+}
+
+static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t length)
+{
+    uint8_t* pBytes = (uint8_t*)pv;
+    while (length--)
+        Buffer_WriteByteAsHex(pBuffer, *pBytes++);
 }
 
 static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
@@ -84,7 +92,7 @@ static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
     value = Platform_MemRead32(pvMemory);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
-    readMemoryBytesIntoHexBuffer(pBuffer, &value, sizeof(value));
+    writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
 
     return 1;
 }
@@ -97,6 +105,7 @@ static int isNotWordAligned(const void* pvMemory)
 
 static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
 static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory);
+static int readBytesFromHexBuffer(Buffer* pBuffer, void* pv, size_t length);
 static int writeHexBufferToWordMemory(Buffer* pBuffer, void* pvMemory);
 int WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
 {
@@ -139,13 +148,26 @@ static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
     if (isNotHalfWordAligned(pvMemory))
         return writeHexBufferToByteMemory(pBuffer, pvMemory, 2);
     
-    if (!writeHexBufferToByteMemory(pBuffer, &value, sizeof(value)))
+    if (!readBytesFromHexBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
     Platform_MemWrite16(pvMemory, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
+    return 1;
+}
+
+static int readBytesFromHexBuffer(Buffer* pBuffer, void* pv, size_t length)
+{
+    uint8_t* pBytes = (uint8_t*)pv;
+    while (length--)
+    {
+        __try
+            *pBytes++ = Buffer_ReadByteAsHex(pBuffer);
+        __catch
+            __rethrow_and_return(0);
+    }
     return 1;
 }
 
@@ -156,7 +178,7 @@ static int writeHexBufferToWordMemory(Buffer* pBuffer, void* pvMemory)
     if (isNotWordAligned(pvMemory))
         return writeHexBufferToByteMemory(pBuffer, pvMemory, 4);
 
-    if (!writeHexBufferToByteMemory(pBuffer, &value, sizeof(value)))
+    if (!readBytesFromHexBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
     Platform_MemWrite32(pvMemory, value);

@@ -270,28 +270,6 @@ TEST(cmdMemory, MemoryWrite8_TooFewBytesInPacket_ShouldReturnErrorAndNotModifyMe
     CHECK_EQUAL ( 0xFF, value );
 }
 
-TEST(cmdMemory, MemoryWrite32_FaultOnFinalWraite)
-{
-    uint32_t value = 0xFFFFFFFF;
-    char     packet[64];
-    snprintf(packet, sizeof(packet), "+$M%08x,4:12345678#", (uint32_t)(size_t)&value);
-    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
-    platformMock_FaultOnSpecificMemoryCall(5);
-        __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
-}
-
-TEST(cmdMemory, MemoryWrite16_FaultOnFinalWrite)
-{
-    uint16_t value = 0xFFFF;
-    char     packet[64];
-    snprintf(packet, sizeof(packet), "+$M%08x,2:1234#", (uint32_t)(size_t)&value);
-    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
-    platformMock_FaultOnSpecificMemoryCall(3);
-        __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
-}
-
 TEST(cmdMemory, MemoryWrite8_FaultOnFirstWrite)
 {
     uint8_t value = 0xFF;
