@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -98,7 +98,7 @@ typedef struct
 
 PlatformInstructionType     __mriPlatform_TypeOfCurrentInstruction(void);
 PlatformSemihostParameters  __mriPlatform_GetSemihostCallParameters(void);
-void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue);
+void                        __mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
 #define Platform_Init                                       __mriPlatform_Init
@@ -146,6 +146,6 @@ void                        __mriPlatform_SetSemihostCallReturnValue(uint32_t re
 #define Platform_ClearHardwareWatchpoint                    __mriPlatform_ClearHardwareWatchpoint
 #define Platform_TypeOfCurrentInstruction                   __mriPlatform_TypeOfCurrentInstruction
 #define Platform_GetSemihostCallParameters                  __mriPlatform_GetSemihostCallParameters
-#define Platform_SetSemihostCallReturnValue                 __mriPlatform_SetSemihostCallReturnValue
+#define Platform_SetSemihostCallReturnAndErrnoValues        __mriPlatform_SetSemihostCallReturnAndErrnoValues
 
 #endif /* _PLATFORMS_H_ */

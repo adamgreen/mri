@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -22,8 +22,8 @@
 
 typedef struct
 {
-    const char*     pFilename;
-    uint32_t        filenameLength;    
+    uint32_t        filenameAddress;
+    uint32_t        filenameLength;
     uint32_t        flags;
     uint32_t        mode;
 } OpenParameters;
@@ -32,7 +32,7 @@ typedef struct
 {
     uint32_t        fileDescriptor;
     uint32_t        bufferAddress;
-    int32_t         bufferSize;    
+    int32_t         bufferSize;
 } TransferParameters;
 
 typedef struct
@@ -45,8 +45,23 @@ typedef struct
 typedef struct
 {
     uint32_t        filenameAddress;
-    uint32_t        filenameLength;    
+    uint32_t        filenameLength;
 } RemoveParameters;
+
+typedef struct
+{
+    uint32_t        filenameAddress;
+    uint32_t        filenameLength;
+    uint32_t        fileStatBuffer;
+} StatParameters;
+
+typedef struct
+{
+    uint32_t        origFilenameAddress;
+    uint32_t        origFilenameLength;
+    uint32_t        newFilenameAddress;
+    uint32_t        newFilenameLength;
+} RenameParameters;
 
 /* Real name of functions are in __mri namespace. */
 int      __mriIssueGdbFileOpenRequest(const OpenParameters* pParameters);
@@ -56,8 +71,8 @@ int      __mriIssueGdbFileCloseRequest(uint32_t fileDescriptor);
 int      __mriIssueGdbFileSeekRequest(const SeekParameters* pParameters);
 int      __mriIssueGdbFileFStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer);
 int      __mriIssueGdbFileUnlinkRequest(const RemoveParameters* pParameters);
-int      __mriIssueGdbFileStatRequest(const char* pFilename, uint32_t fileStatBuffer);
-int      __mriIssueGdbFileRenameRequest(const char* pOrigFilename, const char* pNewFilename);
+int      __mriIssueGdbFileStatRequest(const StatParameters* pParameters);
+int      __mriIssueGdbFileRenameRequest(const RenameParameters* pParameters);
 uint32_t __mriHandleFileIOCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */

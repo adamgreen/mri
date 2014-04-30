@@ -693,17 +693,24 @@ const char*  __mriPlatform_GetTargetXml(void)
 
 
 // Semihost Test Instrumentation.
-static uint32_t g_semihostCallReturnValue;
+static int g_semihostCallReturnValue;
+static int g_semihostCallErrno;
 
-uint32_t platformMock_GetSemihostCallReturnValue(void)
+int platformMock_GetSemihostCallReturnValue(void)
 {
     return g_semihostCallReturnValue;
 }
 
-// Stubs called MRI core.
-void __mriPlatform_SetSemihostCallReturnValue(uint32_t returnValue)
+int platformMock_GetSemihostCallErrno(void)
+{
+    return g_semihostCallErrno;
+}
+
+// Stubs called by MRI core.
+void __mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 {
     g_semihostCallReturnValue = returnValue;
+    g_semihostCallErrno = err;
 }
 
 

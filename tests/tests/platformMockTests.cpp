@@ -621,6 +621,7 @@ TEST(platformMock, Platform_GetTargetXml)
 TEST(platformMock, Platform_SetSemihostCallReturnValue_GetValue)
 {
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
-        Platform_SetSemihostCallReturnValue(0x12345678);
+        Platform_SetSemihostCallReturnAndErrnoValues(0x12345678, 0x87654321);
     CHECK_EQUAL ( 0x12345678, platformMock_GetSemihostCallReturnValue() );
+    CHECK_EQUAL ( (int)0x87654321, platformMock_GetSemihostCallErrno() );
 }

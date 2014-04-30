@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -83,7 +83,7 @@ static int handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters)
     memcpy(pUidParameters->pBuffer, __mriMbed1768_GetMbedUid(), copySize);
 
     Platform_AdvanceProgramCounterToNextInstruction();
-    Platform_SetSemihostCallReturnValue(0);
+    Platform_SetSemihostCallReturnAndErrnoValues(0, 0);
 
     return 1;
 }
@@ -92,17 +92,17 @@ static int handleMbedSemihostOpenRequest(PlatformSemihostParameters* pSemihostPa
 {
     typedef struct
     {
-        const char*     pFilename;
-        uint32_t        openMode;
-        uint32_t        filenameLength;    
+        uint32_t filenameAddress;
+        uint32_t openMode;
+        uint32_t filenameLength;    
     } MbedOpenParameters;
     const MbedOpenParameters*  pParameters = (const MbedOpenParameters*)pSemihostParameters->parameter2;
     OpenParameters             parameters;
     
-    parameters.pFilename = pParameters->pFilename;
+    parameters.filenameAddress = pParameters->filenameAddress;
     parameters.flags = convertRealViewOpenModeToPosixOpenFlags(pParameters->openMode);
     parameters.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    parameters.filenameLength = pParameters->filenameLength;
+    parameters.filenameLength = pParameters->filenameLength + 1;
     
     return IssueGdbFileOpenRequest(&parameters); 
 }
@@ -149,7 +149,7 @@ static int handleMbedSemihostIsTtyRequest(PlatformSemihostParameters* pSemihostP
     Platform_AdvanceProgramCounterToNextInstruction();
 
     // Hardcode all such file handles to non-TTY so that they are buffered.
-    Platform_SetSemihostCallReturnValue(0);
+    Platform_SetSemihostCallReturnAndErrnoValues(0, 0);
 
     return 1;
 }
@@ -184,10 +184,10 @@ static void convertBytesTransferredToBytesNotTransferred(int bytesThatWereToBeTr
     
     /* The mbed version of the read/write function need bytes not transferred instead of bytes transferred. */
     if (bytesTransferred >= 0)
-        Platform_SetSemihostCallReturnValue(bytesThatWereToBeTransferred - bytesTransferred);
+        Platform_SetSemihostCallReturnAndErrnoValues(bytesThatWereToBeTransferred - bytesTransferred, 0);
     else
         /* Maintain error code. */
-        Platform_SetSemihostCallReturnValue(bytesTransferred);
+        Platform_SetSemihostCallReturnAndErrnoValues(bytesTransferred, 0);
 }
 
 static int handleMbedSemihostCloseRequest(PlatformSemihostParameters* pSemihostParameters)
@@ -250,7 +250,7 @@ static int handleMbedSemihostFileLengthRequest(PlatformSemihostParameters* pSemi
     if (returnValue && GetSemihostReturnCode() == 0)
     {
         /* The stat command was successfully executed to set R0 to the file length field. */
-        Platform_SetSemihostCallReturnValue(extractWordFromBigEndianByteArray(&gdbFileStats.totalSizeLowerWord));
+        Platform_SetSemihostCallReturnAndErrnoValues(extractWordFromBigEndianByteArray(&gdbFileStats.totalSizeLowerWord), 0);
     }
 
     return returnValue;

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -32,7 +32,7 @@ static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemiho
 int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostParameters)
 {
     uint32_t semihostOperation;
-    
+
     semihostOperation = Platform_GetProgramCounter() | 1;
     if (semihostOperation == (uint32_t)__mriNewlib_SemihostWrite)
         return handleNewlibSemihostWriteRequest(pSemihostParameters);
@@ -82,8 +82,8 @@ static int handleNewlibSemihostOpenRequest(PlatformSemihostParameters* pSemihost
 {
     OpenParameters parameters;
 
-    parameters.pFilename = (const char*)pSemihostParameters->parameter1;
-    parameters.filenameLength = strlen(parameters.pFilename);
+    parameters.filenameAddress = pSemihostParameters->parameter1;
+    parameters.filenameLength = strlen((const char*)parameters.filenameAddress) + 1;
     parameters.flags = pSemihostParameters->parameter2;
     parameters.mode = pSemihostParameters->parameter3;
     
@@ -95,7 +95,7 @@ static int handleNewlibSemihostUnlinkRequest(PlatformSemihostParameters* pSemiho
     RemoveParameters parameters;
 
     parameters.filenameAddress = pSemihostParameters->parameter1;    
-    parameters.filenameLength = strlen((char*)pSemihostParameters->parameter1);
+    parameters.filenameLength = strlen((const char*)parameters.filenameAddress) + 1;
     
     return IssueGdbFileUnlinkRequest(&parameters);
 }
@@ -123,11 +123,20 @@ static int handleNewlibSemihostFStatRequest(PlatformSemihostParameters* pSemihos
 
 static int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    return IssueGdbFileStatRequest((const char*)pSemihostParameters->parameter1, pSemihostParameters->parameter2);
+    StatParameters parameters;
+
+    parameters.filenameAddress = pSemihostParameters->parameter1;
+    parameters.filenameLength = strlen((const char*) parameters.filenameAddress) + 1;
+    return IssueGdbFileStatRequest(&parameters);
 }
 
 static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    return IssueGdbFileRenameRequest((const char*)pSemihostParameters->parameter1, 
-                                     (const char*)pSemihostParameters->parameter2);
+    RenameParameters parameters;
+
+    parameters.origFilenameAddress = pSemihostParameters->parameter1;
+    parameters.origFilenameLength = strlen((const char*)parameters.origFilenameAddress) + 1;
+    parameters.newFilenameAddress = pSemihostParameters->parameter2;
+    parameters.newFilenameLength = strlen((const char*)parameters.newFilenameAddress) + 1;
+    return IssueGdbFileRenameRequest(&parameters);
 }

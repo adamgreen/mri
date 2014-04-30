@@ -14,12 +14,17 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
 /* Routines to expose the Cortex-M functionality to the mri debugger. */
+#include <errno.h>
 #include <string.h>
 #include <signal.h>
 #include <platforms.h>
 #include <gdb_console.h>
 #include "debug_cm3.h"
 #include "armv7-m.h"
+
+/* Disable any macro used for errno and use the int global instead. */
+#undef errno
+extern int errno;
 
 /* Fake stack used when task encounters stacking/unstacking fault. */
 const uint32_t  __mriCortexMFakeStack[8] = { 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD,
@@ -840,9 +845,11 @@ PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 }
 
 
-void Platform_SetSemihostCallReturnValue(uint32_t returnValue)
+void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 {
     __mriCortexMState.context.R0 = returnValue;
+    if (returnValue < 0)
+        errno = err;
 }
 
 

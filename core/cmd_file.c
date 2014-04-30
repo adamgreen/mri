@@ -38,9 +38,9 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
     Buffer*            pBuffer = GetInitializedBuffer();
 
     Buffer_WriteString(pBuffer, gdbOpenCommand);
-    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)(size_t)pParameters->pFilename);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength + 1);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
     Buffer_WriteChar(pBuffer, ',');
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->flags);
     Buffer_WriteChar(pBuffer, ',');
@@ -182,7 +182,7 @@ int IssueGdbFileUnlinkRequest(const RemoveParameters* pParameters)
     Buffer_WriteString(pBuffer, gdbUnlinkCommand);
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength + 1);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();
@@ -197,17 +197,17 @@ int IssueGdbFileUnlinkRequest(const RemoveParameters* pParameters)
           nn is the hex value of the count of characters in the filename pointed to by ff.
           bb is the hex representation of the address of the stat structure to be filled in.
 */
-int IssueGdbFileStatRequest(const char* pFilename, uint32_t fileStatBuffer)
+int IssueGdbFileStatRequest(const StatParameters* pParameters)
 {
     static const char  gdbStatCommand[] = "Fstat,";
     Buffer*            pBuffer = GetInitializedBuffer();
 
     Buffer_WriteString(pBuffer, gdbStatCommand);
-    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pFilename);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pFilename) + 1);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->filenameLength);
     Buffer_WriteChar(pBuffer, ',');
-    Buffer_WriteUIntegerAsHex(pBuffer, fileStatBuffer);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->fileStatBuffer);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();
@@ -223,19 +223,19 @@ int IssueGdbFileStatRequest(const char* pFilename, uint32_t fileStatBuffer)
           nn is the hex representation of the address of the new filename.
           bb is the hex value of the count of characters in the new filename pointed to by nn.
 */
-int IssueGdbFileRenameRequest(const char* pOrigFilename, const char* pNewFilename)
+int IssueGdbFileRenameRequest(const RenameParameters* pParameters)
 {
     static const char  gdbCommand[] = "Frename,";
     Buffer*            pBuffer = GetInitializedBuffer();
 
     Buffer_WriteString(pBuffer, gdbCommand);
-    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pOrigFilename);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->origFilenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pOrigFilename) + 1);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->origFilenameLength);
     Buffer_WriteChar(pBuffer, ',');
-    Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)pNewFilename);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->newFilenameAddress);
     Buffer_WriteChar(pBuffer, '/');
-    Buffer_WriteUIntegerAsHex(pBuffer, strlen(pNewFilename) + 1);
+    Buffer_WriteUIntegerAsHex(pBuffer, pParameters->newFilenameLength);
     
     SendPacketToGdb();
     return processGdbFileResponseCommands();

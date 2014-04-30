@@ -58,10 +58,6 @@ static MriCore g_mri;
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
 
-/* Disable any macro used for errno and use the int global instead. */
-#undef errno
-extern int errno;
-
 /* These two routines can be provided by the debuggee to get notified on debugger entry/exit.  Can be used to safely
    turn off some external hardware so that it doesn't keep running while sitting at a breakpoint. */
 void __mriPlatform_EnteringDebuggerHook(void) __attribute__((weak));
@@ -337,9 +333,7 @@ int WasSemihostCallCancelledByGdb(void)
 void FlagSemihostCallAsHandled(void)
 {
     Platform_AdvanceProgramCounterToNextInstruction();
-    Platform_SetSemihostCallReturnValue(g_mri.semihostReturnCode);
-    if (g_mri.semihostReturnCode)
-        errno = g_mri.semihostErrno;
+    Platform_SetSemihostCallReturnAndErrnoValues(g_mri.semihostReturnCode, g_mri.semihostErrno);
 }
 
 
