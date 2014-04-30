@@ -191,6 +191,29 @@ TEST(cmdMemory, MemoryWrite16Aligned)
     CHECK_EQUAL ( 0x3412, value );
 }
 
+TEST(cmdMemory, MemoryWrite32_FaultOnFinalWrite)
+{
+    uint32_t value = 0xFFFFFFFF;
+    char     packet[64];
+    snprintf(packet, sizeof(packet), "+$M%08x,4:12345678#", (uint32_t)(size_t)&value);
+    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
+    platformMock_FaultOnSpecificMemoryCall(1);
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
+}
+
+TEST(cmdMemory, MemoryWrite16_FaultOnFinalWrite)
+{
+    uint16_t value = 0xFFFF;
+    char     packet[64];
+    snprintf(packet, sizeof(packet), "+$M%08x,2:1234#", (uint32_t)(size_t)&value);
+    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
+    platformMock_FaultOnSpecificMemoryCall(1);
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
+ }
+ 
+ 
 TEST(cmdMemory, MemoryWrite8)
 {
     uint8_t  value = 0xFF;
@@ -319,6 +342,28 @@ TEST(cmdMemory, BinaryMemoryWrite16Aligned)
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$OK#9a+") );
     CHECK_EQUAL ( 0x3412, value );
+}
+
+TEST(cmdMemory, BinaryMemoryWrite32_FaultOnFinalWraite)
+{
+    uint32_t value = 0xFFFFFFFF;
+    char     packet[64];
+    snprintf(packet, sizeof(packet), "+$X%08x,4:\x12\x34\x56\x78#", (uint32_t)(size_t)&value);
+    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
+    platformMock_FaultOnSpecificMemoryCall(1);
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
+}
+
+TEST(cmdMemory, BinaryMemoryWrite16_FaultOnFinalWrite)
+{
+    uint16_t value = 0xFFFF;
+    char     packet[64];
+    snprintf(packet, sizeof(packet), "+$X%08x,2:\x12\x34#", (uint32_t)(size_t)&value);
+    platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
+    platformMock_FaultOnSpecificMemoryCall(1);
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
 }
 
 TEST(cmdMemory, BinaryMemoryWrite8)
