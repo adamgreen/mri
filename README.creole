@@ -1,3 +1,7 @@
+==Version Information
+**0.6-20140512.1**  This updated release of MRI is used by the gcc4mbed project.
+
+
 ==MRI - Monitor for Remote Inspection
 MRI is a debug monitor which allows the GNU debugger, GDB, to be used with the [[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768 device]].  This makes it possible to debug applications running on LPC176X devices using a full featured source level debugger with no extra hardware other than a serial connection.  MRI is able to communicate with GDB through the convenient USB based serial port on the mbed or any of the device's other 3 available serial ports (incase the application requires exclusive access to the USB based serial port.)
 
