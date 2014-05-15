@@ -28,7 +28,7 @@
 
 /* Constants related to special memory area used by the debugger for its stack so that it doesn't interferes with
    the task's stack contents. */
-#define CORTEXM_DEBUGGER_STACK_SIZE            64
+#define CORTEXM_DEBUGGER_STACK_SIZE            39
 #define CORTEXM_DEBUGGER_STACK_SIZE_IN_BYTES   (CORTEXM_DEBUGGER_STACK_SIZE * 8)
 #define CORTEXM_DEBUGGER_STACK_FILL            0xDEADBEEF
 
