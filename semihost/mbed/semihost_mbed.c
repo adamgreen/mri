@@ -265,7 +265,7 @@ static uint32_t extractWordFromBigEndianByteArray(const void* pBigEndianValueToE
 
 static int handleMbedSemihostRemoveRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    const RemoveParameters*  pParameters = (const RemoveParameters*)pSemihostParameters->parameter2;
-
-    return IssueGdbFileUnlinkRequest(pParameters); 
+    RemoveParameters*  pParameters = (RemoveParameters*)pSemihostParameters->parameter2;
+    pParameters->filenameLength++;
+    return IssueGdbFileUnlinkRequest(pParameters);
 }
