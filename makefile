@@ -86,7 +86,7 @@ ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-dele
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
 ARMV7M_LDFLAGS   = -mcpu=cortex-m3 -mthumb -Wl,-Map=$(basename $@).map,--cref,--gc-sections
-ARMV7M_ASFLAGS  := -mcpu=cortex-m3 -mthumb -x assembler-with-cpp -MMD -MP
+ARMV7M_ASFLAGS  := -mcpu=cortex-m3 -mthumb -g -x assembler-with-cpp -MMD -MP
 
 # Flags to use when compiling binaries to run on this host system.
 HOST_GCCFLAGS := -O2 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
@@ -94,7 +94,7 @@ HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common
 HOST_GCCFLAGS += -include CppUTest/include/CppUTest/MemoryLeakDetectorMallocMacros.h
 HOST_GPPFLAGS := $(HOST_GCCFLAGS) -include CppUTest/include/CppUTest/MemoryLeakDetectorNewMacros.h
 HOST_GCCFLAGS += -std=gnu90
-HOST_ASFLAGS  := -x assembler-with-cpp -MMD -MP
+HOST_ASFLAGS  := -g -x assembler-with-cpp -MMD -MP
 
 # Output directories for intermediate object files.
 OBJDIR        := obj
