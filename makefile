@@ -19,16 +19,6 @@ else
     Q := @
 endif
 
-# Make sure that gcov goal isn't used with incompatible rules.
-ifeq "$(findstring gcov,$(MAKECMDGOALS))" "gcov"
-    ifeq "$(findstring all,$(MAKECMDGOALS))" "all"
-        $(error Can't use 'all' and 'gcov' goals together.)
-    endif
-    ifeq "$(findstring host,$(MAKECMDGOALS))" "host"
-        $(error Can't use 'host' and 'gcov' goals together.)
-    endif
-endif
-
 # *** High Level Make Rules ***
 .PHONY : arm clean host all gcov
 
@@ -109,17 +99,12 @@ LIBDIR        := lib
 ARMV7M_LIBDIR := $(LIBDIR)/armv7-m
 HOST_LIBDIR   := $(LIBDIR)/host
 
-# Modify some things if we want to run code coverage as part of this build.
-ifeq "$(findstring gcov,$(MAKECMDGOALS))" "gcov"
-    HOST_OBJDIR   := $(GCOVDIR)/$(HOST_OBJDIR)
-    HOST_LIBDIR   := $(GCOVDIR)/$(HOST_LIBDIR)
-    HOST_GCCFLAGS += -fprofile-arcs -ftest-coverage
-    HOST_GPPFLAGS += -fprofile-arcs -ftest-coverage
-    HOST_LDFLAGS  += -fprofile-arcs -ftest-coverage
-    GCOV          := _gcov
-else
-    GCOV :=
-endif
+# Customize some variables for code coverage builds.
+GCOV_HOST_OBJDIR        := $(GCOVDIR)/$(HOST_OBJDIR)
+GCOV_HOST_LIBDIR        := $(GCOVDIR)/$(HOST_LIBDIR)
+GCOV_HOST_GCCFLAGS      := $(HOST_GCCFLAGS) -fprofile-arcs -ftest-coverage
+GCOV_HOST_GPPFLAGS      := $(HOST_GPPFLAGS) -fprofile-arcs -ftest-coverage
+GCOV_HOST_LDFLAGS       := $(HOST_LDFLAGS) -fprofile-arcs -ftest-coverage
 
 # Most of the needed headers are located here.
 INCLUDES := include
@@ -131,7 +116,9 @@ DEPS :=
 objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
 armv7m_objs = $(call objs,$1,$(ARMV7M_OBJDIR))
 host_objs = $(call objs,$1,$(HOST_OBJDIR))
-add_deps = $(patsubst %.o,%.d,$(ARMV7M_$1_OBJ) $(HOST_$1_OBJ))
+gcov_host_objs = $(call objs,$1,$(GCOV_HOST_OBJDIR))
+add_deps = $(patsubst %.o,%.d,$(ARMV7M_$1_OBJ) $(HOST_$1_OBJ) $(GCOV_HOST_$1_OBJ))
+obj_to_gcda = $(patsubst %.o,%.gcda,$1)
 includes = $(patsubst %,-I%,$1)
 define build_lib
 	@echo Building $@
@@ -143,15 +130,66 @@ define link_exe
 	$Q $(MAKEDIR)
 	$Q $($1_LD) $($1_LDFLAGS) $^ -o $@
 endef
+define gcov_link_exe
+	@echo Building $@
+	$Q $(MAKEDIR)
+	$Q $($1_LD) $(GCOV_$1_LDFLAGS) $^ -o $@
+endef
+define run_gcov
+    .PHONY : GCOV_$1
+    GCOV_$1 : GCOV_RUN_$1_TESTS
+		$Q $(REMOVE) $1_output.txt $(QUIET)
+		$Q mkdir -p gcov/$1_tests $(QUIET)
+		$Q $(foreach i,$(GCOV_HOST_$1_OBJ),gcov -object-directory=$(dir $i) $(notdir $i) >> $1_output.txt ;)
+		$Q mv $1_output.txt gcov/$1_tests/ $(QUIET)
+		$Q mv *.gcov gcov/$1_tests/ $(QUIET)
+		$Q CppUTest/scripts/filterGcov.sh gcov/$1_tests/$1_output.txt /dev/null gcov/$1_tests/$1.txt
+		$Q cat gcov/$1_tests/$1.txt
+endef
+define make_library # ,LIBRARY,src_dirs,libname.a,includes
+    HOST_$1_OBJ      := $(foreach i,$2,$(call host_objs,$i))
+    GCOV_HOST_$1_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
+    HOST_$1_LIB      := $(HOST_LIBDIR)/$3
+    GCOV_HOST_$1_LIB := $(GCOV_HOST_LIBDIR)/$3
+    DEPS             += $$(call add_deps,$1)
+    $$(HOST_$1_LIB)      : INCLUDES := $4
+    $$(GCOV_HOST_$1_LIB) : INCLUDES := $4
+    $$(HOST_$1_LIB) : $$(HOST_$1_OBJ)
+		$$(call build_lib,HOST)
+    $$(GCOV_HOST_$1_LIB) : $$(GCOV_HOST_$1_OBJ)
+		$$(call build_lib,HOST)
+endef
+define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
+    HOST_$1_TESTS_OBJ      := $(foreach i,$2,$(call host_objs,$i))
+    GCOV_HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
+    HOST_$1_TESTS_EXE      := $1_tests
+    GCOV_HOST_$1_TESTS_EXE := $1_tests_gcov
+    DEPS                   += $$(call add_deps,$1_TESTS)
+    $$(HOST_$1_TESTS_EXE)      : INCLUDES := CppUTest/include $3
+    $$(GCOV_HOST_$1_TESTS_EXE) : INCLUDES := CppUTest/include $3
+    $$(HOST_$1_TESTS_EXE) : $$(HOST_$1_TESTS_OBJ) $(HOST_$1_LIB) $(HOST_CPPUTEST_LIB) $4
+		$$(call link_exe,HOST)
+    .PHONY : RUN_$1_TESTS GCOV_RUN_$1_TESTS
+    RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
+		@echo Runnning $$^
+		$Q $$^
+    $$(GCOV_HOST_$1_TESTS_EXE) : $$(GCOV_HOST_$1_TESTS_OBJ) $(GCOV_HOST_$1_LIB) $(GCOV_HOST_CPPUTEST_LIB) $4
+		$$(call gcov_link_exe,HOST)
+    GCOV_RUN_$1_TESTS : $$(GCOV_HOST_$1_TESTS_EXE)
+		@echo Runnning $$^
+		$Q $$^
+endef
 
 
-# MRI Core sources to build.
-ARMV7M_CORE_OBJ := $(call armv7m_objs,core)
-HOST_CORE_OBJ   := $(call host_objs,core)
-HOST_CORE_LIB   := $(HOST_LIBDIR)/libmricore.a
-$(HOST_CORE_LIB) : $(HOST_CORE_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,CORE)
+# Build CppUTest library which runs on host machine.
+$(eval $(call make_library,CPPUTEST,CppUTest/src/CppUTest CppUTest/src/Platforms/Gcc,libCppUTest.a,CppUTest/include))
+$(eval $(call make_tests,CPPUTEST,CppUTest/tests,,))
+
+# MRI Core sources to build and test.
+ARMV7M_CORE_OBJ    := $(call armv7m_objs,core)
+$(eval $(call make_library,CORE,core memory/native,libmricore.a,include))
+$(eval $(call make_tests,CORE,tests/tests tests/mocks,include tests/mocks,))
+$(eval $(call run_gcov,CORE))
 
 # Sources for newlib and mbed's LocalFileSystem semihosting support.
 ARMV7M_SEMIHOST_OBJ := $(call armv7m_objs,semihost)
@@ -165,7 +203,6 @@ DEPS += $(call add_deps,ARMV7M)
 
 # Native memory access sources.
 ARMV7M_NATIVE_MEM_OBJ := $(call armv7m_objs,memory/native)
-HOST_NATIVE_MEM_OBJ   := $(call host_objs,memory/native)
 DEPS += $(call add_deps,NATIVE_MEM)
 
 # LPC176x device sources.
@@ -183,44 +220,6 @@ DEPS += $(call add_deps,MBED1768)
 
 # All boards to be built for ARM target.
 ARM_BOARDS : $(ARMV7M_MBED1768_LIB)
-
-
-# Build CppUTest library which runs on host machine.
-HOST_CPPUTEST_OBJ := $(call host_objs,CppUTest/src/CppUTest) $(call host_objs,CppUTest/src/Platforms/Gcc)
-HOST_CPPUTEST_LIB := $(HOST_LIBDIR)/libCppUTest.a
-$(HOST_CPPUTEST_LIB) : INCLUDES := $(INCLUDES) CppUTest/include
-$(HOST_CPPUTEST_LIB) : $(HOST_CPPUTEST_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,CPPUTEST)
-
-# Unit tests for CppUTest library.
-HOST_CPPUTEST_TESTS_OBJ := $(call host_objs,CppUTest/tests)
-HOST_CPPUTEST_TESTS_EXE := CppUTest_tests$(GCOV)
-$(HOST_CPPUTEST_TESTS_EXE) : INCLUDES := $(INCLUDES) CppUTest/include
-$(HOST_CPPUTEST_TESTS_EXE) : $(HOST_CPPUTEST_TESTS_OBJ) $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_CPPUTEST_TESTS : $(HOST_CPPUTEST_TESTS_EXE)
-	$Q $(HOST_CPPUTEST_TESTS_EXE)
-DEPS += $(call add_deps,CPPUTEST_TESTS)
-
-# Unit tests for MRI core library.
-HOST_CORE_TESTS_OBJ := $(call host_objs,tests/tests) $(call host_objs,tests/mocks)
-HOST_CORE_TESTS_EXE := mri_tests$(GCOV)
-$(HOST_CORE_TESTS_EXE) : INCLUDES := $(INCLUDES) CppUTest/include tests/tests tests/mocks
-$(HOST_CORE_TESTS_EXE) : $(HOST_CORE_TESTS_OBJ) $(HOST_NATIVE_MEM_OBJ) $(HOST_CORE_LIB) $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_CORE_TESTS : $(HOST_CORE_TESTS_EXE)
-	$Q $(HOST_CORE_TESTS_EXE)
-DEPS += $(call add_deps,CORE_TESTS)
-
-GCOV_CORE : RUN_CORE_TESTS
-	$Q $(REMOVE mri_output.txt $(QUIET)
-	$Q mkdir -p gcov/mri_tests
-	$(foreach i, $(HOST_CORE_OBJ),$(shell gcov -object-directory=$(dir $i) $(notdir $i) >> mri_output.txt))
-	$Q mv mri_output.txt gcov/mri_tests/
-	$Q mv *.gcov gcov/mri_tests/
-	$Q CppUTest/scripts/filterGcov.sh gcov/mri_tests/mri_output.txt /dev/null gcov/mri_tests/mri.txt
-	$Q cat gcov/mri_tests/mri.txt
 
 
 # *** Pattern Rules ***
@@ -243,6 +242,18 @@ $(HOST_OBJDIR)/%.o : %.cpp
 	@echo Compiling $<
 	$Q $(MAKEDIR)
 	$Q $(HOST_GPP) $(HOST_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_HOST_OBJDIR)/%.o : %.c
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(HOST_GCC) $(GCOV_HOST_GCCFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_HOST_OBJDIR)/%.o : %.cpp
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(HOST_GPP) $(GCOV_HOST_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
 
 
 # *** Pull in header dependencies if not performing a clean build. ***
