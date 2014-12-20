@@ -14,6 +14,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.   
 */
 #include <assert.h>
+#include <signal.h>
 #include <string.h>
 
 extern "C"
@@ -138,7 +139,7 @@ static size_t countPoundSigns(const char* p)
 
 static void copyChecksummedData(char* pDest, const char* pSrc)
 {
-    char checksum;
+    char checksum = 0;
     
     while (*pSrc)
     {

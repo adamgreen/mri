@@ -22,6 +22,7 @@ extern "C"
 void __mriDebugException(void);
 }
 #include <platformMock.h>
+#include <stdio.h>
 
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"

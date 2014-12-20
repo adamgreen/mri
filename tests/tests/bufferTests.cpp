@@ -50,7 +50,8 @@ TEST_GROUP(Buffer)
     void allocateBuffer(size_t sizeOfBuffer)
     {
         m_pCharacterArray = (char*)malloc(sizeOfBuffer);
-        memset(m_pCharacterArray, m_fillChar, sizeOfBuffer);
+        if (sizeOfBuffer > 0)
+            memset(m_pCharacterArray, m_fillChar, sizeOfBuffer);
         m_bufferSize = sizeOfBuffer;
         Buffer_Init(&m_buffer, m_pCharacterArray, m_bufferSize);
     }
