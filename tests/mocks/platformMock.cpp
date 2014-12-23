@@ -20,6 +20,7 @@
 extern "C"
 {
 #include "platforms.h"
+#include "posix4win.h"
 #include "semihost.h"
 #include "buffer.h"
 #include "try_catch.h"

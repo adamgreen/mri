@@ -26,6 +26,7 @@
 #include "token.h"
 #include "core.h"
 #include "platforms.h"
+#include "posix4win.h"
 #include "semihost.h"
 #include "cmd_common.h"
 #include "cmd_file.h"
