@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -25,19 +25,11 @@
     .equ CFSR_BUS_IMPRECISE_BIT, 0x00000400
     .equ PSR_STACK_ALIGN,        0x00000200
     
-    .global __mriARMv7MAsmInit
-    .type __mriARMv7MAsmInit, function
+    .global __mriExceptionHandler
+    .type __mriExceptionHandler, function
     .thumb_func
-    /* extern "C" void __mriARMv7MAsmInit(void);
-       This routine is called when ARMv7-M platform code is used by MRI.  It does nothing but just return
-       because its main purpose is to make sure that the linker pulls in this object file.
-    */
-__mriARMv7MAsmInit:
-    bx      lr
-
-
     /* Saves task SP in R1 and g_MriTaskSP before saving context and calling main mri debugger entry point. */
-mriExceptionHandler:
+__mriExceptionHandler:
     ldr     r0, =mriSaveRestoreContext
     b       mriGetSPAndCallHandler
     
@@ -306,7 +298,7 @@ BusFault_Handler:
        Override Instruction Usage Faults and send to MriExceptionHandler.
     */
 UsageFault_Handler:
-    b       mriExceptionHandler
+    b       __mriExceptionHandler
     
 
     .global DebugMon_Handler
@@ -316,46 +308,4 @@ UsageFault_Handler:
        Override Debug Monintor exceptions and send to MriExceptionHandler.
     */
 DebugMon_Handler:
-    b       mriExceptionHandler
-
-
-/* Implementation of LPC176x UART0 function to be intercepted and sent to mri instead. */
-    .global UART0_IRQHandler
-    .weak   UART0_IRQHandler
-    .type UART0_IRQHandler, function
-    .thumb_func
-    /* extern "C" void UART0_IRQHandler(void);
-       Override UART0 exceptions and send to MriExceptionHandler.
-    */
-UART0_IRQHandler:
-    b       mriExceptionHandler
-
-    .global UART1_IRQHandler
-    .weak   UART1_IRQHandler
-    .type UART1_IRQHandler, function
-    .thumb_func
-    /* extern "C" void UART1_IRQHandler(void);
-       Override UART1 exceptions and send to MriExceptionHandler.
-    */
-UART1_IRQHandler:
-    b       mriExceptionHandler
-
-    .global UART2_IRQHandler
-    .weak   UART2_IRQHandler
-    .type UART2_IRQHandler, function
-    .thumb_func
-    /* extern "C" void UART2_IRQHandler(void);
-       Override UART2 exceptions and send to MriExceptionHandler.
-    */
-UART2_IRQHandler:
-    b       mriExceptionHandler
-
-    .global UART3_IRQHandler
-    .weak   UART3_IRQHandler
-    .type UART3_IRQHandler, function
-    .thumb_func
-    /* extern "C" void UART3_IRQHandler(void);
-       Override UART3 exceptions and send to MriExceptionHandler.
-    */
-UART3_IRQHandler:
-    b       mriExceptionHandler
+    b       __mriExceptionHandler

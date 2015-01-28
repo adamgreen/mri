@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -90,16 +90,23 @@ static const char g_targetXml[] =
 #define CONTEXT_MEMBER_INDEX(MEMBER) (offsetof(Context, MEMBER)/sizeof(uint32_t))
 
 
+/* Reference this handler in the ASM module to make sure that it gets linked in. */
+void __mriExceptionHandler(void);
+
+
 static void clearState(void);
 static void configureDWTandFPB(void);
 static void defaultSvcAndSysTickInterruptsToPriority1(void);
 void __mriCortexMInit(Token* pParameterTokens)
 {
+
+    /* Reference routine in ASM module to make sure that is gets linked in. */
+    void (* volatile dummyReference)(void) = __mriExceptionHandler;
+    (void)dummyReference;
     (void)pParameterTokens;
-    
-    __mriARMv7MAsmInit();
+
     clearState();
-    configureDWTandFPB();    
+    configureDWTandFPB();
     defaultSvcAndSysTickInterruptsToPriority1();
     Platform_DisableSingleStep();
     clearMonitorPending();

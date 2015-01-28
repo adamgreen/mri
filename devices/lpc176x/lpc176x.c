@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -48,10 +48,17 @@ static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
 Lpc176xState __mriLpc176xState;
 
 
+/* Reference this handler in the ASM module to make sure that it gets linked in. */
+void UART0_IRQHandler(void);
+
 
 static void defaultExternalInterruptsToPriority1(void);
 void __mriLpc176x_Init(Token* pParameterTokens)
 {
+    /* Reference handler in ASM module to make sure that is gets linked in. */
+    void (* volatile dummyReference)(void) = UART0_IRQHandler;
+    (void)dummyReference;
+
     __try
         __mriCortexMInit(pParameterTokens);
     __catch
