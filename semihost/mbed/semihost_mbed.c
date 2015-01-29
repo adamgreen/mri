@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Semihost functionality for redirecting mbed LocalFileSystem operations to the GNU host. */
 #include <stdint.h>
@@ -21,7 +21,6 @@
 #include <cmd_file.h>
 #include <fileio.h>
 #include <mbedsys.h>
-#include "../../boards/mbed1768/mbed1768.h"
 
 
 static int      handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters);
@@ -73,14 +72,15 @@ static int handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters)
         uint8_t*   pBuffer;
         uint32_t   bufferSize;
     } SUidParameters;
+    uint32_t              uidSize = Platform_GetUidSize();
     const SUidParameters* pUidParameters;
     uint32_t              copySize;
     
     pUidParameters = (const SUidParameters*)pParameters->parameter2;
     copySize = pUidParameters->bufferSize;
-    if (copySize > MBED1768_UID_SIZE)
-        copySize = MBED1768_UID_SIZE;
-    memcpy(pUidParameters->pBuffer, __mriMbed1768_GetMbedUid(), copySize);
+    if (copySize > uidSize)
+        copySize = uidSize;
+    memcpy(pUidParameters->pBuffer, Platform_GetUid(), copySize);
 
     Platform_AdvanceProgramCounterToNextInstruction();
     Platform_SetSemihostCallReturnAndErrnoValues(0, 0);

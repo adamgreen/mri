@@ -730,10 +730,6 @@ typedef struct
 /*@}*/ /* end of group CMSIS_ITM */
 
 
-/* MRI's debug_cm3.h already has a better definition of this type which separates out the array of comparison
-   registers from the rest.
-*/
-#ifdef NOT_NEEDED_4_MRI
 /** \ingroup  CMSIS_core_register
     \defgroup CMSIS_DWT     Data Watchpoint and Trace (DWT)
     \brief      Type definitions for the Data Watchpoint and Trace (DWT)
@@ -768,7 +764,6 @@ typedef struct
   __IO uint32_t MASK3;                   /*!< Offset: 0x054 (R/W)  Mask Register 3                           */
   __IO uint32_t FUNCTION3;               /*!< Offset: 0x058 (R/W)  Function Register 3                       */
 } DWT_Type;
-#endif // NOT_NEEDED_4_MRI
 
 /* DWT Control Register Definitions */
 #define DWT_CTRL_NUMCOMP_Pos               28                                          /*!< DWT CTRL: NUMCOMP Position */
@@ -1238,11 +1233,7 @@ typedef struct
 /* Memory mapping of Cortex-M3 Hardware */
 #define SCS_BASE            (0xE000E000UL)                            /*!< System Control Space Base Address  */
 #define ITM_BASE            (0xE0000000UL)                            /*!< ITM Base Address                   */
-
-#ifdef NOT_NEEDED_4_MRI
 #define DWT_BASE            (0xE0001000UL)                            /*!< DWT Base Address                   */
-#endif // NOT_NEEDED_4_MRI
-
 #define TPI_BASE            (0xE0040000UL)                            /*!< TPI Base Address                   */
 #define CoreDebug_BASE      (0xE000EDF0UL)                            /*!< Core Debug Base Address            */
 #define SysTick_BASE        (SCS_BASE +  0x0010UL)                    /*!< SysTick Base Address               */
@@ -1254,11 +1245,7 @@ typedef struct
 #define SysTick             ((SysTick_Type   *)     SysTick_BASE  )   /*!< SysTick configuration struct       */
 #define NVIC                ((NVIC_Type      *)     NVIC_BASE     )   /*!< NVIC configuration struct          */
 #define ITM                 ((ITM_Type       *)     ITM_BASE      )   /*!< ITM configuration struct           */
-
-#ifdef NOT_NEEDED_4_MRI
 #define DWT                 ((DWT_Type       *)     DWT_BASE      )   /*!< DWT configuration struct           */
-#endif // NOT_NEEDED_4_MRI
-
 #define TPI                 ((TPI_Type       *)     TPI_BASE      )   /*!< TPI configuration struct           */
 #define CoreDebug           ((CoreDebug_Type *)     CoreDebug_BASE)   /*!< Core Debug configuration struct    */
 

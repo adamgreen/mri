@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -11,15 +11,29 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines which expose mbed1768 specific functionality to the mri debugger. */
-#ifndef _MBED1768_H_
-#define _MBED1768_H_
+#include <string.h>
+#include <platforms.h>
+#include <try_catch.h>
+#include "../../architectures/armv7-m/debug_cm3.h"
+#include "../../devices/lpc43xx/lpc43xx_init.h"
 
-#define MBED1768_UID_SIZE 36
 
-const uint8_t* __mriMbed1768_GetMbedUid(void);
-int            __mriMbed1768_IsMbedDevice(void);
+void Platform_Init(Token* pParameterTokens)
+{
+    __mriLpc43xx_Init(pParameterTokens);
+}
 
-#endif /* _MBED1768_H_ */
+
+const uint8_t* __mriPlatform_GetUid(void)
+{
+    return NULL;
+}
+
+
+uint32_t __mriPlatform_GetUidSize(void)
+{
+    return 0;
+}

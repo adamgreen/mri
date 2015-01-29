@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines which expose mbed1768 specific functionality to the mri debugger. */
 #include <string.h>
@@ -20,9 +20,10 @@
 #include "../../architectures/armv7-m/debug_cm3.h"
 #include "../../devices/lpc176x/lpc176x.h"
 #include "mbed1768_asm.h"
-#include "mbed1768.h"
 
 #define FLAGS_MBED_DETECTED 1
+
+#define MBED1768_UID_SIZE   36
 
 typedef struct
 {
@@ -90,9 +91,15 @@ static void setMbedDetectedFlag(void)
 }
 
 
-const uint8_t* __mriMbed1768_GetMbedUid(void)
+const uint8_t* __mriPlatform_GetUid(void)
 {
     return g_state.mbedUid;
+}
+
+
+uint32_t __mriPlatform_GetUidSize(void)
+{
+    return sizeof(g_state.mbedUid);
 }
 
 

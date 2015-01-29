@@ -100,6 +100,10 @@ PlatformInstructionType     __mriPlatform_TypeOfCurrentInstruction(void);
 PlatformSemihostParameters  __mriPlatform_GetSemihostCallParameters(void);
 void                        __mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err);
 
+const uint8_t* __mriPlatform_GetUid(void);
+uint32_t       __mriPlatform_GetUidSize(void);
+
+
 /* Macroes which allow code to drop the __mri namespace prefix. */
 #define Platform_Init                                       __mriPlatform_Init
 #define Platform_GetPacketBuffer                            __mriPlatform_GetPacketBuffer
@@ -147,5 +151,7 @@ void                        __mriPlatform_SetSemihostCallReturnAndErrnoValues(in
 #define Platform_TypeOfCurrentInstruction                   __mriPlatform_TypeOfCurrentInstruction
 #define Platform_GetSemihostCallParameters                  __mriPlatform_GetSemihostCallParameters
 #define Platform_SetSemihostCallReturnAndErrnoValues        __mriPlatform_SetSemihostCallReturnAndErrnoValues
+#define Platform_GetUid                                     __mriPlatform_GetUid
+#define Platform_GetUidSize                                 __mriPlatform_GetUidSize
 
 #endif /* _PLATFORMS_H_ */

@@ -5,6 +5,7 @@ set -x
 
 make clean arm
 
-cp lib/armv7-m/libmri_mbed1768.a $GCC4MBED/mri.ar
+cp lib/armv7-m/libmri_mbed1768.a $GCC4MBED/
+cp lib/armv7-m/libmri_bambino210.a $GCC4MBED/
 cp COPYING.LESSER $GCC4MBED
 cat include/mri.h include/version.h >$GCC4MBED/mri.h

@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -11,38 +11,18 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Declares registers, bit fields, and inline routines to utilize the debug hardware on the Cortex-M architecture. */
 #ifndef _DEBUG_CM3_H_
 #define _DEBUG_CM3_H_
 
+#include <cmsis.h>
 #include <stdio.h>
-#include <LPC17xx.h>
 #include <try_catch.h>
 #include "armv7-m.h"
 
 /* Data Watchpoint and Trace Registers */
-typedef struct
-{
-    /* Control register. */
-    __IO uint32_t   CTRL;
-    /* Cycle Count register. */
-    __IO uint32_t   CYCCNT;
-    /* CPI Count register. */
-    __IO uint32_t   CPICNT;
-    /* Exception Overhead Count register. */
-    __IO uint32_t   EXCCNT;
-    /* Sleep Count register. */
-    __IO uint32_t   SLEEPCNT;
-    /* Load Store Count register. */
-    __IO uint32_t   LSUCNT;
-    /* Folded-instruction Count register. */
-    __IO uint32_t   FOLDCNT;
-    /* Program Counter Sample register. */
-    __I  uint32_t   PCSR;
-} DWT_Type;
-
 typedef struct
 {
     /* Comparator register. */
@@ -65,9 +45,7 @@ typedef struct
 } FPB_Type;
 
 /* Memory mapping of Cortex-M3 Debug Hardware */
-#define DWT_BASE        (0xE0001000)
 #define DWT_COMP_BASE   (0xE0001020)
-#define DWT             ((DWT_Type *)     DWT_BASE)
 #define DWT_COMP_ARRAY  ((DWT_COMP_Type*) DWT_COMP_BASE)
 #define FPB_BASE        (0xE0002000)
 #define FPB_COMP_BASE   (0xE0002008)

@@ -107,7 +107,7 @@ GCOV_HOST_GPPFLAGS      := $(HOST_GPPFLAGS) -fprofile-arcs -ftest-coverage
 GCOV_HOST_LDFLAGS       := $(HOST_LDFLAGS) -fprofile-arcs -ftest-coverage
 
 # Most of the needed headers are located here.
-INCLUDES := include
+INCLUDES := include cmsis
 
 # Start out with an empty header file dependency list.  Add module files as we go.
 DEPS :=
@@ -209,6 +209,10 @@ DEPS += $(call add_deps,NATIVE_MEM)
 ARMV7M_LPC176X_OBJ := $(call armv7m_objs,devices/lpc176x)
 DEPS += $(call add_deps,LPC176X)
 
+# LPC43xx device sources.
+ARMV7M_LPC43XX_OBJ := $(call armv7m_objs,devices/lpc43xx)
+DEPS += $(call add_deps,LPC43XX)
+
 
 # mbed 1768 board
 ARMV7M_MBED1768_OBJ := $(call armv7m_objs,boards/mbed1768)
@@ -218,8 +222,16 @@ $(ARMV7M_MBED1768_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV
 	$(call build_lib,ARMV7M)
 DEPS += $(call add_deps,MBED1768)
 
+# Bambino 210 LPC4330 board
+ARMV7M_BAMBINO210_OBJ := $(call armv7m_objs,boards/bambino210)
+ARMV7M_BAMBINO210_LIB = $(ARMV7M_LIBDIR)/libmri_bambino210.a
+$(ARMV7M_BAMBINO210_LIB) : INCLUDES := $(INCLUDES) boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx
+$(ARMV7M_BAMBINO210_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC43XX_OBJ) $(ARMV7M_BAMBINO210_OBJ)
+	$(call build_lib,ARMV7M)
+DEPS += $(call add_deps,BAMBINO210)
+
 # All boards to be built for ARM target.
-ARM_BOARDS : $(ARMV7M_MBED1768_LIB)
+ARM_BOARDS : $(ARMV7M_MBED1768_LIB) $(ARMV7M_BAMBINO210_LIB)
 
 
 # *** Pattern Rules ***
