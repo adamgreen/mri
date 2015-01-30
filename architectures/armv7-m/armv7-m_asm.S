@@ -11,20 +11,24 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Implementation of Cortex-M architecture assembly language routines to be used by mri debug monitor. */
     .text
     .code 16
     .syntax unified
-    
+
     #include "armv7-m.h"
 
     .equ CFSR,                   0xE000ED28
     .equ CFSR_STACK_ERROR_BITS,  0x00001818
     .equ CFSR_BUS_IMPRECISE_BIT, 0x00000400
     .equ PSR_STACK_ALIGN,        0x00000200
-    
+    /* Bit in LR to indicate whether PSP was used for automatic stacking of registers during exception entry. */
+    .equ LR_PSP,                 (1 << 2)
+    /* Bit in LR set to 0 when automatic stacking of floating point registers occurs during exception handling. */
+    .equ LR_FLOAT_STACK,         (1 << 4)
+
     .global __mriExceptionHandler
     .type __mriExceptionHandler, function
     .thumb_func
@@ -45,7 +49,7 @@ mriFaultHandler:
     */
 mriGetSPAndCallHandler:
     /* Task may have been using PSP or MSP so retrieve the correct one into R1. */
-    tst     lr, #0x4
+    tst     lr, #LR_PSP
     ite     eq
     mrseq   r1, msp
     mrsne   r1, psp
@@ -160,6 +164,12 @@ mriSaveRestoreContext:
     str     r2, [r0], #8      /* Skip over SP which will be saved in context just before calling __mriDebugException. */
     /* Store LR, PC, and PSR to context. */
     stmia   r0!, {r3, r4, r5}
+    /* Advance R1 past the auto-stacked FPU registers if necessary. */
+    /* Fetch the stacked lr back into r2. */
+    ldr     r2, [sp, #4]
+    tst     r2, #LR_FLOAT_STACK
+    it      eq
+    addeq   r1, r1, #0x48
     /* R1 will now be pointing to the task's SP at interrupt time unless the stack was 8-byte aligned. */
     tst     r5, #PSR_STACK_ALIGN
     it      ne
@@ -175,6 +185,12 @@ mriSaveRestoreContext:
     ldr     r0, =(__mriCortexMState + CORTEXM_STATE_CONTEXT_OFFSET + 16*4)
     /* Retrieve value of task's SP at time of interrupt.  May have been changed by debug client. */
     ldr     r1, [r0, #-(3*4)]
+    /* Advance down past the auto-stacked FPU registers if necessary. */
+    /* Fetch the stacked lr back into r2. */
+    ldr     r2, [sp, #4]
+    tst     r2, #LR_FLOAT_STACK
+    it      eq
+    subeq   r1, r1, #0x48
     /* Force double word stack alignment off in PSR. */
     ldr     r2, [r0]
     bic     r2, #PSR_STACK_ALIGN
