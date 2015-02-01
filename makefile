@@ -75,8 +75,7 @@ ARMV7M_GCCFLAGS := -Os -g3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -Wall -Wext
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
-ARMV7M_LDFLAGS  := -mcpu=cortex-m3 -mthumb -Wl,-Map=$(basename $@).map,--cref,--gc-sections
-ARMV7M_ASFLAGS  := -mcpu=cortex-m3 -mthumb -g3 -x assembler-with-cpp -MMD -MP
+ARMV7M_ASFLAGS  := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb -g3 -x assembler-with-cpp -MMD -MP
 
 # Flags to use when compiling binaries to run on this host system.
 HOST_GCCFLAGS := -O2 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
@@ -197,9 +196,11 @@ ARMV7M_SEMIHOST_OBJ += $(call armv7m_objs,semihost/newlib)
 ARMV7M_SEMIHOST_OBJ += $(call armv7m_objs,semihost/mbed)
 DEPS += $(call add_deps,SEMIHOST)
 
-# Sources for ARMv7-M debug architecture.
-ARMV7M_ARMV7M_OBJ := $(call armv7m_objs,architectures/armv7-m)
+# ARMv7-M architecture sources with and without FPU support.
+ARMV7M_ARMV7M_OBJ := $(call objs,architectures/armv7-m,$(ARMV7M_OBJDIR)/nofpu)
 DEPS += $(call add_deps,ARMV7M)
+ARMV7M_ARMV7M_FPU_OBJ := $(call objs,architectures/armv7-m,$(ARMV7M_OBJDIR)/fpu)
+DEPS += $(call add_deps,ARMV7M_FPU)
 
 # Native memory access sources.
 ARMV7M_NATIVE_MEM_OBJ := $(call armv7m_objs,memory/native)
@@ -226,7 +227,7 @@ DEPS += $(call add_deps,MBED1768)
 ARMV7M_BAMBINO210_OBJ := $(call armv7m_objs,boards/bambino210)
 ARMV7M_BAMBINO210_LIB = $(ARMV7M_LIBDIR)/libmri_bambino210.a
 $(ARMV7M_BAMBINO210_LIB) : INCLUDES := $(INCLUDES) boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx
-$(ARMV7M_BAMBINO210_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC43XX_OBJ) $(ARMV7M_BAMBINO210_OBJ)
+$(ARMV7M_BAMBINO210_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_FPU_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC43XX_OBJ) $(ARMV7M_BAMBINO210_OBJ)
 	$(call build_lib,ARMV7M)
 DEPS += $(call add_deps,BAMBINO210)
 
@@ -244,6 +245,26 @@ $(ARMV7M_OBJDIR)/%.o : %.S
 	@echo Assembling $<
 	$Q $(MAKEDIR)
 	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/nofpu/%.o : %.c
+	@echo Compiling $< for no FPU
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/nofpu/%.o : %.S
+	@echo Assembling $< for no FPU
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/fpu/%.o : %.c
+	@echo Compiling $< for FPU
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/fpu/%.o : %.S
+	@echo Assembling $< for FPU
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(HOST_OBJDIR)/%.o : %.c
 	@echo Compiling $<

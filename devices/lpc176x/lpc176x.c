@@ -16,10 +16,9 @@
 /* Routines used by mri that are specific to the LPC176x device. */
 #include <try_catch.h>
 #include <platforms.h>
+#include "lpc176x.h"
 #include "../../architectures/armv7-m/armv7-m.h"
 #include "../../architectures/armv7-m/debug_cm3.h"
-#include "lpc176x_uart.h"
-#include "lpc176x.h"
 
 
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"

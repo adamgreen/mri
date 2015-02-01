@@ -20,7 +20,6 @@
 #include <cmsis.h>
 #include <stdio.h>
 #include <try_catch.h>
-#include "armv7-m.h"
 
 /* Data Watchpoint and Trace Registers */
 typedef struct

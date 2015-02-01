@@ -11,15 +11,14 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines used by mri that are specific to the LPC176x device. */
 #include <try_catch.h>
 #include <platforms.h>
+#include "lpc43xx_init.h"
 #include "../../architectures/armv7-m/armv7-m.h"
 #include "../../architectures/armv7-m/debug_cm3.h"
-#include "lpc43xx_uart.h"
-#include "lpc43xx_init.h"
 
 
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"

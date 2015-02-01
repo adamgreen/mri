@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines and globals which expose the Cortex-M functionality to the mri debugger.  Also describes global architecture
   state which is shared between cortex-m.c and cortex-m_asm.S */
@@ -44,13 +44,17 @@
 /* Definitions only required from C code. */
 #if !__ASSEMBLER__
 
+#ifndef MRI_DEVICE_HAS_FPU
+    #error "MRI_DEVICE_HAS_FPU must be defined with a value of 0 or 1."
+#endif
+
 #include <stdint.h>
 #include <token.h>
 
 /* NOTE: The MriExceptionHandler function definition in mriasm.S is dependent on the layout of this structure.  It
          is also dictated by the version of gdb which supports the ARM processors.  It should only be changed if the
          gdb ARM support code is modified and then the context saving and restoring code will need to be modified to
-         use the correct offsets as well. 
+         use the correct offsets as well.
 */
 typedef struct
 {
@@ -71,6 +75,41 @@ typedef struct
     uint32_t    LR;
     uint32_t    PC;
     uint32_t    CPSR;
+#if MRI_DEVICE_HAS_FPU
+    uint32_t    S0;
+    uint32_t    S1;
+    uint32_t    S2;
+    uint32_t    S3;
+    uint32_t    S4;
+    uint32_t    S5;
+    uint32_t    S6;
+    uint32_t    S7;
+    uint32_t    S8;
+    uint32_t    S9;
+    uint32_t    S10;
+    uint32_t    S11;
+    uint32_t    S12;
+    uint32_t    S13;
+    uint32_t    S14;
+    uint32_t    S15;
+    uint32_t    S16;
+    uint32_t    S17;
+    uint32_t    S18;
+    uint32_t    S19;
+    uint32_t    S20;
+    uint32_t    S21;
+    uint32_t    S22;
+    uint32_t    S23;
+    uint32_t    S24;
+    uint32_t    S25;
+    uint32_t    S26;
+    uint32_t    S27;
+    uint32_t    S28;
+    uint32_t    S29;
+    uint32_t    S30;
+    uint32_t    S31;
+    uint32_t    FPSCR;
+#endif
 } Context;
 
 /* NOTE: The largest buffer is required for receiving the 'G' command which receives the contents of the registers from 

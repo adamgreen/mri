@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines to expose the Cortex-M functionality to the mri debugger. */
 #include <errno.h>
@@ -84,6 +84,27 @@ static const char g_targetXml[] =
     "<reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>\n"
     "<reg name=\"xpsr\" bitsize=\"32\" regnum=\"25\"/>\n"
     "</feature>\n"
+#if (MRI_DEVICE_HAS_FPU)
+    "<feature name=\"org.gnu.gdb.arm.vfp\">\n"
+    "<reg name=\"d0\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d1\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d2\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d3\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d4\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d5\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d6\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d7\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d8\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d9\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d10\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d11\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d12\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d13\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d14\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"d15\" bitsize=\"64\" type=\"ieee_double\"/>\n"
+    "<reg name=\"fpscr\" bitsize=\"32\" type=\"int\" group=\"float\"/>\n"
+    "</feature>\n"
+#endif
     "</target>\n";
 
 /* Macro to provide index for specified register in the SContext structure. */

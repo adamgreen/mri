@@ -28,6 +28,10 @@
     .equ LR_PSP,                 (1 << 2)
     /* Bit in LR set to 0 when automatic stacking of floating point registers occurs during exception handling. */
     .equ LR_FLOAT_STACK,         (1 << 4)
+    /* Coprocessor Access Control Register. */
+    .equ CPACR,                 0xE000ED88
+    /* Bits set in CPACR if FPU is enabled. */
+    .equ CPACR_FPU_BITS,        (5 << 20)
 
     .global __mriExceptionHandler
     .type __mriExceptionHandler, function
@@ -164,12 +168,48 @@ mriSaveRestoreContext:
     str     r2, [r0], #8      /* Skip over SP which will be saved in context just before calling __mriDebugException. */
     /* Store LR, PC, and PSR to context. */
     stmia   r0!, {r3, r4, r5}
-    /* Advance R1 past the auto-stacked FPU registers if necessary. */
-    /* Fetch the stacked lr back into r2. */
+
+    /* Fetch the stacked lr back into r2 and check for auto-stacked FPU registers. */
     ldr     r2, [sp, #4]
     tst     r2, #LR_FLOAT_STACK
+
+#if !MRI_DEVICE_HAS_FPU
+    /* Advance R1 past the auto-stacked FPU registers if LR_FLOAT_STACK bit in LR is 0. */
+    /* NOTE: This code only runs when device has FPU but MRI was compiled without FPU support. */
     it      eq
     addeq   r1, r1, #0x48
+#else /* MRI_DEVICE_HAS_FPU */
+    bne     3$
+
+    /* If LR_FLOAT_STACK bit in LR is 0 then pull auto-stacked S0-S15 and FPSCR registers off of exception stack. */
+    vldmia.32 r1!, {s0-s15}
+    ldr       r2, [r1], #8    /* FPSCR->R2 and 8-byte alignment padding. */
+
+    /* Write all FPU registers to context. FPSCR should be in R2. */
+2$: vstmia.32   r0!, {s0-s31}
+    str         r2, [r0], #4
+    b           5$
+
+    /* If FPU is enabled then move current FPSCR into R2 and then save all FPU registers to context. */
+3$: ldr     r2, =CPACR
+    ldr     r2, [r2]
+    and     r2, #CPACR_FPU_BITS
+    cmp     r2, #CPACR_FPU_BITS
+    itt     eq
+    vmrseq  r2, fpscr
+    beq     2$
+
+    /* Get here if FPU isn't enabled so zero out FPU registers in context. */
+    mov     r2, #0
+    mov     r3, #33
+4$: str     r2, [r0], #4
+    subs    r3, #1
+    bne     4$
+
+5$: /* Set R0 context pointer back to beginning of FPU registers where subsequent code expects it. */
+    subs    r0, #(33*4)
+#endif /* _FPU_PRESENT */
+
     /* R1 will now be pointing to the task's SP at interrupt time unless the stack was 8-byte aligned. */
     tst     r5, #PSR_STACK_ALIGN
     it      ne
@@ -177,20 +217,52 @@ mriSaveRestoreContext:
     /* Jump back past the PSR, PC and LR that were placed in context to store the potentially updated SP. */
     str     r1, [r0, #-16]
 
+
     /**** Run the C routine which allows for debugging of exceptions. */
     bl      __mriDebugException
+
 
     /**** Restore the tasks' registers which may have been modified by debugger. */
     /* Point context source pointer to location of PSR data. */
     ldr     r0, =(__mriCortexMState + CORTEXM_STATE_CONTEXT_OFFSET + 16*4)
     /* Retrieve value of task's SP at time of interrupt.  May have been changed by debug client. */
     ldr     r1, [r0, #-(3*4)]
+
+#if !MRI_DEVICE_HAS_FPU
     /* Advance down past the auto-stacked FPU registers if necessary. */
     /* Fetch the stacked lr back into r2. */
     ldr     r2, [sp, #4]
     tst     r2, #LR_FLOAT_STACK
     it      eq
     subeq   r1, r1, #0x48
+#else /* MRI_DEVICE_HAS_FPU */
+    /* See if the FPU is enabled. */
+    ldr     r2, =CPACR
+    ldr     r2, [r2]
+    and     r2, #CPACR_FPU_BITS
+    cmp     r2, #CPACR_FPU_BITS
+    bne     6$
+
+    /* If FPU is enabled then pull all FPU register values out of the debug context. */
+    /* R0 is currently pointing at the XPSR value.  Increment to point to S0 instead. */
+    adds        r0, #4
+    vldmia.32   r0!, {s0-s31}
+    ldr         r2, [r0]
+    vmsr        fpscr, r2
+    /* Point R0 back to the PSR in the debug context. */
+    subs        r0, #(33 * 4)
+
+    /* Copy S0-S15,FPSCR to auto-stacked area if the auto-stack bit is set in exception LR. */
+    /* Fetch the stacked lr back into r3 and check for the auto-stack bit. */
+6$: ldr     r3, [sp, #4]
+    tst     r3, #LR_FLOAT_STACK
+    itt     eq
+    /* Store FPSR and LR (as padding word) to exception stack. */
+    stmdbeq     r1!, {r2-r3}
+    /* Store S0-S15 to exception stack. */
+    vstmdbeq.32 r1!, {s0-s15}
+#endif /* MRI_DEVICE_HAS_FPU */
+
     /* Force double word stack alignment off in PSR. */
     ldr     r2, [r0]
     bic     r2, #PSR_STACK_ALIGN

@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines used by mri that are specific to the LPC176x device. */
 #ifndef _LPC176X_H_
@@ -24,6 +24,9 @@
 /* Flags that can be set in Lpc176xState::flags */
 #define LPC176X_UART_FLAGS_SHARE        1
 #define LPC176X_UART_FLAGS_MANUAL_BAUD  2
+
+/* Flag to indicate whether context will contain FPU registers or not. */
+#define MRI_DEVICE_HAS_FPU 0
 
 typedef struct
 {
