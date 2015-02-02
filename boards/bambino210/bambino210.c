@@ -13,7 +13,7 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/* Routines which expose mbed1768 specific functionality to the mri debugger. */
+/* Routines which expose Micromint Bambino210 specific functionality to the mri debugger. */
 #include <string.h>
 #include <platforms.h>
 #include <try_catch.h>

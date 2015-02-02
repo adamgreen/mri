@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include "platforms.h"
 #include "../../architectures/armv7-m/debug_cm3.h"
-#include "lpc176x.h"
+#include "lpc176x_init.h"
 
 
 static const UartConfiguration g_uartConfigurations[] =

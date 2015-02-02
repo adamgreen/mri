@@ -84,7 +84,7 @@ static const char g_targetXml[] =
     "<reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>\n"
     "<reg name=\"xpsr\" bitsize=\"32\" regnum=\"25\"/>\n"
     "</feature>\n"
-#if (MRI_DEVICE_HAS_FPU)
+#if MRI_DEVICE_HAS_FPU
     "<feature name=\"org.gnu.gdb.arm.vfp\">\n"
     "<reg name=\"d0\" bitsize=\"64\" type=\"ieee_double\"/>\n"
     "<reg name=\"d1\" bitsize=\"64\" type=\"ieee_double\"/>\n"

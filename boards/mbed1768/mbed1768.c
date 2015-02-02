@@ -18,7 +18,7 @@
 #include <platforms.h>
 #include <try_catch.h>
 #include "../../architectures/armv7-m/debug_cm3.h"
-#include "../../devices/lpc176x/lpc176x.h"
+#include "../../devices/lpc176x/lpc176x_init.h"
 #include "mbed1768_asm.h"
 
 #define FLAGS_MBED_DETECTED 1
