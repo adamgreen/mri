@@ -111,6 +111,9 @@ INCLUDES := include cmsis
 # Start out with an empty header file dependency list.  Add module files as we go.
 DEPS :=
 
+# Start out with an empty list of libraries to build.  Add libs as we go.
+ARM_BOARD_LIBS :=
+
 # Useful macros.
 objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
 armv7m_objs = $(call objs,$1,$(ARMV7M_OBJDIR))
@@ -119,6 +122,10 @@ gcov_host_objs = $(call objs,$1,$(GCOV_HOST_OBJDIR))
 add_deps = $(patsubst %.o,%.d,$(ARMV7M_$1_OBJ) $(HOST_$1_OBJ) $(GCOV_HOST_$1_OBJ))
 obj_to_gcda = $(patsubst %.o,%.gcda,$1)
 includes = $(patsubst %,-I%,$1)
+define armv7m_module
+    ARMV7M_$1_OBJ := $(call armv7m_objs,$2)
+    DEPS += $$(call add_deps,$1)
+endef
 define build_lib
 	@echo Building $@
 	$Q $(MAKEDIR)
@@ -178,6 +185,15 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
 		@echo Runnning $$^
 		$Q $$^
 endef
+define make_board_library #,BOARD,sourcedir,libfilename,OBJS,includes
+    ARMV7M_$1_OBJ := $(call armv7m_objs,$2)
+    ARMV7M_$1_LIB = $(ARMV7M_LIBDIR)/$3
+    DEPS += $$(call add_deps,$1)
+    ARM_BOARD_LIBS += $$(ARMV7M_$1_LIB)
+    $$(ARMV7M_$1_LIB) : INCLUDES := $(INCLUDES) $5
+    $$(ARMV7M_$1_LIB) : $$(ARMV7M_$1_OBJ) $(foreach i,$4,$$(ARMV7M_$i_OBJ))
+		$$(call build_lib,ARMV7M)
+endef
 
 
 # Build CppUTest library which runs on host machine.
@@ -203,36 +219,30 @@ ARMV7M_ARMV7M_FPU_OBJ := $(call objs,architectures/armv7-m,$(ARMV7M_OBJDIR)/fpu)
 DEPS += $(call add_deps,ARMV7M_FPU)
 
 # Native memory access sources.
-ARMV7M_NATIVE_MEM_OBJ := $(call armv7m_objs,memory/native)
-DEPS += $(call add_deps,NATIVE_MEM)
+$(eval $(call armv7m_module,NATIVE_MEM,memory/native))
 
+
+# ** DEVICES **
 # LPC176x device sources.
-ARMV7M_LPC176X_OBJ := $(call armv7m_objs,devices/lpc176x)
-DEPS += $(call add_deps,LPC176X)
+$(eval $(call armv7m_module,LPC176X,devices/lpc176x))
 
 # LPC43xx device sources.
-ARMV7M_LPC43XX_OBJ := $(call armv7m_objs,devices/lpc43xx)
-DEPS += $(call add_deps,LPC43XX)
+$(eval $(call armv7m_module,LPC43XX,devices/lpc43xx))
 
 
+# ** BOARDS **
 # mbed 1768 board
-ARMV7M_MBED1768_OBJ := $(call armv7m_objs,boards/mbed1768)
-ARMV7M_MBED1768_LIB = $(ARMV7M_LIBDIR)/libmri_mbed1768.a
-$(ARMV7M_MBED1768_LIB) : INCLUDES := $(INCLUDES) boards/mbed1768 devices/lpc176x architecture/armv7-m cmsis/LPC17xx
-$(ARMV7M_MBED1768_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC176X_OBJ) $(ARMV7M_MBED1768_OBJ)
-	$(call build_lib,ARMV7M)
-DEPS += $(call add_deps,MBED1768)
+$(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
+                                 CORE SEMIHOST ARMV7M NATIVE_MEM LPC176X,\
+                                 boards/mbed1768 devices/lpc176x architecture/armv7-m cmsis/LPC17xx))
 
 # Bambino 210 LPC4330 board
-ARMV7M_BAMBINO210_OBJ := $(call armv7m_objs,boards/bambino210)
-ARMV7M_BAMBINO210_LIB = $(ARMV7M_LIBDIR)/libmri_bambino210.a
-$(ARMV7M_BAMBINO210_LIB) : INCLUDES := $(INCLUDES) boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx
-$(ARMV7M_BAMBINO210_LIB) : $(ARMV7M_CORE_OBJ) $(ARMV7M_SEMIHOST_OBJ) $(ARMV7M_ARMV7M_FPU_OBJ) $(ARMV7M_NATIVE_MEM_OBJ) $(ARMV7M_LPC43XX_OBJ) $(ARMV7M_BAMBINO210_OBJ)
-	$(call build_lib,ARMV7M)
-DEPS += $(call add_deps,BAMBINO210)
+$(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
+                                 CORE SEMIHOST ARMV7M_FPU NATIVE_MEM LPC43XX,\
+                                 boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx))
 
 # All boards to be built for ARM target.
-ARM_BOARDS : $(ARMV7M_MBED1768_LIB) $(ARMV7M_BAMBINO210_LIB)
+ARM_BOARDS : $(ARM_BOARD_LIBS)
 
 
 # *** Pattern Rules ***
