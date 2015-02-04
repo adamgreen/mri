@@ -52,6 +52,8 @@ git clone --recursive git@github.com:adamgreen/mri.git
 \\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-pros-cons.creole|Why use MRI]]:**  Documents the advantages of using a debug monitor like MRI and its known limitations.\\
 \\
+**[[https://github.com/adamgreen/mri/blob/master/notes/mri-porting.creole|Porting MRI]]:**  Notes on how to port MRI to new devices.\\
+\\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-report-problem.creole#hit-a-problem|Reporting a Problem]]:**  How to extract information from your PC to show what was happening at the time a problem occurs in a MRI debugging session.\\
 \\
 **[[https://github.com/adamgreen/mri/blob/master/notes/mri-faq.creole#frequently-asked-questions|Frequently Asked Questions]]**\\
