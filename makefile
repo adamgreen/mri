@@ -71,7 +71,7 @@ else
 endif
 
 # Flags to use when cross-compiling ARMv7-M binaries.
-ARMV7M_GCCFLAGS := -Os -g3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
+ARMV7M_GCCFLAGS := -Os -g3 -mcpu=cortex-m4 -mthumb -mthumb-interwork -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
@@ -223,23 +223,31 @@ $(eval $(call armv7m_module,NATIVE_MEM,memory/native))
 
 
 # ** DEVICES **
+
+$(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
+
 # LPC176x device sources.
-$(eval $(call armv7m_module,LPC176X,devices/lpc176x))
+#$(eval $(call armv7m_module,LPC176X,devices/lpc176x))
 
 # LPC43xx device sources.
-$(eval $(call armv7m_module,LPC43XX,devices/lpc43xx))
+#$(eval $(call armv7m_module,LPC43XX,devices/lpc43xx))
 
 
 # ** BOARDS **
 # mbed 1768 board
-$(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
+#$(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
                                  CORE SEMIHOST ARMV7M NATIVE_MEM LPC176X,\
                                  boards/mbed1768 devices/lpc176x architecture/armv7-m cmsis/LPC17xx))
 
 # Bambino 210 LPC4330 board
-$(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
+#$(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM LPC43XX,\
                                  boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx))
+
+# STM32F429i-Discovery STM32F429xx board
+ $(eval $(call make_board_library,STM32F429_DISCO,boards/stm32f429-disco,libmri_stm32f429-disco.a,\
+                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM STM32F429XX,\
+                                  boards/stm32f429-disco devices/stm32f429xx architecture/armv7-m cmsis/STM32F429xx))
 
 # All boards to be built for ARM target.
 ARM_BOARDS : $(ARM_BOARD_LIBS)
@@ -303,3 +311,6 @@ $(GCOV_HOST_OBJDIR)/%.o : %.cpp
 ifneq "$(findstring clean,$(MAKECMDGOALS))" "clean"
     -include $(DEPS)
 endif
+
+install: lib/armv7-m/libmri_stm32f429-disco.a
+	cp lib/armv7-m/libmri_stm32f429-disco.a ../../gcc4mbed-master/mri/
