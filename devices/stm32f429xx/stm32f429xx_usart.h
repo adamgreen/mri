@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines used to provide STM32F429XX UART functionality to the mri debugger. */
 #ifndef _STM32F429XX_UART_H_
@@ -21,12 +21,9 @@
 #include <stm32f4xx.h>
 #include <token.h>
 
-typedef struct
-{
+typedef struct {
     USART_TypeDef*     pUartRegisters;
-    //uint32_t    txPin;
     uint32_t    txFunction;
-    //uint32_t    rxPin;
     uint32_t    rxFunction;
 } UartConfiguration;
 

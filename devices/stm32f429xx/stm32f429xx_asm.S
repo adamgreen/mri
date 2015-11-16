@@ -30,8 +30,6 @@ USART1_IRQHandler:
     b       __mriExceptionHandler
 
 
-
-
     .global USART2_IRQHandler
     .weak   USART2_IRQHandler
     .type USART2_IRQHandler, function
@@ -41,8 +39,6 @@ USART1_IRQHandler:
     */
 USART2_IRQHandler:
     b       __mriExceptionHandler
-
-
 
 
     .global USART3_IRQHandler

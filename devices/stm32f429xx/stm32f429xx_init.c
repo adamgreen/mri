@@ -11,7 +11,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Routines used by mri that are specific to the STM32F429ZI device. */
 #include <try_catch.h>
@@ -24,23 +24,23 @@
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
                                      "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
                                      "<memory-map>"
-                                       "<memory type=\"flash\" start=\"0x08000000\" length=\"0x4000\"> <property name=\"blocksize\">0x1000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x08010000\" length=\"0x10000\"> <property name=\"blocksize\">0x10000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x08020000\" length=\"0x40000\"> <property name=\"blocksize\">0x20000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x080E0000\" length=\"0x20000\"> <property name=\"blocksize\">0x20000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x08100000\" length=\"0x4000\"> <property name=\"blocksize\">0x1000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x08110000\" length=\"0x10000\"> <property name=\"blocksize\">0x10000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x08120000\" length=\"0x40000\"> <property name=\"blocksize\">0x20000</property></memory>"
-                                       "<memory type=\"flash\" start=\"0x081E0000\" length=\"0x20000\"> <property name=\"blocksize\">0x20000</property></memory>"
-                                       "<memory type=\"ram\" start=\"0x20000000\" length=\"0x1C000\"> </memory>"
-                                       "<memory type=\"ram\" start=\"0x2001C000\" length=\"0x4000\"> </memory>"
-                                       "<memory type=\"ram\" start=\"0x20020000\" length=\"0x10000\"> </memory>"
+                                     "<memory type=\"flash\" start=\"0x08000000\" length=\"0x4000\"> <property name=\"blocksize\">0x1000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x08010000\" length=\"0x10000\"> <property name=\"blocksize\">0x10000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x08020000\" length=\"0x40000\"> <property name=\"blocksize\">0x20000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x080E0000\" length=\"0x20000\"> <property name=\"blocksize\">0x20000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x08100000\" length=\"0x4000\"> <property name=\"blocksize\">0x1000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x08110000\" length=\"0x10000\"> <property name=\"blocksize\">0x10000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x08120000\" length=\"0x40000\"> <property name=\"blocksize\">0x20000</property></memory>"
+                                     "<memory type=\"flash\" start=\"0x081E0000\" length=\"0x20000\"> <property name=\"blocksize\">0x20000</property></memory>"
+                                     "<memory type=\"ram\" start=\"0x20000000\" length=\"0x1C000\"> </memory>"
+                                     "<memory type=\"ram\" start=\"0x2001C000\" length=\"0x4000\"> </memory>"
+                                     "<memory type=\"ram\" start=\"0x20020000\" length=\"0x10000\"> </memory>"
                                      "</memory-map>";
 Stm32f429xxState __mriStm32f429xxState;
 
 
 /* Reference this handler in the ASM module to make sure that it gets linked in. */
-    void USART1_IRQHandler(void);
+void USART1_IRQHandler(void);
 
 
 static void defaultExternalInterruptsToPriority1(void);
@@ -50,21 +50,22 @@ void __mriStm32f429xx_Init(Token* pParameterTokens)
     void (* volatile dummyReference)(void) = USART1_IRQHandler;
     (void)dummyReference;
 
-    __mriStm32f429xxUart_Init(pParameterTokens);
     __try
         __mriCortexMInit(pParameterTokens);
     __catch
         __rethrow;
-        
-    defaultExternalInterruptsToPriority1();    
-    //__mriStm32f429xxUart_Init(pParameterTokens);
+
+    defaultExternalInterruptsToPriority1();
+    __mriStm32f429xxUart_Init(pParameterTokens);
 }
 
 static void defaultExternalInterruptsToPriority1(void)
 {
     int irq;
     for (irq = WWDG_IRQn ; irq <= DMA2D_IRQn ; irq++) //Set all priority
-        NVIC_SetPriority((IRQn_Type)irq, 1);
+	{
+		NVIC_SetPriority((IRQn_Type)irq, 1);
+	}
 }
 
 

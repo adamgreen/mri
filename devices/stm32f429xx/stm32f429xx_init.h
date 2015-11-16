@@ -20,7 +20,6 @@
 #include <stdint.h>
 #include <token.h>
 #include "stm32f429xx_usart.h"
-//#include "./inc/serial_api.h"
 
 /* Flags that can be set in Stm32f429xxState::flags */
 #define STM32F429XX_UART_FLAGS_SHARE        1
@@ -29,8 +28,7 @@
 /* Flag to indicate whether context will contain FPU registers or not. */
 #define MRI_DEVICE_HAS_FPU 1
 
-typedef struct
-{
+typedef struct {
     const UartConfiguration*  pCurrentUart;
     uint32_t                  flags;
 } Stm32f429xxState;
