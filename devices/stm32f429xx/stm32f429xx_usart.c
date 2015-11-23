@@ -477,7 +477,7 @@ void Platform_CommSendChar(int Character)
 
 int Platform_CommCausedInterrupt(void)
 {
-    int interruptSource = (int)getCurrentlyExecutingExceptionNumber();
+    int interruptSource = (int)getCurrentlyExecutingExceptionNumber()-16;
 
     //For USART1~3,the IRQn are continuous,others need check!
     int irq_num_base = USART1_IRQn;
