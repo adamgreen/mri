@@ -1,4 +1,5 @@
 /* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+   Copyright 2015 JaredCJR   (https://github.com/JaredCJR)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -13,7 +14,7 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/* Routines used by mri that are specific to the STM32F429ZI device. */
+/* Routines used by mri that are specific to the STM32F429xx device. */
 #include <try_catch.h>
 #include <platforms.h>
 #include "stm32f429xx_init.h"

@@ -312,5 +312,3 @@ ifneq "$(findstring clean,$(MAKECMDGOALS))" "clean"
     -include $(DEPS)
 endif
 
-install: lib/armv7-m/libmri_stm32f429-disco.a
-	cp lib/armv7-m/libmri_stm32f429-disco.a ../../gcc4mbed-master/mri/

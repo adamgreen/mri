@@ -1,4 +1,5 @@
 /* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+   Copyright 2015 JaredCJR   (https://github.com/JaredCJR)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -13,7 +14,7 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/* Routines used to provide STM32F429ZI USART functionality to the mri debugger. */
+/* Routines used to provide STM32F429xx USART functionality to the mri debugger. */
 #include <string.h>
 #include <stdlib.h>
 #include "platforms.h"
@@ -77,7 +78,8 @@ void __mriStm32f429xxUart_Init(Token *pParameterTokens)
     saveUartToBeUsedByDebugger(parameters.uartIndex);
     if (parameters.share)
         setUartSharedFlag();
-    else {
+    else 
+	{
         configureUartForExclusiveUseOfDebugger(&parameters);
     }
 }
@@ -142,7 +144,8 @@ static void enableUartPeripheralCLOCK(uint32_t uart)
     }
 }
 
-typedef struct {
+typedef struct 
+{
     uint32_t _mriSYSCLK_Frequency; /*!<  SYSCLK clock frequency expressed in Hz */
     uint32_t _mriHCLK_Frequency;   /*!<  HCLK clock frequency expressed in Hz   */
     uint32_t _mriPCLK1_Frequency;  /*!<  PCLK1 clock frequency expressed in Hz  */
@@ -161,7 +164,8 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
     /* Get SYSCLK source -------------------------------------------------------*/
     tmp = RCC->CFGR & RCC_CFGR_SWS;
 
-    switch (tmp) {
+    switch (tmp) 
+	{
         case 0x00:  /* HSI used as system clock source */
             RCC_Clocks->_mriSYSCLK_Frequency = HSI_VALUE;
             break;
@@ -176,10 +180,12 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
             pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
             pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
 
-            if (pllsource != 0) {
+            if (pllsource != 0) 
+			{
                 /* HSE used as PLL clock source */
                 pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
-            } else {
+            } else 
+			{
                 /* HSI used as PLL clock source */
                 pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
             }
@@ -226,17 +232,21 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     /* Configure the USART Baud Rate */
     _mriRCC_GetClocksFreq(&RCC_ClocksStatus);
 
-    if ((base == USART1_BASE) || (base == USART6_BASE)) {
+    if ((base == USART1_BASE) || (base == USART6_BASE)) 
+	{
         apbclock = RCC_ClocksStatus._mriPCLK2_Frequency;
-    } else {
+    } else 
+	{
         apbclock = RCC_ClocksStatus._mriPCLK1_Frequency;
     }
 
     /* Determine the integer part */
-    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) {
+    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
+	{
         /* Integer part computing in case Oversampling mode is 8 Samples */
         integerdivider = ((25 * apbclock) / (2 * (baudrate)));
-    } else { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+    } else 
+	{ /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         /* Integer part computing in case Oversampling mode is 16 Samples */
         integerdivider = ((25 * apbclock) / (4 * (baudrate)));
     }
@@ -246,9 +256,11 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     fractionaldivider = integerdivider - (100 * (tmpreg >> 4));
 
     /* Implement the fractional part in the register */
-    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) {
+    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
+	{
         tmpreg |= ((((fractionaldivider * 8) + 50) / 100)) & ((uint8_t)0x07);
-    } else { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+    } else 
+	{ /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         tmpreg |= ((((fractionaldivider * 16) + 50) / 100)) & ((uint8_t)0x0F);
     }
 
@@ -293,7 +305,8 @@ void enableUART(uint32_t uart)
      */
     uint32_t base_addr = USART1_BASE;
     USART_TypeDef *USARTx = USART1;
-    switch(uart) {
+    switch(uart) 
+	{
         case 1://USART1
             base_addr = USART1_BASE;
             USARTx = USART1;
@@ -333,8 +346,9 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
     GPIO_TypeDef *my_GPIO;
     uint8_t pin_tx = 9;
     uint8_t pin_rx = 10;
-    switch(uart) { //To Do:Using better function
-        case 1://USART1
+    switch(uart) //To Do:Using better function
+	{       
+		case 1://USART1
             my_GPIO = GPIOA;
             pin_tx = 9;
             pin_rx = 10;
@@ -378,8 +392,9 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
      * For Alternative-Function,assign AF
      * USART1/2/3 are all AF7
      */
-    switch(uart) { //To Do: Using better function
-        case 1://USART1
+    switch(uart)  //To Do: Using better function
+	{   
+		case 1://USART1
             my_GPIO->AFR[1] &= ~0xF0;//Pin 9,tx
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
             my_GPIO->AFR[1] &= ~0xF00;//Pin 10,rx
@@ -458,7 +473,8 @@ uint32_t Platform_CommHasReceiveData(void)
 
 int Platform_CommReceiveChar(void)
 {
-    while(!Platform_CommHasReceiveData()) {
+    while(!Platform_CommHasReceiveData()) 
+	{
         //busy wait
     }
     return (__mriStm32f429xxState.pCurrentUart->pUartRegisters->DR & 0x1FF);
@@ -469,7 +485,8 @@ int Platform_CommReceiveChar(void)
 void Platform_CommSendChar(int Character)
 {
     USART_TypeDef *uart = __mriStm32f429xxState.pCurrentUart->pUartRegisters;
-    while (!(uart->SR & USART_SR_TXE)) {
+    while (!(uart->SR & USART_SR_TXE)) 
+	{
         //busy wait
     }
     uart->DR = (Character & 0x1FF);
@@ -526,7 +543,8 @@ static int isNoReceivedCharAndNoTimeout(void);
 
 void Platform_CommWaitForReceiveDataToStop(void)
 {
-    while (hasHostSentDataInLessThan10Milliseconds()) {
+    while (hasHostSentDataInLessThan10Milliseconds()) 
+	{
         Platform_CommReceiveChar();
     }
 }
@@ -539,7 +557,8 @@ static int hasHostSentDataInLessThan10Milliseconds(void)
     uint32_t originalSysTickReloadValue = getCurrentSysTickReloadValue();
     start10MillisecondSysTick();
 
-    while (isNoReceivedCharAndNoTimeout()) {
+    while (isNoReceivedCharAndNoTimeout()) 
+	{
     }
 
     setSysTickReloadValue(originalSysTickReloadValue);
