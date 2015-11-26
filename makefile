@@ -224,6 +224,7 @@ $(eval $(call armv7m_module,NATIVE_MEM,memory/native))
 
 # ** DEVICES **
 
+# STM32F429XX device sources.
 $(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
 
 # LPC176x device sources.
