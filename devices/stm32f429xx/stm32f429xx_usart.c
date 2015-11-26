@@ -1,5 +1,5 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
-   Copyright 2015 JaredCJR   (https://github.com/JaredCJR)
+/* Copyright 2015 Adam Green     (http://mbed.org/users/AdamGreen/)
+   Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -23,30 +23,31 @@
 #include "stm32f429xx_usart.h"
 
 //start count by 0,1,2,etc
-static const UartConfiguration g_uartConfigurations[] = {
+static const UartConfiguration g_uartConfigurations[] = 
+{
     {
-		/* 
-		 * Tx=PA9
-		 * Rx=PA10
-		 */
+        /* 
+         * Tx=PA9
+         * Rx=PA10
+         */
         USART1,
         7,//AF7
         7//AF7
     },
     {
-		/* 
-		 * Tx=PD5
-		 * Rx=PD6
-		 */
+        /* 
+         * Tx=PD5
+         * Rx=PD6
+         */
         USART2,
         7,//AF7
         7//AF7
     },
     {
-		/* 
-		 * Tx=PB10
-		 * Rx=PB11
-		 */
+        /* 
+         * Tx=PB10
+         * Rx=PB11
+         */
         USART3,
         7,//AF7
         7//AF7
@@ -54,20 +55,53 @@ static const UartConfiguration g_uartConfigurations[] = {
 };
 
 
-
-typedef struct {
+typedef struct 
+{
     int      share;
     uint32_t uartIndex;
     uint32_t baudRate;
 } UartParameters;
 
 
-static void 	configureNVICForUartInterrupt(uint32_t index);
+static void     configureNVICForUartInterrupt(uint32_t index);
 static void     parseUartParameters(Token* pParameterTokens, UartParameters* pParameters);
 static void     setManualBaudFlag(void);
 static void     setUartSharedFlag(void);
 static void     saveUartToBeUsedByDebugger(uint32_t mriUart);
-static void  	configureUartForExclusiveUseOfDebugger(UartParameters* pParameters);
+static void     configureUartForExclusiveUseOfDebugger(UartParameters* pParameters);
+
+static uint32_t getDecimalDigit(char currChar) 
+{
+    if (currChar >= '0' && currChar <= '9')
+        return currChar - '0';
+    else
+        __throw_and_return(invalidDecDigitException, 0);
+}
+
+
+static uint32_t uint32FromString(const char* pString)
+{
+    uint32_t value = 0;
+
+    while (*pString)
+    {
+        uint32_t digit;
+  
+        __try
+        {
+            digit = getDecimalDigit(*pString++);
+        }
+        __catch
+        {
+            clearExceptionCode();
+            break;
+        }
+            
+        value = value * 10 + digit;
+    }
+    
+    return value;
+}
 
 void __mriStm32f429xxUart_Init(Token *pParameterTokens)
 {
@@ -79,7 +113,7 @@ void __mriStm32f429xxUart_Init(Token *pParameterTokens)
     if (parameters.share)
         setUartSharedFlag();
     else 
-	{
+    {
         configureUartForExclusiveUseOfDebugger(&parameters);
     }
 }
@@ -87,18 +121,25 @@ void __mriStm32f429xxUart_Init(Token *pParameterTokens)
 
 static void parseUartParameters(Token* pParameterTokens, UartParameters* pParameters)
 {
-    memset(pParameters, 0, sizeof(*pParameters));
-    pParameters->uartIndex = 1;
-    pParameters->baudRate = 115200;
+	static const char baudRatePrefix[] = "MRI_UART_BAUD=";
+    const char*       pMatchingPrefix = NULL;
 
-    if (Token_MatchingString(pParameterTokens, "MRI_UART_MBED_USB"))
-        pParameters->uartIndex = 1;
+    memset(pParameters, 0, sizeof(*pParameters));
+
     if (Token_MatchingString(pParameterTokens, "MRI_UART_1"))
         pParameters->uartIndex = 1;
     if (Token_MatchingString(pParameterTokens, "MRI_UART_2"))
         pParameters->uartIndex = 2;
     if (Token_MatchingString(pParameterTokens, "MRI_UART_3"))
         pParameters->uartIndex = 3;
+
+    if ((pMatchingPrefix = Token_MatchingStringPrefix(pParameterTokens, baudRatePrefix)) != NULL)
+    {
+        pParameters->baudRate = uint32FromString(pMatchingPrefix + sizeof(baudRatePrefix)-1);
+    }else
+    {
+        pParameters->baudRate = 230400;//default baudrate
+    }
 
     if (Token_MatchingString(pParameterTokens, "MRI_UART_SHARE"))
         pParameters->share = 1;
@@ -125,7 +166,8 @@ static void enableUartPeripheralCLOCK(uint32_t uart)
      * USART2:APB1ENR;  GPIOD:AHB1
      * USART3:APB1ENR;  GPIOB:AHB1
      */
-    switch(uart) {
+    switch(uart) 
+    {
         case 1://USART1
             RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
             RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
@@ -165,7 +207,7 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
     tmp = RCC->CFGR & RCC_CFGR_SWS;
 
     switch (tmp) 
-	{
+    {
         case 0x00:  /* HSI used as system clock source */
             RCC_Clocks->_mriSYSCLK_Frequency = HSI_VALUE;
             break;
@@ -181,11 +223,11 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
             pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
 
             if (pllsource != 0) 
-			{
+            {
                 /* HSE used as PLL clock source */
                 pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
             } else 
-			{
+            {
                 /* HSI used as PLL clock source */
                 pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
             }
@@ -233,20 +275,20 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     _mriRCC_GetClocksFreq(&RCC_ClocksStatus);
 
     if ((base == USART1_BASE) || (base == USART6_BASE)) 
-	{
+    {
         apbclock = RCC_ClocksStatus._mriPCLK2_Frequency;
     } else 
-	{
+    {
         apbclock = RCC_ClocksStatus._mriPCLK1_Frequency;
     }
 
     /* Determine the integer part */
     if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
-	{
+    {
         /* Integer part computing in case Oversampling mode is 8 Samples */
         integerdivider = ((25 * apbclock) / (2 * (baudrate)));
     } else 
-	{ /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+    { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         /* Integer part computing in case Oversampling mode is 16 Samples */
         integerdivider = ((25 * apbclock) / (4 * (baudrate)));
     }
@@ -257,10 +299,10 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
 
     /* Implement the fractional part in the register */
     if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
-	{
+    {
         tmpreg |= ((((fractionaldivider * 8) + 50) / 100)) & ((uint8_t)0x07);
     } else 
-	{ /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+    { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         tmpreg |= ((((fractionaldivider * 16) + 50) / 100)) & ((uint8_t)0x0F);
     }
 
@@ -268,8 +310,9 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     return (uint16_t)tmpreg;
 }
 
-void enableUART(uint32_t uart)
+void enableUART(UartParameters *pParameters)
 {
+	uint32_t uart = pParameters->uartIndex;
     USART_TypeDef* _uart = g_uartConfigurations[uart-1].pUartRegisters;
     /*******************************___CR2___********************************/
     /*
@@ -306,7 +349,7 @@ void enableUART(uint32_t uart)
     uint32_t base_addr = USART1_BASE;
     USART_TypeDef *USARTx = USART1;
     switch(uart) 
-	{
+    {
         case 1://USART1
             base_addr = USART1_BASE;
             USARTx = USART1;
@@ -321,7 +364,7 @@ void enableUART(uint32_t uart)
             break;
     }
 
-    _uart->BRR = usart_baud_calc(base_addr,USARTx,115200);//baudrate=115200
+    _uart->BRR = usart_baud_calc(base_addr,USARTx,pParameters->baudRate);
 
     /*
      * Enable USART
@@ -347,8 +390,8 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
     uint8_t pin_tx = 9;
     uint8_t pin_rx = 10;
     switch(uart) //To Do:Using better function
-	{       
-		case 1://USART1
+    {       
+        case 1://USART1
             my_GPIO = GPIOA;
             pin_tx = 9;
             pin_rx = 10;
@@ -393,8 +436,8 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
      * USART1/2/3 are all AF7
      */
     switch(uart)  //To Do: Using better function
-	{   
-		case 1://USART1
+    {   
+        case 1://USART1
             my_GPIO->AFR[1] &= ~0xF0;//Pin 9,tx
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
             my_GPIO->AFR[1] &= ~0xF00;//Pin 10,rx
@@ -474,7 +517,7 @@ uint32_t Platform_CommHasReceiveData(void)
 int Platform_CommReceiveChar(void)
 {
     while(!Platform_CommHasReceiveData()) 
-	{
+    {
         //busy wait
     }
     return (__mriStm32f429xxState.pCurrentUart->pUartRegisters->DR & 0x1FF);
@@ -486,7 +529,7 @@ void Platform_CommSendChar(int Character)
 {
     USART_TypeDef *uart = __mriStm32f429xxState.pCurrentUart->pUartRegisters;
     while (!(uart->SR & USART_SR_TXE)) 
-	{
+    {
         //busy wait
     }
     uart->DR = (Character & 0x1FF);
@@ -525,52 +568,21 @@ int Platform_CommShouldWaitForGdbConnect(void)
 
 int Platform_CommIsWaitingForGdbToConnect(void)
 {
-    //if (!Platform_CommShouldWaitForGdbConnect())
-    	return 0;//stm32f429 does not support auto-baudrate
+        return 0;//stm32f429 does not support auto-baudrate
 }
-
 
 
 void Platform_CommPrepareToWaitForGdbConnection(void)
 {
-    //if (!Platform_CommShouldWaitForGdbConnect())
-        return;//Due to the Platform_CommShouldWaitForGdbConnect() always return 0,the if condition always enter!
+        return;//stm32f429 does not support auto-baudrate
 }
 
-
-static int hasHostSentDataInLessThan10Milliseconds(void);
-static int isNoReceivedCharAndNoTimeout(void);
 
 void Platform_CommWaitForReceiveDataToStop(void)
 {
-    while (hasHostSentDataInLessThan10Milliseconds()) 
-	{
-        Platform_CommReceiveChar();
-    }
+    return;//stm32f429 does not support auto-baudrate
 }
 
-
-
-static int hasHostSentDataInLessThan10Milliseconds(void)
-{
-    uint32_t originalSysTickControlValue = getCurrentSysTickControlValue();
-    uint32_t originalSysTickReloadValue = getCurrentSysTickReloadValue();
-    start10MillisecondSysTick();
-
-    while (isNoReceivedCharAndNoTimeout()) 
-	{
-    }
-
-    setSysTickReloadValue(originalSysTickReloadValue);
-    setSysTickControlValue(originalSysTickControlValue);
-
-    return Platform_CommHasReceiveData();
-}
-
-static int isNoReceivedCharAndNoTimeout(void)
-{
-    return !Platform_CommHasReceiveData() && !has10MillisecondSysTickExpired();
-}
 
 static void configureNVICForUartInterrupt(uint32_t index)
 {
@@ -589,7 +601,7 @@ static void configureUartForExclusiveUseOfDebugger(UartParameters* pParameters)
     uint32_t uart_index = pParameters->uartIndex;
     enableUartPeripheralCLOCK(uart_index);
     enableGPIO(uart_index);
-    enableUART(uart_index);//baudrate = 115200
+    enableUART(pParameters);
     enableUartToInterruptOnReceivedChar(uart_index);
     Platform_CommPrepareToWaitForGdbConnection();
     configureNVICForUartInterrupt(uart_index);
