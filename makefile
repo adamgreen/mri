@@ -223,6 +223,10 @@ $(eval $(call armv7m_module,NATIVE_MEM,memory/native))
 
 
 # ** DEVICES **
+
+# STM32F429XX device sources.
+$(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
+
 # LPC176x device sources.
 $(eval $(call armv7m_module,LPC176X,devices/lpc176x))
 
@@ -240,6 +244,11 @@ $(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
 $(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM LPC43XX,\
                                  boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx))
+
+# STM32F429i-Discovery STM32F429xx board
+$(eval $(call make_board_library,STM32F429_DISCO,boards/stm32f429-disco,libmri_stm32f429-disco.a,\
+                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM STM32F429XX,\
+                                  boards/stm32f429-disco devices/stm32f429xx architecture/armv7-m cmsis/STM32F429xx))
 
 # All boards to be built for ARM target.
 ARM_BOARDS : $(ARM_BOARD_LIBS)
@@ -303,3 +312,4 @@ $(GCOV_HOST_OBJDIR)/%.o : %.cpp
 ifneq "$(findstring clean,$(MAKECMDGOALS))" "clean"
     -include $(DEPS)
 endif
+
