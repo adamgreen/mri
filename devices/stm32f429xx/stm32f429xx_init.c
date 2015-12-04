@@ -61,10 +61,11 @@ void __mriStm32f429xx_Init(Token* pParameterTokens)
 static void defaultExternalInterruptsToPriority1(void)
 {
     int irq;
-    for (irq = WWDG_IRQn ; irq <= DMA2D_IRQn ; irq++) //Set all priority
-	{
-		NVIC_SetPriority((IRQn_Type)irq, 1);
-	}
+    /* Set all priority to a lower non-zero priority. */
+    for (irq = WWDG_IRQn ; irq <= DMA2D_IRQn ; irq++)
+    {
+        NVIC_SetPriority((IRQn_Type)irq, 1);
+    }
 }
 
 

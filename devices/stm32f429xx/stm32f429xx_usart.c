@@ -22,17 +22,17 @@
 #include "stm32f429xx_init.h"
 #include "stm32f429xx_usart.h"
 
-//start count by 0,1,2,etc
-static const UartConfiguration g_uartConfigurations[] = 
+/* Start indices at 0 such that UART1 is at index 0, UART2 is at index 1, etc. */
+static const UartConfiguration g_uartConfigurations[] =
 {
     {
-        /* 
+        /*
          * Tx=PA9
          * Rx=PA10
          */
         USART1,
-        7,//AF7
-        7//AF7
+        7, /* AF7 */
+        7  /* AF7 */
     },
     {
         /* 
@@ -40,17 +40,17 @@ static const UartConfiguration g_uartConfigurations[] =
          * Rx=PD6
          */
         USART2,
-        7,//AF7
-        7//AF7
+        7, /* AF7 */
+        7  /* AF7 */
     },
     {
-        /* 
+        /*
          * Tx=PB10
          * Rx=PB11
          */
         USART3,
-        7,//AF7
-        7//AF7
+        7, /* AF7 */
+        7  /* AF7 */
     }
 };
 
@@ -106,22 +106,22 @@ static uint32_t uint32FromString(const char* pString)
 void __mriStm32f429xxUart_Init(Token *pParameterTokens)
 {
     UartParameters parameters;
-    setManualBaudFlag();//STM32f429 does not support auto BaudRate
+
+    /* STM32f429 does not support auto BaudRate. */
+    setManualBaudFlag();
 
     parseUartParameters(pParameterTokens, &parameters);
     saveUartToBeUsedByDebugger(parameters.uartIndex);
     if (parameters.share)
         setUartSharedFlag();
     else 
-    {
         configureUartForExclusiveUseOfDebugger(&parameters);
-    }
 }
 
 
 static void parseUartParameters(Token* pParameterTokens, UartParameters* pParameters)
 {
-	static const char baudRatePrefix[] = "MRI_UART_BAUD=";
+    static const char baudRatePrefix[] = "MRI_UART_BAUD=";
     const char*       pMatchingPrefix = NULL;
 
     memset(pParameters, 0, sizeof(*pParameters));
@@ -136,9 +136,11 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
     if ((pMatchingPrefix = Token_MatchingStringPrefix(pParameterTokens, baudRatePrefix)) != NULL)
     {
         pParameters->baudRate = uint32FromString(pMatchingPrefix + sizeof(baudRatePrefix)-1);
-    }else
+    }
+    else
     {
-        pParameters->baudRate = 230400;//default baudrate
+        /* Default baud rate to 230400. */
+        pParameters->baudRate = 230400;
     }
 
     if (Token_MatchingString(pParameterTokens, "MRI_UART_SHARE"))
@@ -149,7 +151,8 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
 
 static void saveUartToBeUsedByDebugger(uint32_t mriUart)
 {
-    __mriStm32f429xxState.pCurrentUart = &g_uartConfigurations[mriUart-1];//-1 is due to the array start by index 0.However,we start from UART"1".
+    /* -1 is due to the array start by index 0.However,we start from UART"1". */
+    __mriStm32f429xxState.pCurrentUart = &g_uartConfigurations[mriUart-1];
 }
 
 
@@ -168,19 +171,19 @@ static void enableUartPeripheralCLOCK(uint32_t uart)
      */
     switch(uart) 
     {
-        case 1://USART1
+        case 1: /* USART1 */
             RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
             RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
             break;
-        case 2://USART2
+        case 2: /* USART2 */
             RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
             RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
             break;
-        case 3://USART3
+        case 3: /* USART3 */
             RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
             RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
             break;
-        default://USART1
+        default: /* USART1 */
             RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
             RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     }
@@ -226,7 +229,8 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
             {
                 /* HSE used as PLL clock source */
                 pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
-            } else 
+            }
+            else
             {
                 /* HSI used as PLL clock source */
                 pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
@@ -277,7 +281,8 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     if ((base == USART1_BASE) || (base == USART6_BASE)) 
     {
         apbclock = RCC_ClocksStatus._mriPCLK2_Frequency;
-    } else 
+    }
+    else
     {
         apbclock = RCC_ClocksStatus._mriPCLK1_Frequency;
     }
@@ -287,7 +292,8 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     {
         /* Integer part computing in case Oversampling mode is 8 Samples */
         integerdivider = ((25 * apbclock) / (2 * (baudrate)));
-    } else 
+    }
+    else
     { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         /* Integer part computing in case Oversampling mode is 16 Samples */
         integerdivider = ((25 * apbclock) / (4 * (baudrate)));
@@ -301,7 +307,8 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
     {
         tmpreg |= ((((fractionaldivider * 8) + 50) / 100)) & ((uint8_t)0x07);
-    } else 
+    }
+    else
     { /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
         tmpreg |= ((((fractionaldivider * 16) + 50) / 100)) & ((uint8_t)0x0F);
     }
@@ -312,7 +319,7 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
 
 void enableUART(UartParameters *pParameters)
 {
-	uint32_t uart = pParameters->uartIndex;
+    uint32_t uart = pParameters->uartIndex;
     USART_TypeDef* _uart = g_uartConfigurations[uart-1].pUartRegisters;
     /*******************************___CR2___********************************/
     /*
@@ -340,8 +347,8 @@ void enableUART(UartParameters *pParameters)
     /*
      * Flow Control don't need
      */
-    _uart->CR3 &= ~USART_CR3_RTSE;//disable RTS flow control
-    _uart->CR3 &= ~USART_CR3_CTSE;//disable CTS flow control
+    _uart->CR3 &= ~USART_CR3_RTSE; /* disable RTS flow control */
+    _uart->CR3 &= ~USART_CR3_CTSE; /* disable CTS flow control */
     /*******************************___BRR___********************************/
     /*
      * Set baud-rate
@@ -350,15 +357,15 @@ void enableUART(UartParameters *pParameters)
     USART_TypeDef *USARTx = USART1;
     switch(uart) 
     {
-        case 1://USART1
+        case 1: /* USART1 */
             base_addr = USART1_BASE;
             USARTx = USART1;
             break;
-        case 2://USART2
+        case 2: /* USART2 */
             base_addr = USART2_BASE;
             USARTx = USART2;
             break;
-        case 3://USART3
+        case 3: /* USART3 */
             base_addr = USART3_BASE;
             USARTx = USART3;
             break;
@@ -380,7 +387,8 @@ void enableUART(UartParameters *pParameters)
 #define GPIO_MODER_M(n)                 (uint32_t) (0x3 << 2*n)            /* Pin mask */
 #define GPIO_MODER_PIN(n)               (uint32_t) (2*n)                   /* Pin bitshift */
 #define GPIO_MODER_ALT                  (uint32_t) (0x2)                   /* Alternative function mode */
-void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
+/* All GPIO(contains USARTs) on AHB1 */
+void enableGPIO(uint32_t uart)
 {
     /* USART1:GPIO_A
      * USART2:GPIO_D
@@ -389,24 +397,25 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
     GPIO_TypeDef *my_GPIO;
     uint8_t pin_tx = 9;
     uint8_t pin_rx = 10;
-    switch(uart) //To Do:Using better function
-    {       
-        case 1://USART1
+    /* ToDo: Using better function */
+    switch(uart)
+    {
+        case 1: /* USART1 */
             my_GPIO = GPIOA;
             pin_tx = 9;
             pin_rx = 10;
             break;
-        case 2://USART2
+        case 2: /* USART2 */
             my_GPIO = GPIOD;
             pin_tx = 5;
             pin_rx = 6;
             break;
-        case 3://USART3
+        case 3: /* USART3 */
             my_GPIO = GPIOB;
             pin_tx = 10;
             pin_rx = 11;
             break;
-        default://USART1
+        default: /* USART1 */
             my_GPIO = GPIOA;
             pin_tx = 9;
             pin_rx = 10;
@@ -435,30 +444,31 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
      * For Alternative-Function,assign AF
      * USART1/2/3 are all AF7
      */
-    switch(uart)  //To Do: Using better function
+    /* ToDo: Using better function */
+    switch(uart)
     {   
-        case 1://USART1
-            my_GPIO->AFR[1] &= ~0xF0;//Pin 9,tx
+        case 1: /* USART1 */
+            my_GPIO->AFR[1] &= ~0xF0; /* Pin 9,tx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
-            my_GPIO->AFR[1] &= ~0xF00;//Pin 10,rx
+            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,rx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
             break;
-        case 2://USART2
-            my_GPIO->AFR[0] &= ~0xF00000;//Pin 5,tx
+        case 2: /* USART2 */
+            my_GPIO->AFR[0] &= ~0xF00000; /* Pin 5,tx */
             my_GPIO->AFR[0] |= (g_uartConfigurations[uart-1].txFunction << 20);
-            my_GPIO->AFR[0] &= ~0xF000000;//Pin 6,rx
+            my_GPIO->AFR[0] &= ~0xF000000; /* Pin 6,rx */
             my_GPIO->AFR[0] |= (g_uartConfigurations[uart-1].rxFunction << 24);
             break;
-        case 3://USART3
-            my_GPIO->AFR[1] &= ~0xF00;//Pin 10,tx
+        case 3: /* USART3 */
+            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,tx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
-            my_GPIO->AFR[1] &= ~0xF000;//Pin 11,rx
+            my_GPIO->AFR[1] &= ~0xF000; /* Pin 11,rx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
             break;
-        default://USART1
-            my_GPIO->AFR[1] &= ~0xF0;//Pin 9,tx
+        default: /* USART1 */
+            my_GPIO->AFR[1] &= ~0xF0; /* Pin 9,tx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
-            my_GPIO->AFR[1] &= ~0xF00;//Pin 10,rx
+            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,rx */
             my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
             break;
     }
@@ -468,7 +478,7 @@ void enableGPIO(uint32_t uart)//All GPIO(contains USARTs) on AHB1
      */
 #define GPIO_OTYPER_M(n)                (uint32_t) (1 << n)                  /* Pin mask */
 #define GPIO_OTYPER_PIN(n)              (uint32_t) (n)                       /* Pin bitshift */
-#define GPIO_OTYPER_OUTPUT_PUSHPULL     0                                    /*Push Pull*/
+#define GPIO_OTYPER_OUTPUT_PUSHPULL     0                                    /* Push Pull */
     my_GPIO->OTYPER &= ~GPIO_OTYPER_M(pin_tx);
     my_GPIO->OTYPER |= (GPIO_OTYPER_OUTPUT_PUSHPULL << GPIO_OTYPER_PIN(pin_tx) );
     my_GPIO->OTYPER &= ~GPIO_OTYPER_M(pin_rx);
@@ -499,11 +509,11 @@ static void setManualBaudFlag(void)
     __mriStm32f429xxState.flags |= STM32F429XX_UART_FLAGS_MANUAL_BAUD;
 }
 
-//If the order of g_uartConfigurations changes,fix it!
-/*  Return 0 for USART1
- *  Return 1 for USART2
- *  Return 2 for USART3
- */
+/* If the order of g_uartConfigurations changes,fix it!
+    Return 0 for USART1
+    Return 1 for USART2
+    Return 2 for USART3
+*/
 int Platform_CommUartIndex(void)
 {
     return __mriStm32f429xxState.pCurrentUart - g_uartConfigurations;
@@ -518,7 +528,7 @@ int Platform_CommReceiveChar(void)
 {
     while(!Platform_CommHasReceiveData()) 
     {
-        //busy wait
+        /* busy wait */
     }
     return (__mriStm32f429xxState.pCurrentUart->pUartRegisters->DR & 0x1FF);
 }
@@ -530,7 +540,7 @@ void Platform_CommSendChar(int Character)
     USART_TypeDef *uart = __mriStm32f429xxState.pCurrentUart->pUartRegisters;
     while (!(uart->SR & USART_SR_TXE)) 
     {
-        //busy wait
+        /* busy wait */
     }
     uart->DR = (Character & 0x1FF);
 }
@@ -539,7 +549,7 @@ int Platform_CommCausedInterrupt(void)
 {
     int interruptSource = (int)getCurrentlyExecutingExceptionNumber()-16;
 
-    //For USART1~3,the IRQn are continuous,others need check!
+    /* For USART1~3,the IRQn are continuous,others need check! */
     int irq_num_base = USART1_IRQn;
     int currentUartIRQ = irq_num_base + Platform_CommUartIndex();
     return currentUartIRQ==interruptSource;
@@ -547,7 +557,7 @@ int Platform_CommCausedInterrupt(void)
 
 void Platform_CommClearInterrupt(void)
 {
-    //Clear Interrupt flag,to avoid infinit loop in USARTx_Handler
+    /* Clear Interrupt flag,to avoid infinit loop in USARTx_Handler */
     __mriStm32f429xxState.pCurrentUart->pUartRegisters->SR &= ~USART_SR_RXNE;
 }
 
@@ -568,19 +578,22 @@ int Platform_CommShouldWaitForGdbConnect(void)
 
 int Platform_CommIsWaitingForGdbToConnect(void)
 {
-        return 0;//stm32f429 does not support auto-baudrate
+    /* stm32f429 does not support auto-baudrate */
+    return 0;
 }
 
 
 void Platform_CommPrepareToWaitForGdbConnection(void)
 {
-        return;//stm32f429 does not support auto-baudrate
+    /* stm32f429 does not support auto-baudrate */
+    return;
 }
 
 
 void Platform_CommWaitForReceiveDataToStop(void)
 {
-    return;//stm32f429 does not support auto-baudrate
+    /* stm32f429 does not support auto-baudrate */
+    return;
 }
 
 
@@ -606,4 +619,3 @@ static void configureUartForExclusiveUseOfDebugger(UartParameters* pParameters)
     Platform_CommPrepareToWaitForGdbConnection();
     configureNVICForUartInterrupt(uart_index);
 }
-
