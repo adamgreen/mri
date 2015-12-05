@@ -1,7 +1,5 @@
 ==MRI - Monitor for Remote Inspection
-MRI is a debug monitor which allows the GNU debugger, GDB, to debug Cortex-M3/M4 processors (currently supports
-[[http://mbed.org/handbook/mbed-NXP-LPC1768|mbed 1768]] and
-[[http://www.micromint.com/index.php?option=com_content&view=article&id=199:bambino210&catid=53:products | Micromint Bambino210 LPC4330]] devices).
+MRI is a debug monitor which allows the GNU debugger, GDB, to debug Cortex-M3/M4 processors.
 This makes it possible to debug applications running on Cortex-M devices using a full featured source level debugger
 with no extra hardware other than a serial connection.
 
@@ -23,6 +21,14 @@ link it into your program and make use of it.  Such an example is provided by th
 * works with free [[https://launchpad.net/gcc-arm-embedded|GNU Tools for ARM Embedded Processors]]
 * no program binary size limitations
 * open source (LGPL)
+
+
+==Devices Supported
+|= Device      |= Sample Boards |
+| NXP LPC17xx  | [[https://developer.mbed.org/platforms/mbed-LPC1768/ | mbed-1768]] |
+|              | [[https://www.embeddedartists.com/products/lpcxpresso/lpc1769_xpr.php | LPC1769 LPCXpresso Board]] |
+| NXP LPC43xx  | [[http://www.micromint.com/index.php?option=com_content&view=article&id=199:bambino210&catid=53:products | Micromint Bambino 210]] |
+| STM32F429XX  | [[http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF259090 | STM32F429 Discovery kit]] |
 
 
 ==How to Clone

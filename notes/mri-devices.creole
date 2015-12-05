@@ -13,6 +13,5 @@ mbed interface chip and attempt to disable it with special semi-host calls.  In 
 advantage of the existing JTAG debugger and skip MRI.
 
 == Other Devices
-The following table lists the other devices currently supported by MRI:
-|= Device      |= Samples Boards |
-|  NXP LPC4330 |  [[http://www.micromint.com/index.php?option=com_content&view=article&id=199:bambino210&catid=53:products | Micromint Bambino 210]] |
+Support for other devices has been added over time.  The current list of supported devices can be seen in the
+[[https://github.com/adamgreen/mri#devices-supported | following table]].
