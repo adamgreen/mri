@@ -461,9 +461,9 @@ void enableGPIO(uint32_t uart)
             break;
         case 3: /* USART3 */
             my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,tx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
+            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 8);
             my_GPIO->AFR[1] &= ~0xF000; /* Pin 11,rx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
+            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 12);
             break;
         default: /* USART1 */
             my_GPIO->AFR[1] &= ~0xF0; /* Pin 9,tx */
