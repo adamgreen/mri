@@ -35,10 +35,8 @@ clean :
 	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
 	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)
 	$Q $(REMOVE_DIR) $(GCOVDIR) $(QUIET)
-	$Q $(REMOVE) mri_tests$(EXE) $(QUIET)
-	$Q $(REMOVE) mri_tests_gcov$(EXE) $(QUIET)
-	$Q $(REMOVE) CppUTest_tests$(EXE) $(QUIET)
-	$Q $(REMOVE) CppUTest_tests_gcov$(EXE) $(QUIET)
+	$Q $(REMOVE) *_tests$(EXE) $(QUIET)
+	$Q $(REMOVE) *_tests_gcov$(EXE) $(QUIET)
 
 
 #  Names of tools for cross-compiling ARMv7-M binaries.
