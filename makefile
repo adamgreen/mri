@@ -176,12 +176,13 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
     .PHONY : RUN_$1_TESTS GCOV_RUN_$1_TESTS
     RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
 		@echo Runnning $$^
-		$Q $$^
+		$Q ./$$^
     $$(GCOV_HOST_$1_TESTS_EXE) : $$(GCOV_HOST_$1_TESTS_OBJ) $(GCOV_HOST_$1_LIB) $(GCOV_HOST_CPPUTEST_LIB) $4
 		$$(call gcov_link_exe,HOST)
     GCOV_RUN_$1_TESTS : $$(GCOV_HOST_$1_TESTS_EXE)
 		@echo Runnning $$^
-		$Q $$^
+		$Q $(REMOVE) $(call obj_to_gcda,$(GCOV_HOST_$1_OBJ)) $(QUIET)
+		$Q ./$$^
 endef
 define make_board_library #,BOARD,sourcedir,libfilename,OBJS,includes
     ARMV7M_$1_OBJ := $(call armv7m_objs,$2)
