@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2016 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -453,10 +453,12 @@ uint32_t Platform_CommHasReceiveData(void)
 }
 
 
-static void     waitForUartToReceiveData(void);
+static void yieldUartBusToDma(void);
+static void waitForUartToReceiveData(void);
 int Platform_CommReceiveChar(void)
 {
     waitForUartToReceiveData();
+    yieldUartBusToDma();
 
     return (int)__mriLpc176xState.pCurrentUart->pUartRegisters->RBR;
 }
@@ -465,15 +467,25 @@ static void waitForUartToReceiveData(void)
 {
     while (!Platform_CommHasReceiveData())
     {
+        yieldUartBusToDma();
     }
 }
+
+static void yieldUartBusToDma(void)
+{
+    __NOP();
+    __NOP();
+    __NOP();
+}
+
 
 static void     waitForUartToAllowTransmit(void);
 static uint32_t targetUartCanTransmit(void);
 void Platform_CommSendChar(int Character)
 {
     waitForUartToAllowTransmit();
-    
+    yieldUartBusToDma();
+
     __mriLpc176xState.pCurrentUart->pUartRegisters->THR = (uint8_t)Character;
 }
 
@@ -481,6 +493,7 @@ static void waitForUartToAllowTransmit(void)
 {
     while (!targetUartCanTransmit())
     {
+        yieldUartBusToDma();
     }
 }
 
