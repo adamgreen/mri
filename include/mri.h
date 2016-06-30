@@ -41,15 +41,63 @@ extern "C"
    used to initialize the debug monitor.  The supported options include:
    
    One of these options to indicate which UART to be used for the debugger connection:
-        MRI_UART_MBED_USB
-        MRI_UART_MBED_P9_P10
-        MRI_UART_MBED_P13_P14
-        MRI_UART_MBED_P28_P27
-        MRI_UART_0
-        MRI_UART_1
-        MRI_UART_2
-        MRI_UART_3
-        
+        Valid options for LPC1768:
+            MRI_UART_MBED_USB
+            MRI_UART_MBED_P9_P10
+            MRI_UART_MBED_P13_P14
+            MRI_UART_MBED_P28_P27
+            MRI_UART_0
+            MRI_UART_1
+            MRI_UART_2
+            MRI_UART_3
+        Valid options for STM32F429xx:
+            MRI_UART_1
+            MRI_UART_2
+            MRI_UART_3
+        Valid options for LPC43xx when specifying TX & RX pins separately:
+            One from this list:
+                MRI_UART_TX_P1_13
+                MRI_UART_TX_P1_15
+                MRI_UART_TX_P2_0
+                MRI_UART_TX_P2_3
+                MRI_UART_TX_P2_10
+                MRI_UART_TX_P3_4
+                MRI_UART_TX_P4_1
+                MRI_UART_TX_P5_6
+                MRI_UART_TX_P6_4
+                MRI_UART_TX_P7_1
+                MRI_UART_TX_P9_3
+                MRI_UART_TX_P9_5
+                MRI_UART_TX_PA_1
+                MRI_UART_TX_PC_13
+                MRI_UART_TX_PE_11
+                MRI_UART_TX_PF_2
+                MRI_UART_TX_PF_10
+            And another from this list:
+                MRI_UART_RX_P1_14
+                MRI_UART_RX_P1_16
+                MRI_UART_RX_P2_1
+                MRI_UART_RX_P2_4
+                MRI_UART_RX_P2_11
+                MRI_UART_RX_P3_5
+                MRI_UART_RX_P4_2
+                MRI_UART_RX_P5_7
+                MRI_UART_RX_P6_5
+                MRI_UART_RX_P7_2
+                MRI_UART_RX_P9_4
+                MRI_UART_RX_P9_6
+                MRI_UART_RX_PA_2
+                MRI_UART_RX_PC_14
+                MRI_UART_RX_PE_12
+                MRI_UART_RX_PF_3
+                MRI_UART_RX_PF_11
+        Valid options for LPC43xx on Bambino210E:
+            MRI_UART_MBED_USB
+            MRI_UART_0
+            MRI_UART_1
+            MRI_UART_2
+            MRI_UART_3
+
     By default the debug monitor expects to take full control of the UART to configure baud rate, etc.  However 
     including the following option will tell the monitor to assume that the user's firmware will configure and use the
     serial port until the first exception occurs:
