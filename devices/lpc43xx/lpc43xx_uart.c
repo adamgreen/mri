@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2016 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -65,11 +65,13 @@ static const UartConfiguration g_uartConfigurations[] =
     }
 };
 
+static UartConfiguration g_customUart;
+
 typedef struct
 {
-    int      share;
-    uint32_t uartIndex;
-    uint32_t baudRate;
+    const UartConfiguration* pUart;
+    int                      share;
+    uint32_t                 baudRate;
 } UartParameters;
 
 typedef struct
@@ -91,8 +93,8 @@ typedef struct
 
 
 
-static void     parseUartParameters(Token* pParameterTokens, UartParameters* pParameters);
-static void     saveUartToBeUsedByDebugger(uint32_t mriCommSetting);
+static void     parseUartParameters(Token* pParameterTokens, UartConfiguration* pUart, UartParameters* pParameters);
+static void     saveUartToBeUsedByDebugger(const UartConfiguration* pUart);
 static void     setUartSharedFlag(void);
 static uint32_t uint32FromString(const char* pString);
 static uint32_t getDecimalDigit(char currChar);
@@ -120,33 +122,284 @@ static void     enableUartToInterruptOnReceivedChar(void);
 static void     configureNVICForUartInterrupt(void);
 void __mriLpc43xxUart_Init(Token* pParameterTokens)
 {
-    UartParameters parameters;
+    UartParameters    parameters = {NULL, 0, 0};
 
-    parseUartParameters(pParameterTokens, &parameters);
-    saveUartToBeUsedByDebugger(parameters.uartIndex);
+    parseUartParameters(pParameterTokens, &g_customUart, &parameters);
+    saveUartToBeUsedByDebugger(parameters.pUart);
     if (parameters.share)
         setUartSharedFlag();
     else
         configureUartForExclusiveUseOfDebugger(&parameters);
 }
 
-static void parseUartParameters(Token* pParameterTokens, UartParameters* pParameters)
+static void parseUartParameters(Token* pParameterTokens, UartConfiguration* pUart, UartParameters* pParameters)
 {
     static const char baudRatePrefix[] = "MRI_UART_BAUD=";
     const char*       pMatchingPrefix = NULL;
+    LPC_USART_T*      pRxUartRegisters = NULL;
 
-    memset(pParameters, 0, sizeof(*pParameters));
+    /* Parse TX pins */
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P1_13"))
+    {
+        /* {P1_13, UART_1, (SCU_PINIO_UART_TX | 1)}, */
+        pUart->pUartRegisters = LPC_UART1;
+        pUart->txPin = SCU_PIN(1, 13);
+        pUart->txFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P1_15"))
+    {
+        /* {P1_15, UART_2, (SCU_PINIO_UART_TX | 1)}, */
+        pUart->pUartRegisters = LPC_USART2;
+        pUart->txPin = SCU_PIN(1, 15);
+        pUart->txFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P2_0"))
+    {
+        /* {P2_0,  UART_0, (SCU_PINIO_UART_TX | 1)}, */
+        pUart->pUartRegisters = LPC_USART0;
+        pUart->txPin = SCU_PIN(2, 0);
+        pUart->txFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P2_3"))
+    {
+        /* {P2_3,  UART_3, (SCU_PINIO_UART_TX | 2)}, */
+        pUart->pUartRegisters = LPC_USART3;
+        pUart->txPin = SCU_PIN(2, 3);
+        pUart->txFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P2_10"))
+    {
+        /* {P2_10, UART_2, (SCU_PINIO_UART_TX | 2)}, */
+        pUart->pUartRegisters = LPC_USART2;
+        pUart->txPin = SCU_PIN(2, 10);
+        pUart->txFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P3_4"))
+    {
+        /* {P3_4,  UART_1, (SCU_PINIO_UART_TX | 4)}, */
+        pUart->pUartRegisters = LPC_UART1;
+        pUart->txPin = SCU_PIN(3, 4);
+        pUart->txFunction = SCU_MODE_FUNC4;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P4_1"))
+    {
+        /* {P4_1,  UART_3, (SCU_PINIO_UART_TX | 6)}, */
+        pUart->pUartRegisters = LPC_USART3;
+        pUart->txPin = SCU_PIN(4, 1);
+        pUart->txFunction = SCU_MODE_FUNC6;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P5_6"))
+    {
+        /* {P5_6,  UART_1, (SCU_PINIO_UART_TX | 4)}, */
+        pUart->pUartRegisters = LPC_UART1;
+        pUart->txPin = SCU_PIN(5, 6);
+        pUart->txFunction = SCU_MODE_FUNC4;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P6_4"))
+    {
+        /* {P6_4,  UART_0, (SCU_PINIO_UART_TX | 2)}, */
+        pUart->pUartRegisters = LPC_USART0;
+        pUart->txPin = SCU_PIN(6, 4);
+        pUart->txFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P7_1"))
+    {
+        /* {P7_1,  UART_2, (SCU_PINIO_UART_TX | 6)}, */
+        pUart->pUartRegisters = LPC_USART2;
+        pUart->txPin = SCU_PIN(7, 1);
+        pUart->txFunction = SCU_MODE_FUNC6;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P9_3"))
+    {
+        /* {P9_3,  UART_3, (SCU_PINIO_UART_TX | 7)}, */
+        pUart->pUartRegisters = LPC_USART3;
+        pUart->txPin = SCU_PIN(9, 3);
+        pUart->txFunction = SCU_MODE_FUNC7;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_P9_5"))
+    {
+        /* {P9_5,  UART_0, (SCU_PINIO_UART_TX | 7)}, */
+        pUart->pUartRegisters = LPC_USART0;
+        pUart->txPin = SCU_PIN(9, 5);
+        pUart->txFunction = SCU_MODE_FUNC7;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_PA_1"))
+    {
+        /* {PA_1,  UART_2, (SCU_PINIO_UART_TX | 3)}, */
+        pUart->pUartRegisters = LPC_USART2;
+        pUart->txPin = SCU_PIN(0xA, 1);
+        pUart->txFunction = SCU_MODE_FUNC3;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_PC_13"))
+    {
+        /* {PC_13, UART_1, (SCU_PINIO_UART_TX | 2)}, */
+        pUart->pUartRegisters = LPC_UART1;
+        pUart->txPin = SCU_PIN(0xC, 13);
+        pUart->txFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_PE_11"))
+    {
+        /* {PE_11, UART_1, (SCU_PINIO_UART_TX | 2)}, */
+        pUart->pUartRegisters = LPC_UART1;
+        pUart->txPin = SCU_PIN(0xE, 11);
+        pUart->txFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_PF_2"))
+    {
+        /* {PF_2,  UART_3, (SCU_PINIO_UART_TX | 1)}, */
+        pUart->pUartRegisters = LPC_USART3;
+        pUart->txPin = SCU_PIN(0xF, 2);
+        pUart->txFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_TX_PF_10"))
+    {
+        /* {PF_10, UART_0, (SCU_PINIO_UART_TX | 1)}, */
+        pUart->pUartRegisters = LPC_USART0;
+        pUart->txPin = SCU_PIN(0xF, 10);
+        pUart->txFunction = SCU_MODE_FUNC1;
+    }
 
+
+    /* Parse RX pins */
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P1_14"))
+    {
+        /* {P1_14, UART_1, (SCU_PINIO_UART_RX | 1)}, */
+        pRxUartRegisters = LPC_UART1;
+        pUart->rxPin = SCU_PIN(1, 14);
+        pUart->rxFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P1_16"))
+    {
+        /* {P1_16, UART_2, (SCU_PINIO_UART_RX | 1)}, */
+        pRxUartRegisters = LPC_USART2;
+        pUart->rxPin = SCU_PIN(1, 16);
+        pUart->rxFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P2_1"))
+    {
+        /* {P2_1,  UART_0, (SCU_PINIO_UART_RX | 1)}, */
+        pRxUartRegisters = LPC_USART0;
+        pUart->rxPin = SCU_PIN(2, 1);
+        pUart->rxFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P2_4"))
+    {
+        /* {P2_4,  UART_3, (SCU_PINIO_UART_RX | 2)}, */
+        pRxUartRegisters = LPC_USART3;
+        pUart->rxPin = SCU_PIN(2, 4);
+        pUart->rxFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P2_11"))
+    {
+        /* {P2_11, UART_2, (SCU_PINIO_UART_RX | 2)}, */
+        pRxUartRegisters = LPC_USART2;
+        pUart->rxPin = SCU_PIN(2, 11);
+        pUart->rxFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P3_5"))
+    {
+        /* {P3_5,  UART_1, (SCU_PINIO_UART_RX | 4)}, */
+        pRxUartRegisters = LPC_UART1;
+        pUart->rxPin = SCU_PIN(3, 5);
+        pUart->rxFunction = SCU_MODE_FUNC4;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P4_2"))
+    {
+        /* {P4_2,  UART_3, (SCU_PINIO_UART_RX | 6)}, */
+        pRxUartRegisters = LPC_USART3;
+        pUart->rxPin = SCU_PIN(4, 2);
+        pUart->rxFunction = SCU_MODE_FUNC6;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P5_7"))
+    {
+        /* {P5_7,  UART_1, (SCU_PINIO_UART_RX | 4)}, */
+        pRxUartRegisters = LPC_UART1;
+        pUart->rxPin = SCU_PIN(5, 7);
+        pUart->rxFunction = SCU_MODE_FUNC4;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P6_5"))
+    {
+        /* {P6_5,  UART_0, (SCU_PINIO_UART_RX | 2)}, */
+        pRxUartRegisters = LPC_USART0;
+        pUart->rxPin = SCU_PIN(6, 5);
+        pUart->rxFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P7_2"))
+    {
+        /* {P7_2,  UART_2, (SCU_PINIO_UART_RX | 6)}, */
+        pRxUartRegisters = LPC_USART2;
+        pUart->rxPin = SCU_PIN(7, 2);
+        pUart->rxFunction = SCU_MODE_FUNC6;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P9_4"))
+    {
+        /* {P9_4,  UART_3, (SCU_PINIO_UART_RX | 7)}, */
+        pRxUartRegisters = LPC_USART3;
+        pUart->rxPin = SCU_PIN(9, 4);
+        pUart->rxFunction = SCU_MODE_FUNC7;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_P9_6"))
+    {
+        /* {P9_6,  UART_0, (SCU_PINIO_UART_RX | 7)}, */
+        pRxUartRegisters = LPC_USART0;
+        pUart->rxPin = SCU_PIN(9, 6);
+        pUart->rxFunction = SCU_MODE_FUNC7;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_PA_2"))
+    {
+        /* {PA_2,  UART_2, (SCU_PINIO_UART_RX | 3)}, */
+        pRxUartRegisters = LPC_USART2;
+        pUart->rxPin = SCU_PIN(0xA, 2);
+        pUart->rxFunction = SCU_MODE_FUNC3;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_PC_14"))
+    {
+        /* {PC_14, UART_1, (SCU_PINIO_UART_RX | 2)}, */
+        pRxUartRegisters = LPC_UART1;
+        pUart->rxPin = SCU_PIN(0xC, 14);
+        pUart->rxFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_PE_12"))
+    {
+        /* {PE_12, UART_1, (SCU_PINIO_UART_RX | 2)}, */
+        pRxUartRegisters = LPC_UART1;
+        pUart->rxPin = SCU_PIN(0xE, 12);
+        pUart->rxFunction = SCU_MODE_FUNC2;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_PF_3"))
+    {
+        /* {PF_3,  UART_3, (SCU_PINIO_UART_RX | 1)}, */
+        pRxUartRegisters = LPC_USART3;
+        pUart->rxPin = SCU_PIN(0xF, 3);
+        pUart->rxFunction = SCU_MODE_FUNC1;
+    }
+    if (Token_MatchingString(pParameterTokens, "MRI_UART_RX_PF_11"))
+    {
+        /* {PF_11, UART_0, (SCU_PINIO_UART_RX | 1)}, */
+        pRxUartRegisters = LPC_USART0;
+        pUart->rxPin = SCU_PIN(0xF, 11);
+        pUart->rxFunction = SCU_MODE_FUNC1;
+    }
+
+    /* Remember this UART if Tx and Rx pin matched to the same UART peripherals. */
+    if (pUart->pUartRegisters == pRxUartRegisters)
+        pParameters->pUart = pUart;
+
+    /* The Bambino210E only exposes a single set of pins per UART so these are specific to that board. */
     if (Token_MatchingString(pParameterTokens, "MRI_UART_MBED_USB"))
-        pParameters->uartIndex = 2;
+        pParameters->pUart = &g_uartConfigurations[2];
     if (Token_MatchingString(pParameterTokens, "MRI_UART_0"))
-        pParameters->uartIndex = 0;
+        pParameters->pUart = &g_uartConfigurations[0];
     if (Token_MatchingString(pParameterTokens, "MRI_UART_1"))
-        pParameters->uartIndex = 1;
+        pParameters->pUart = &g_uartConfigurations[1];
     if (Token_MatchingString(pParameterTokens, "MRI_UART_2"))
-        pParameters->uartIndex = 2;
+        pParameters->pUart = &g_uartConfigurations[2];
     if (Token_MatchingString(pParameterTokens, "MRI_UART_3"))
-        pParameters->uartIndex = 3;
+        pParameters->pUart = &g_uartConfigurations[3];
+
+    /* Default to MRI_UART_MBED_USB if nothing else was specified. */
+    if (!pParameters->pUart)
+        pParameters->pUart = &g_uartConfigurations[2];
 
     if ((pMatchingPrefix = Token_MatchingStringPrefix(pParameterTokens, baudRatePrefix)) != NULL)
         pParameters->baudRate = uint32FromString(pMatchingPrefix + sizeof(baudRatePrefix)-1);
@@ -155,9 +408,9 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
         pParameters->share = 1;
 }
 
-static void saveUartToBeUsedByDebugger(uint32_t mriUart)
+static void saveUartToBeUsedByDebugger(const UartConfiguration* pUart)
 {
-    __mriLpc43xxState.pCurrentUart = &g_uartConfigurations[mriUart];
+    __mriLpc43xxState.pCurrentUart = pUart;
 }
 
 static void setUartSharedFlag(void)
@@ -413,7 +666,16 @@ static void configureNVICForUartInterrupt(void)
 
 int Platform_CommUartIndex(void)
 {
-    return __mriLpc43xxState.pCurrentUart - g_uartConfigurations;
+    if (__mriLpc43xxState.pCurrentUart->pUartRegisters == LPC_USART0)
+        return 0;
+    else if (__mriLpc43xxState.pCurrentUart->pUartRegisters == LPC_UART1)
+        return 1;
+    else if (__mriLpc43xxState.pCurrentUart->pUartRegisters == LPC_USART2)
+        return 2;
+    else if (__mriLpc43xxState.pCurrentUart->pUartRegisters == LPC_USART3)
+        return 3;
+    else
+        return -1;
 }
 
 
