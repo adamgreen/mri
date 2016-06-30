@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2016 Adam Green (http://mbed.org/users/AdamGreen/)
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published
@@ -21,15 +21,25 @@
 #include "../../architectures/armv7-m/debug_cm3.h"
 
 
-static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
-                                     "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
-                                     "<memory-map>"
-                                     "<memory type=\"flash\" start=\"0x14000000\" length=\"0x4000000\"> <property name=\"blocksize\">0x400</property></memory>"
-                                     "<memory type=\"ram\" start=\"0x10000000\" length=\"0x20000\"> </memory>"
-                                     "<memory type=\"ram\" start=\"0x10080000\" length=\"0x12000\"> </memory>"
-                                     "<memory type=\"ram\" start=\"0x20000000\" length=\"0x8000\"> </memory>"
-                                     "<memory type=\"ram\" start=\"0x20008000\" length=\"0x8000\"> </memory>"
-                                     "</memory-map>";
+static const char g_memoryMapXml4330[] = "<?xml version=\"1.0\"?>"
+                                         "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                                         "<memory-map>"
+                                         "<memory type=\"flash\" start=\"0x14000000\" length=\"0x4000000\"> <property name=\"blocksize\">0x400</property></memory>"
+                                         "<memory type=\"ram\" start=\"0x10000000\" length=\"0x20000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x10080000\" length=\"0x12000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x20000000\" length=\"0x8000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x20008000\" length=\"0x8000\"> </memory>"
+                                         "</memory-map>";
+static const char g_memoryMapXml4337[] = "<?xml version=\"1.0\"?>"
+                                         "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                                         "<memory-map>"
+                                         "<memory type=\"flash\" start=\"0x1A000000\" length=\"0x80000\"> <property name=\"blocksize\">0x400</property></memory>"
+                                         "<memory type=\"flash\" start=\"0x1B000000\" length=\"0x80000\"> <property name=\"blocksize\">0x400</property></memory>"
+                                         "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x10080000\" length=\"0xA000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x20000000\" length=\"0x8000\"> </memory>"
+                                         "<memory type=\"ram\" start=\"0x20008000\" length=\"0x8000\"> </memory>"
+                                         "</memory-map>";
 Lpc43xxState __mriLpc43xxState;
 
 
@@ -63,13 +73,26 @@ static void defaultExternalInterruptsToPriority1(void)
 }
 
 
+static int isLpc4337(void);
 uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
-    return sizeof(g_memoryMapXml) - 1;
+    if (isLpc4337())
+        return sizeof(g_memoryMapXml4337) - 1;
+    else
+        return sizeof(g_memoryMapXml4330) - 1;
+}
+
+static int isLpc4337(void)
+{
+    /* Code running on the LPC4337 will be in internal FLASH which is at higher address than LPC4330 SPIFI FLASH. */
+    return ((uint32_t)__mriLpc43xx_Init >= 0x1A000000);
 }
 
 
 const char* Platform_GetDeviceMemoryMapXml(void)
 {
-    return g_memoryMapXml;
+    if (isLpc4337())
+        return g_memoryMapXml4337;
+    else
+        return g_memoryMapXml4330;
 }
