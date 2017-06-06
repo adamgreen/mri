@@ -20,7 +20,7 @@ link it into your program and make use of it.  Such an example is provided by th
 ** maintains access to mbed device's unique ethernet address
 * works with free [[https://launchpad.net/gcc-arm-embedded|GNU Tools for ARM Embedded Processors]]
 * no program binary size limitations
-* open source (LGPL)
+* open source (Apache Licensed)
 
 
 ==Devices Supported
