@@ -896,7 +896,7 @@ static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, ui
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 void Platform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
-    sendRegisterForTResponse(pBuffer, CONTEXT_MEMBER_INDEX(R12), __mriCortexMState.context.R12);
+    sendRegisterForTResponse(pBuffer, CONTEXT_MEMBER_INDEX(R7), __mriCortexMState.context.R7);
     sendRegisterForTResponse(pBuffer, CONTEXT_MEMBER_INDEX(SP), __mriCortexMState.context.SP);
     sendRegisterForTResponse(pBuffer, CONTEXT_MEMBER_INDEX(LR), __mriCortexMState.context.LR);
     sendRegisterForTResponse(pBuffer, CONTEXT_MEMBER_INDEX(PC), __mriCortexMState.context.PC);
