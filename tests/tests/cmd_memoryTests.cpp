@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ TEST(cmdMemory, MemoryRead32_FaultAndReturnNoBytes)
     platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
     platformMock_FaultOnSpecificMemoryCall(1);
         __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$#00+") );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$E03#a8+") );
 }
 
 TEST(cmdMemory, MemoryRead16_FaultAndReturnNoBytes)
@@ -142,7 +142,7 @@ TEST(cmdMemory, MemoryRead16_FaultAndReturnNoBytes)
     platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
     platformMock_FaultOnSpecificMemoryCall(1);
         __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$#00+") );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$E03#a8+") );
 }
 
 TEST(cmdMemory, MemoryRead8_FaultAndReturnNoBytes)
@@ -153,7 +153,7 @@ TEST(cmdMemory, MemoryRead8_FaultAndReturnNoBytes)
     platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
     platformMock_FaultOnSpecificMemoryCall(1);
         __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$#00+") );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$E03#a8+") );
 }
 
 TEST(cmdMemory, MemoryRead8_FaultOnLastOfThreeBytes)

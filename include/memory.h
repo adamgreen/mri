@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 #include "buffer.h"
 
 /* Real name of functions are in __mri namespace. */
-int __mriMem_ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount);
-int __mriMem_WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
-int __mriMem_WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
+uint32_t __mriMem_ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount);
+int      __mriMem_WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
+int      __mriMem_WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
 #define ReadMemoryIntoHexBuffer     __mriMem_ReadMemoryIntoHexBuffer

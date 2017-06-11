@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ uint32_t HandleMemoryReadCommand(void)
 {
     Buffer*       pBuffer = GetBuffer();
     AddressLength addressLength;
+    uint32_t      result;
 
     __try
     {
@@ -47,7 +48,9 @@ uint32_t HandleMemoryReadCommand(void)
     }
 
     InitBuffer();
-    ReadMemoryIntoHexBuffer(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length);
+    result = ReadMemoryIntoHexBuffer(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length);
+    if (result == 0)
+        PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 #include "memory.h"
 
 
-static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount);
-static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory);
+static uint32_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount);
+static uint32_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory);
 static int isNotHalfWordAligned(const void* pvMemory);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t length);
-static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory);
+static uint32_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory);
 static int isNotWordAligned(const void* pvMemory);
-int ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount)
+uint32_t ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount)
 {
     switch (readByteCount)
     {
@@ -36,8 +36,9 @@ int ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t read
     }
 }
 
-static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount)
+static uint32_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount)
 {
+    uint32_t byteCount = 0;
     uint8_t* p = (uint8_t*) pvMemory;
     
     while (readByteCount-- > 0)
@@ -46,15 +47,16 @@ static int readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, 
         
         byte = Platform_MemRead8(p++);
         if (Platform_WasMemoryFaultEncountered())
-            return 0;
+            break;
 
         Buffer_WriteByteAsHex(pBuffer, byte);
+        byteCount++;
     }
 
-    return 1;
+    return byteCount;
 }
 
-static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
+static uint32_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
 {
     uint16_t value;
     
@@ -66,7 +68,7 @@ static int readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory
         return 0;
     writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
 
-    return 1;
+    return sizeof(value);
 }
 
 static int isNotHalfWordAligned(const void* pvMemory)
@@ -81,7 +83,7 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t leng
         Buffer_WriteByteAsHex(pBuffer, *pBytes++);
 }
 
-static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
+static uint32_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
 {
     uint32_t value;
     
@@ -93,7 +95,7 @@ static int readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
         return 0;
     writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
 
-    return 1;
+    return sizeof(value);
 }
 
 static int isNotWordAligned(const void* pvMemory)
