@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -239,6 +239,7 @@ static int handleGDBCommand(void)
     {
         {Send_T_StopResponse,                       '?'},
         {HandleContinueCommand,                     'c'},
+        {HandleContinueWithSignalCommand,           'C'},
         {HandleFileIOCommand,                       'F'},
         {HandleRegisterReadCommand,                 'g'},
         {HandleRegisterWriteCommand,                'G'},
@@ -246,6 +247,7 @@ static int handleGDBCommand(void)
         {HandleMemoryWriteCommand,                  'M'},
         {HandleQueryCommand,                        'q'},
         {HandleSingleStepCommand,                   's'},
+        {HandleSingleStepWithSignalCommand,         'S'},
         {HandleBinaryMemoryWriteCommand,            'X'},
         {HandleBreakpointWatchpointRemoveCommand,   'z'},
         {HandleBreakpointWatchpointSetCommand,      'Z'}

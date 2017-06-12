@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -68,4 +68,50 @@ TEST(cmdContinue, SetProgramCountWithContinueCommand)
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, SetSignalOnly)
+{
+    platformMock_CommInitReceiveChecksummedData("+$C0b#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, SetSignalWithAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$C0b;f00d#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, SetSignalSkipOverHardcodedBreakpoints)
+{
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$C0b#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, SetSignalCommandWithMissingSignalValue)
+{
+    platformMock_CommInitReceiveChecksummedData("+$C#", "+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, SetSignalCommandWithMissingAddressAfterSemicolon)
+{
+    platformMock_CommInitReceiveChecksummedData("+$C0b;#", "+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }

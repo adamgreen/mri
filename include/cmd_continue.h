@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@
 
 /* Real name of functions are in __mri namespace. */
 uint32_t __mriCmd_HandleContinueCommand(void);
+uint32_t __mriCmd_HandleContinueWithSignalCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
-#define HandleContinueCommand __mriCmd_HandleContinueCommand
+#define HandleContinueCommand           __mriCmd_HandleContinueCommand
+#define HandleContinueWithSignalCommand __mriCmd_HandleContinueWithSignalCommand
 
 #endif /* _CMD_CONTINUE_H_ */
