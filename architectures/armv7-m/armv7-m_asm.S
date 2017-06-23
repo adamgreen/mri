@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -167,6 +167,15 @@ mriSaveRestoreContext:
     str     r2, [r0], #8      /* Skip over SP which will be saved in context just before calling __mriDebugException. */
     /* Store LR, PC, and PSR to context. */
     stmia   r0!, {r3, r4, r5}
+    /* Skip over MSP since it was already saved in context. */
+    adds    r0, #4
+    /* Store PSP, PRIMASK, BASEPRI, FAULTMASK, and CONTROL to context. */
+    mrs     r2, psp
+    mrs     r3, primask
+    mrs     r4, basepri
+    mrs     r6, faultmask /* Don't use r5 since later code expects it to still contain PSR. */
+    mrs     r7, control
+    stmia   r0!, {r2-r4, r6-r7}
 
     /* Fetch the stacked lr back into r2 and check for auto-stacked FPU registers. */
     ldr     r2, [sp, #4]
@@ -189,6 +198,7 @@ mriSaveRestoreContext:
     str         r2, [r0], #4
     b           5$
 
+    /* Get here if no floating point registers were auto-stacked. */
     /* If FPU is enabled then move current FPSCR into R2 and then save all FPU registers to context. */
 3$: ldr     r2, =CPACR
     ldr     r2, [r2]
@@ -213,8 +223,9 @@ mriSaveRestoreContext:
     tst     r5, #PSR_STACK_ALIGN
     it      ne
     addne   r1, r1, #4
-    /* Jump back past the PSR, PC and LR that were placed in context to store the potentially updated SP. */
-    str     r1, [r0, #-16]
+    /* Jump back past the CONTROL, FAULTMASK, BASEPRI, PRIMASK, PSP, MSP, PSR, PC and LR that were placed in context 
+       to store the potentially updated SP. */
+    str     r1, [r0, #-40]
 
 
     /**** Run the C routine which allows for debugging of exceptions. */
@@ -243,13 +254,13 @@ mriSaveRestoreContext:
     bne     6$
 
     /* If FPU is enabled then pull all FPU register values out of the debug context. */
-    /* R0 is currently pointing at the XPSR value.  Increment to point to S0 instead. */
-    adds        r0, #4
+    /* R0 is currently pointing at the XPSR value.  Advance to point to S0 instead. */
+    adds        r0, #(7 * 4)
     vldmia.32   r0!, {s0-s31}
     ldr         r2, [r0]
     vmsr        fpscr, r2
     /* Point R0 back to the PSR in the debug context. */
-    subs        r0, #(33 * 4)
+    subs        r0, #(39 * 4)
 
     /* Copy S0-S15,FPSCR to auto-stacked area if the auto-stack bit is set in exception LR. */
     /* Fetch the stacked lr back into r3 and check for the auto-stack bit. */

@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -82,6 +82,14 @@ static const char g_targetXml[] =
     "<reg name=\"lr\" bitsize=\"32\"/>\n"
     "<reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>\n"
     "<reg name=\"xpsr\" bitsize=\"32\" regnum=\"25\"/>\n"
+    "</feature>\n"
+    "<feature name=\"org.gnu.gdb.arm.m-system\">\n"
+    "<reg name=\"msp\" bitsize=\"32\" regnum=\"26\"/>\n"
+    "<reg name=\"psp\" bitsize=\"32\" regnum=\"27\"/>\n"
+    "<reg name=\"primask\" bitsize=\"32\" regnum=\"28\"/>\n"
+    "<reg name=\"basepri\" bitsize=\"32\" regnum=\"29\"/>\n"
+    "<reg name=\"faultmask\" bitsize=\"32\" regnum=\"30\"/>\n"
+    "<reg name=\"control\" bitsize=\"32\" regnum=\"31\"/>\n"
     "</feature>\n"
 #if MRI_DEVICE_HAS_FPU
     "<feature name=\"org.gnu.gdb.arm.vfp\">\n"

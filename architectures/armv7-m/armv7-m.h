@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #define CORTEXM_FLAGS_RESTORE_BASEPRI       8
 #define CORTEXM_FLAGS_SVC_STEP              16
 
-/* Constants related to special memory area used by the debugger for its stack so that it doesn't interferes with
+/* Constants related to special memory area used by the debugger for its stack so that it doesn't interfere with
    the task's stack contents. */
 #define CORTEXM_DEBUGGER_STACK_SIZE            39
 #define CORTEXM_DEBUGGER_STACK_SIZE_IN_BYTES   (CORTEXM_DEBUGGER_STACK_SIZE * 8)
@@ -35,9 +35,9 @@
    structure from within assembly language code. */
 #define CORTEXM_STATE_DEBUGGER_STACK_OFFSET 0
 #define CORTEXM_STATE_FLAGS_OFFSET          (CORTEXM_STATE_DEBUGGER_STACK_OFFSET + CORTEXM_DEBUGGER_STACK_SIZE_IN_BYTES)
-#define CORTEXM_STATE_SAVED_MSP_OFFSET      (CORTEXM_STATE_FLAGS_OFFSET + 4)
-#define CORTEXM_STATE_TASK_SP_OFFSET        (CORTEXM_STATE_SAVED_MSP_OFFSET + 4)
+#define CORTEXM_STATE_TASK_SP_OFFSET        (CORTEXM_STATE_FLAGS_OFFSET + 4)
 #define CORTEXM_STATE_CONTEXT_OFFSET        (CORTEXM_STATE_TASK_SP_OFFSET + 4)
+#define CORTEXM_STATE_SAVED_MSP_OFFSET      (CORTEXM_STATE_CONTEXT_OFFSET + 17 * 4)
 
 
 /* Definitions only required from C code. */
@@ -74,6 +74,12 @@ typedef struct
     uint32_t    LR;
     uint32_t    PC;
     uint32_t    CPSR;
+    uint32_t    MSP;
+    uint32_t    PSP;
+    uint32_t    PRIMASK;
+    uint32_t    BASEPRI;
+    uint32_t    FAULTMASK;
+    uint32_t    CONTROL;
 #if MRI_DEVICE_HAS_FPU
     uint32_t    S0;
     uint32_t    S1;
@@ -119,7 +125,6 @@ typedef struct
 {
     uint64_t            debuggerStack[CORTEXM_DEBUGGER_STACK_SIZE];
     volatile uint32_t   flags;
-    volatile uint32_t   savedMSP;
     volatile uint32_t   taskSP;
     Context             context;
     uint32_t            originalPC;
