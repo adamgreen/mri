@@ -15,7 +15,7 @@ The MRI project already contains CMSIS headers for the devices that it currently
 to:
 * Create a new subfolder under this cmsis/ folder for your new device (i.e. LPC17xx, LPC43xx, etc).
 * Copy the vendor provided CMSIS headers for the device into this new directory.  One source for these CMSIS device
-  headers is the [[https://github.com/mbedmicro/mbed/tree/master/libraries/mbed/targets/cmsis | mbed SDK project]].
+  headers is the [[https://github.com/ARMmbed/mbed-os | mbed-os project]].
 ** Just copy over the **.h** device specific header files.
 ** Don't copy over the .c, .s, and toolchain specific folders as MRI doesn't require them.
 
@@ -67,7 +67,7 @@ UART0_IRQHandler:
 How many of these UART handlers should be provided and what should they be named?  The number depends on the amount of
 UART ports provided by a particular device.  The names must match those placed in the interrupt vector table by the
 CMSIS startup code.  The following is an excerpt from the
-[[https://github.com/mbedmicro/mbed/blob/master/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/startup_LPC17xx.s | LPC17xx CMSIS startup code for GCC]]:
+[[https://github.com/ARMmbed/mbed-os/blob/master/targets/TARGET_NXP/TARGET_LPC176X/device/TOOLCHAIN_GCC_ARM/startup_LPC17xx.S | LPC17xx CMSIS startup code for GCC]]:
 {{{
 __isr_vector:
     ...
