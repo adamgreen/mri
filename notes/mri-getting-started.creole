@@ -14,15 +14,15 @@ This section provides steps to setup MRI the first time and use it to debug one 
 You will first want to make sure that you can connect to your mbed device using the USB virtual serial port provided by the mbed interface chip.  Follow the steps [[http://mbed.org/handbook/SerialPC|documented here in the mbed handbook]] to get your PC talking to the mbed device.  Once you have this working, take note of the serial port identifier that worked for you (ie: COM3, /dev/ttyACM0, /dev/tty.usbmodem412, etc.)  You will soon need to provide this identifier to the GNU debugger, GDB.
 
 ===Build debugger enabled binaries
-By default the GCC4MBED project builds binaries of a **Release** type which produces optimized code and doesn't include any debugging support.  This will need to be changed to a **Debug** build type to enable the MRI debugger in the binaries.  This can be done by following these steps:
-* Run the BuildShellDebug script found in the root of the GCC4MBED project directory.  This script will start a shell which is configured to create debuggable binaries for your mbed.
+By default the GCC4MBED project builds binaries of a **Release** type which produces optimized code and doesn't include any debugging support. This should be changed to a **Debug** build type to disable optimizations (makes for easier debugging) and then enable the MRI debugger in the produced binaries.  This can be done by following these steps:
+* Run the BuildShellDebug script found in the root of the GCC4MBED project directory.  This script will start a shell which is configured to create unoptimized binaries for your mbed.
 * Run "cd samples" from the debug shell.
-* Run "make clean all" from the debug shell.
+* Run "make clean all MRI_ENABLE=1" from the debug shell.
 
 //Using the BuildShell script will revert back to Release.//
 
 ===Deploy FileTest sample to your mbed
-From within the debug shell, run "cd FileTest" to switch into the directory which contains the sample's sources and binaries.  Make sure that your mbed device is connected to your PC and that you can access its file system from your PC.  On OS X and Linux, you can probably now just run "make deploy" from the debug shell to have the FileTest.bin copied to your mbed device.  On Windows, you will need to issue something like "copy FileTest.bin e:\" to copy the binary to your mbed device but you will need to switch the "e:\" drive designation to match whatever is appropriate for your particular machine.
+From within the debug shell, run "cd FileTest" to switch into the directory which contains the sample's sources and binaries.  Make sure that your mbed device is connected to your PC and that you can access its file system from your PC.  On macOS and Linux, you can probably now just run "make deploy" from the debug shell to have the FileTest.bin copied to your mbed device.  On Windows, you will need to issue something like "copy FileTest.bin e:\" to copy the binary to your mbed device but you will need to switch the "e:\" drive designation to match whatever is appropriate for your particular machine.
 
 //You can read [[https://github.com/adamgreen/gcc4mbed/blob/master/notes/install.creole#deploy]] to learn more about how to configure the LPC_DEPLOY environment variable from your BuildShell* scripts to make deployment during build easier.//
 
@@ -30,12 +30,12 @@ From within the debug shell, run "cd FileTest" to switch into the directory whic
 If you have a terminal application such as **HyperTerminal** or **screen** connected to your mbed's virtual serial port, then disconnect it now.  This allows GDB to use the same serial port for remote debugging of the mbed device.
 
 ===Reset the mbed device
-Press the reset button on the mbed device.  The application will be restarted but not actually start execution as the debug builds actually halt at startup and wait for GDB to be connected.  This allows you, the developer, to set breakpoints at locations of interest in your code before starting your main() routine.
+Press the reset button on the mbed device.  The application will be restarted but not actually start execution as the MRI enabled builds halt at startup and wait for GDB to be connected.  This allows you, the developer, to set breakpoints at locations of interest in your code (including global constructors) before starting your main() routine.
 
 ===Connect GDB to mbed
 We are now going to connect GDB to your mbed device over the USB virtual serial port.  The command you use to start GDB is similar across different operating systems and machines but the serial port identification portion at the end of the command line will depend on your particular machine.  Just replace that portion of the command line examples shown next with what you found in the first step of this Getting Started guide:
 * **Windows:** {{{arm-none-eabi-gdb FileTest.elf --baud 460800 -ex "set target-charset ASCII" -ex "set print pretty on" -ex "set remotelogfile mri.log" -ex "target remote com3"}}}
-* **OS X:** {{{arm-none-eabi-gdb FileTest.elf --baud 230400 -ex "set target-charset ASCII" -ex "set print pretty on" -ex "set remotelogfile mri.log" -ex "target remote /dev/tty.usbmodem412"}}}
+* **macOS:** {{{arm-none-eabi-gdb FileTest.elf --baud 230400 -ex "set target-charset ASCII" -ex "set print pretty on" -ex "set remotelogfile mri.log" -ex "target remote /dev/tty.usbmodem412"}}}
 * **Linux:** {{{arm-none-eabi-gdb FileTest.elf --baud 460800 -ex "set target-charset ASCII" -ex "set print pretty on" -ex "set remotelogfile mri.log" -ex "target remote /dev/ttyACM0"}}}
 
 A successful connection should result in text similar to this:
@@ -274,9 +274,9 @@ We can continue stepping through this code for a bit more:
 51	    fp = fopen(Filename, "r");
 }}}
 
-Normally this foo.bar file would be created on the 2MB FLASH device built into the mbed device.  There is a problem with that though.  MRI needs to disable the mbed interface JTAG connection so that it can act as the debugger instead.  Unfortunately the LocalFileSystem uses this JTAG interface to talk to this embedded FLASH.  So where did the foo.bar file end up?  If we actually look at the FileTest sample directory where we are currently running GDB, we will see the following:
+Normally this foo.bar file would be created on the 2MB FLASH device built into the mbed device.  There is a problem with that though.  MRI needs to disable the mbed interface JTAG connection so that it can act as the debugger instead.  Unfortunately the LocalFileSystem uses this JTAG interface to talk to this embedded FLASH.  So where did the foo.bar file end up?  If we actually look at the FileTest sample directory where we are currently running GDB, we will see the following (**Note:** Use {{{shell dir}}} on Windows instead of {{{shell ls -l}}}:
 {{{
-/depots/gcc4mbed/samples/FileTest$ ls -l
+(gdb) shell ls -l
 total 1192
 -rwxr-xr-x  1 adamgr  admin   64632 Aug  9 22:49 FileTest.bin
 -rwxr-xr-x  1 adamgr  admin  309396 Aug  9 22:49 FileTest.elf
@@ -326,7 +326,7 @@ main () at main.cpp:73
 
 We are back in main after having called the remove() function.  Let's take a look at the sample source directory again to see if foo.bar was deleted as expected:
 {{{
-/depots/gcc4mbed/samples/FileTest$ ls -l
+(gdb) shell ls -l
 total 1192
 -rwxr-xr-x  1 adamgr  admin   64632 Aug  9 22:49 FileTest.bin
 -rwxr-xr-x  1 adamgr  admin  309396 Aug  9 22:49 FileTest.elf
@@ -370,5 +370,5 @@ Quit anyway? (y or n) y
 }}}
 One thing to note is that after the continue command is sent, there is some text, "Test completed", displayed in GDB before the program traps into the exit() call at the end of the program.  This text actually comes from a printf() call at the end of the main() routine.  MRI intercepts these printf() calls and sends them over to GDB.  This means that you can combine printf() debugging with the more full featured GDB debugging.
 
-Want more information about how to use GDB?  If so checkout its documentation which will have been installed in your gcc4mbed project at gcc-arm-none-eabi/share/doc/pdf/gdb.pdf
+Want more information about how to use GDB?  If so checkout its documentation which will have been installed in your gcc4mbed project at gcc-arm-none-eabi/share/doc/gcc-arm-none-eabi/pdf/gdb.pdf
 
