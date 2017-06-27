@@ -13,11 +13,11 @@ link it into your program and make use of it.  Such an example is provided by th
 * 4+ data watchpoints (actual number depends on device)
 * single stepping
 * runs over any of the UART ports on the device (selected when user compiles their code)
-* baud rate is determined at runtime (through GDB command line)
+* baud rate is determined at runtime (through GDB command line) on devices that support auto-baud detection
 * semi-host functionality:
 ** stdout/stderr/stdin are redirected to/from the GDB console
-** mbed LocalFileSystem semi-host support (fopen, fwrite, fread, fseek, and fclose)
-** maintains access to mbed device's unique ethernet address
+** mbed LocalFileSystem semi-host support (fopen, fwrite, fread, fseek, and fclose) - **mbed-LPC1768 only**
+** maintains access to mbed device's unique ethernet address - **mbed-LPC1768 only**
 * works with free [[https://launchpad.net/gcc-arm-embedded|GNU Tools for ARM Embedded Processors]]
 * no program binary size limitations
 * open source (Apache Licensed)
