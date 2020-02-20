@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green     (http://mbed.org/users/AdamGreen/)
+/* Copyright 2020 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ static const UartConfiguration g_uartConfigurations[] =
         7  /* AF7 */
     },
     {
-        /* 
+        /*
          * Tx=PD5
          * Rx=PD6
          */
@@ -54,7 +54,7 @@ static const UartConfiguration g_uartConfigurations[] =
 };
 
 
-typedef struct 
+typedef struct
 {
     int      share;
     uint32_t uartIndex;
@@ -69,7 +69,7 @@ static void     setUartSharedFlag(void);
 static void     saveUartToBeUsedByDebugger(uint32_t mriUart);
 static void     configureUartForExclusiveUseOfDebugger(UartParameters* pParameters);
 
-static uint32_t getDecimalDigit(char currChar) 
+static uint32_t getDecimalDigit(char currChar)
 {
     if (currChar >= '0' && currChar <= '9')
         return currChar - '0';
@@ -85,7 +85,7 @@ static uint32_t uint32FromString(const char* pString)
     while (*pString)
     {
         uint32_t digit;
-  
+
         __try
         {
             digit = getDecimalDigit(*pString++);
@@ -95,10 +95,10 @@ static uint32_t uint32FromString(const char* pString)
             clearExceptionCode();
             break;
         }
-            
+
         value = value * 10 + digit;
     }
-    
+
     return value;
 }
 
@@ -113,7 +113,7 @@ void __mriStm32f429xxUart_Init(Token *pParameterTokens)
     saveUartToBeUsedByDebugger(parameters.uartIndex);
     if (parameters.share)
         setUartSharedFlag();
-    else 
+    else
         configureUartForExclusiveUseOfDebugger(&parameters);
 }
 
@@ -168,7 +168,7 @@ static void enableUartPeripheralCLOCK(uint32_t uart)
      * USART2:APB1ENR;  GPIOD:AHB1
      * USART3:APB1ENR;  GPIOB:AHB1
      */
-    switch(uart) 
+    switch(uart)
     {
         case 1: /* USART1 */
             RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
@@ -188,7 +188,7 @@ static void enableUartPeripheralCLOCK(uint32_t uart)
     }
 }
 
-typedef struct 
+typedef struct
 {
     uint32_t _mriSYSCLK_Frequency; /*!<  SYSCLK clock frequency expressed in Hz */
     uint32_t _mriHCLK_Frequency;   /*!<  HCLK clock frequency expressed in Hz   */
@@ -208,7 +208,7 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
     /* Get SYSCLK source -------------------------------------------------------*/
     tmp = RCC->CFGR & RCC_CFGR_SWS;
 
-    switch (tmp) 
+    switch (tmp)
     {
         case 0x00:  /* HSI used as system clock source */
             RCC_Clocks->_mriSYSCLK_Frequency = HSI_VALUE;
@@ -224,7 +224,7 @@ static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
             pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
             pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
 
-            if (pllsource != 0) 
+            if (pllsource != 0)
             {
                 /* HSE used as PLL clock source */
                 pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
@@ -277,7 +277,7 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     /* Configure the USART Baud Rate */
     _mriRCC_GetClocksFreq(&RCC_ClocksStatus);
 
-    if ((base == USART1_BASE) || (base == USART6_BASE)) 
+    if ((base == USART1_BASE) || (base == USART6_BASE))
     {
         apbclock = RCC_ClocksStatus._mriPCLK2_Frequency;
     }
@@ -287,7 +287,7 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     }
 
     /* Determine the integer part */
-    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
+    if ((USARTx->CR1 & USART_CR1_OVER8) != 0)
     {
         /* Integer part computing in case Oversampling mode is 8 Samples */
         integerdivider = ((25 * apbclock) / (2 * (baudrate)));
@@ -303,7 +303,7 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     fractionaldivider = integerdivider - (100 * (tmpreg >> 4));
 
     /* Implement the fractional part in the register */
-    if ((USARTx->CR1 & USART_CR1_OVER8) != 0) 
+    if ((USARTx->CR1 & USART_CR1_OVER8) != 0)
     {
         tmpreg |= ((((fractionaldivider * 8) + 50) / 100)) & ((uint8_t)0x07);
     }
@@ -354,7 +354,7 @@ void enableUART(UartParameters *pParameters)
      */
     uint32_t base_addr = USART1_BASE;
     USART_TypeDef *USARTx = USART1;
-    switch(uart) 
+    switch(uart)
     {
         case 1: /* USART1 */
             base_addr = USART1_BASE;
@@ -445,30 +445,25 @@ void enableGPIO(uint32_t uart)
      */
     /* ToDo: Using better function */
     switch(uart)
-    {   
-        case 1: /* USART1 */
-            my_GPIO->AFR[1] &= ~0xF0; /* Pin 9,tx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
-            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,rx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
+    {
+        case 3: /* USART3 */
+            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,tx */
+            my_GPIO->AFR[1] |= (g_uartConfigurations[2].txFunction << 8);
+            my_GPIO->AFR[1] &= ~0xF000; /* Pin 11,rx */
+            my_GPIO->AFR[1] |= (g_uartConfigurations[2].rxFunction << 12);
             break;
         case 2: /* USART2 */
             my_GPIO->AFR[0] &= ~0xF00000; /* Pin 5,tx */
-            my_GPIO->AFR[0] |= (g_uartConfigurations[uart-1].txFunction << 20);
+            my_GPIO->AFR[0] |= (g_uartConfigurations[1].txFunction << 20);
             my_GPIO->AFR[0] &= ~0xF000000; /* Pin 6,rx */
-            my_GPIO->AFR[0] |= (g_uartConfigurations[uart-1].rxFunction << 24);
+            my_GPIO->AFR[0] |= (g_uartConfigurations[1].rxFunction << 24);
             break;
-        case 3: /* USART3 */
-            my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,tx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 8);
-            my_GPIO->AFR[1] &= ~0xF000; /* Pin 11,rx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 12);
-            break;
-        default: /* USART1 */
+        case 1: /* USART1 */
+        default:
             my_GPIO->AFR[1] &= ~0xF0; /* Pin 9,tx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].txFunction << 4);
+            my_GPIO->AFR[1] |= (g_uartConfigurations[0].txFunction << 4);
             my_GPIO->AFR[1] &= ~0xF00; /* Pin 10,rx */
-            my_GPIO->AFR[1] |= (g_uartConfigurations[uart-1].rxFunction << 8);
+            my_GPIO->AFR[1] |= (g_uartConfigurations[0].rxFunction << 8);
             break;
     }
 
@@ -525,7 +520,7 @@ uint32_t Platform_CommHasReceiveData(void)
 
 int Platform_CommReceiveChar(void)
 {
-    while(!Platform_CommHasReceiveData()) 
+    while(!Platform_CommHasReceiveData())
     {
         /* busy wait */
     }
@@ -537,7 +532,7 @@ int Platform_CommReceiveChar(void)
 void Platform_CommSendChar(int Character)
 {
     USART_TypeDef *uart = __mriStm32f429xxState.pCurrentUart->pUartRegisters;
-    while (!(uart->SR & USART_SR_TXE)) 
+    while (!(uart->SR & USART_SR_TXE))
     {
         /* busy wait */
     }
