@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 
 extern "C"
 {
-#include <try_catch.h>
-#include <mri.h>
+#include <core/try_catch.h>
+#include <core/mri.h>
 
 void __mriDebugException(void);
 }
@@ -29,8 +29,8 @@ void __mriDebugException(void);
 
 TEST_GROUP(cmdMemory)
 {
-    int     m_expectedException;            
-    
+    int     m_expectedException;
+
     void setup()
     {
         m_expectedException = noException;
@@ -44,7 +44,7 @@ TEST_GROUP(cmdMemory)
         clearExceptionCode();
         platformMock_Uninit();
     }
-    
+
     void validateExceptionCode(int expectedExceptionCode)
     {
         m_expectedException = expectedExceptionCode;
@@ -212,8 +212,8 @@ TEST(cmdMemory, MemoryWrite16_FaultOnFinalWrite)
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_MEMORY_ACCESS_FAILURE "#a8+") );
  }
- 
- 
+
+
 TEST(cmdMemory, MemoryWrite8)
 {
     uint8_t  value = 0xFF;

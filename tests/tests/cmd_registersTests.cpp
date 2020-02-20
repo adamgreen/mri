@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 
 extern "C"
 {
-#include <try_catch.h>
-#include <mri.h>
+#include <core/try_catch.h>
+#include <core/mri.h>
 
 void __mriDebugException(void);
 }
@@ -28,8 +28,8 @@ void __mriDebugException(void);
 
 TEST_GROUP(cmdRegisters)
 {
-    int     m_expectedException;            
-    
+    int     m_expectedException;
+
     void setup()
     {
         m_expectedException = noException;
@@ -43,7 +43,7 @@ TEST_GROUP(cmdRegisters)
         clearExceptionCode();
         platformMock_Uninit();
     }
-    
+
     void validateExceptionCode(int expectedExceptionCode)
     {
         m_expectedException = expectedExceptionCode;
@@ -58,7 +58,7 @@ TEST(cmdRegisters, GetRegisters)
     pContext[1] = 0x22222222;
     pContext[2] = 0x33333333;
     pContext[3] = 0x44444444;
-    
+
     platformMock_CommInitReceiveChecksummedData("+$g#", "+$c#");
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$11111111222222223333333344444444#50+") );
@@ -70,10 +70,10 @@ TEST(cmdRegisters, SetRegisters)
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$OK#9a+") );
     uint32_t* pContext = platformMock_GetContext();
-    CHECK_EQUAL ( 0x78563412, pContext[0] );    
-    CHECK_EQUAL ( 0x22222222, pContext[1] );    
-    CHECK_EQUAL ( 0x33333333, pContext[2] );    
-    CHECK_EQUAL ( 0xf0debc9a, pContext[3] );    
+    CHECK_EQUAL ( 0x78563412, pContext[0] );
+    CHECK_EQUAL ( 0x22222222, pContext[1] );
+    CHECK_EQUAL ( 0x33333333, pContext[2] );
+    CHECK_EQUAL ( 0xf0debc9a, pContext[3] );
 }
 
 TEST(cmdRegisters, SetRegisters_BufferTooShort)
@@ -82,8 +82,8 @@ TEST(cmdRegisters, SetRegisters_BufferTooShort)
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_BUFFER_OVERRUN "#a9+") );
     uint32_t* pContext = platformMock_GetContext();
-    CHECK_EQUAL ( 0x78563412, pContext[0] );    
-    CHECK_EQUAL ( 0x22222222, pContext[1] );    
-    CHECK_EQUAL ( 0x33333333, pContext[2] );    
-    CHECK_EQUAL ( 0xffdebc9a, pContext[3] );    
+    CHECK_EQUAL ( 0x78563412, pContext[0] );
+    CHECK_EQUAL ( 0x22222222, pContext[1] );
+    CHECK_EQUAL ( 0x33333333, pContext[2] );
+    CHECK_EQUAL ( 0xffdebc9a, pContext[3] );
 }

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #define _LPC176X_H_
 
 #include <stdint.h>
-#include <token.h>
+#include <core/token.h>
 #include "lpc176x_uart.h"
 
 /* Flags that can be set in Lpc176xState::flags */

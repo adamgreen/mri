@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include <LPC43xx.h>
-#include <token.h>
+#include <core/token.h>
 
 #define SCU_PIN(GROUP, NUM) (((GROUP) << 16) | (NUM))
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 extern "C"
 {
-#include "platforms.h"
-#include "semihost.h"
-#include "try_catch.h"
-#include "token.h"
+#include <core/platforms.h>
+#include <core/semihost.h>
+#include <core/try_catch.h>
+#include <core/token.h>
 }
 #include "platformMock.h"
 
@@ -29,7 +29,7 @@ extern "C"
 TEST_GROUP(platformMock)
 {
     Token   m_token;
-    
+
     void setup()
     {
         platformMock_Init();
@@ -48,7 +48,7 @@ TEST_GROUP(platformMock)
         POINTERS_EQUAL( m_token.pTokenSeparators, pTokenCopy->pTokenSeparators );
         LONGS_EQUAL( m_token.tokenCount, pTokenCopy->tokenCount );
         STRCMP_EQUAL( m_token.copyOfString, pTokenCopy->copyOfString );
-        
+
         for (size_t i = 0 ; i < m_token.tokenCount ; i++)
         {
             STRCMP_EQUAL( m_token.tokenPointers[i], pTokenCopy->tokenPointers[i] );
@@ -59,7 +59,7 @@ TEST_GROUP(platformMock)
 TEST(platformMock, Platform_CommHasRecieveData_Empty)
 {
     static const char emptyData[] = "";
-    
+
     platformMock_CommInitReceiveData(emptyData);
     CHECK_FALSE( Platform_CommHasReceiveData() );
 }
@@ -67,7 +67,7 @@ TEST(platformMock, Platform_CommHasRecieveData_Empty)
 TEST(platformMock, Platform_CommHasRecieveData_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     platformMock_CommInitReceiveData(testData);
     CHECK_TRUE( Platform_CommHasReceiveData() );
 }
@@ -75,7 +75,7 @@ TEST(platformMock, Platform_CommHasRecieveData_NotEmpty)
 TEST(platformMock, Platform_CommRecieveChar_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     platformMock_CommInitReceiveData(testData);
     LONGS_EQUAL( '$', Platform_CommReceiveChar() );
 }
@@ -86,7 +86,7 @@ TEST(platformMock, Platform_CommHasReceiveData_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     platformMock_CommInitReceiveData(emptyData);
     CHECK_FALSE( Platform_CommHasReceiveData() );
     CHECK_TRUE( Platform_CommHasReceiveData() );
@@ -105,7 +105,7 @@ TEST(platformMock, Platform_CommReceiveChar_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     platformMock_CommInitReceiveData(emptyData);
 
     do
@@ -113,7 +113,7 @@ TEST(platformMock, Platform_CommReceiveChar_SwitchToEmptyGdbPacket)
         *p++ = (char)Platform_CommReceiveChar();
     }
     while (Platform_CommHasReceiveData());
-    
+
     LONGS_EQUAL ( strlen(emptyGdbPacket), (p - buffer) );
     CHECK( 0 == memcmp(emptyGdbPacket, buffer, strlen(emptyGdbPacket)) );
 }
@@ -123,9 +123,9 @@ TEST(platformMock, platformMock_CommReceiveEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     platformMock_CommInitReceiveData(emptyGdbPacket);
-    
+
     while (Platform_CommHasReceiveData())
     {
         *p++ = (char)Platform_CommReceiveChar();
@@ -140,9 +140,9 @@ TEST(platformMock, platformMock_CommReceive_TwoGdbPackets)
     static const char packet2[] = "$packet2#ff";
     char              buffer[16];
     char*             p = buffer;
-    
+
     platformMock_CommInitReceiveData(packet1, packet2);
-    
+
     while (Platform_CommHasReceiveData())
     {
         *p++ = (char)Platform_CommReceiveChar();
@@ -169,9 +169,9 @@ TEST(platformMock, platformMock_CommReceive_TwoGdbPacketsWithCalculatedCRC)
     static const char checksummedPacket2[] = "$packet2#aa";
     char              buffer[16];
     char*             p = buffer;
-    
+
     platformMock_CommInitReceiveChecksummedData(packet1, packet2);
-    
+
     while (Platform_CommHasReceiveData())
     {
         *p++ = (char)Platform_CommReceiveChar();
@@ -232,12 +232,12 @@ TEST(platformMock, platformMockInit_ThrowException)
 {
     int exceptionThrown = 0;
     platformMock_SetInitException(timeoutException);
-    
+
     __try
        Platform_Init(&m_token);
     __catch
         exceptionThrown = 1;
-    
+
     LONGS_EQUAL( 1, exceptionThrown );
     LONGS_EQUAL( timeoutException, getExceptionCode() );
     clearExceptionCode();
@@ -253,9 +253,9 @@ TEST(platformMock, platformMockInit_GetCallCount)
 TEST(platformMock, platformMockInit_GetInitTokenCopy)
 {
     Token_SplitString(&m_token, "Test Tokens");
-    
+
     Platform_Init(&m_token);
-    
+
     Token* pTokenCopy = platformMock_GetInitTokenCopy();
     validateTokenCopy(pTokenCopy);
 }
@@ -440,7 +440,7 @@ TEST(platformMock, Platform_EnableSingleStep)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
         Platform_EnableSingleStep();
-    CHECK_TRUE ( Platform_IsSingleStepping() ); 
+    CHECK_TRUE ( Platform_IsSingleStepping() );
 }
 
 TEST(platformMock, Platform_WasMemoryFaultEncountered_DefaultToFalse)
@@ -468,7 +468,7 @@ TEST(platformMock, Platform_CopyContextFromBuffer)
     const char data[] = "11111111222222223333333344444444";
     Buffer     buffer;
     uint32_t*  pContext;
-    
+
     Buffer_Init(&buffer, (char*)data, sizeof(data)-1);
         Platform_CopyContextFromBuffer(&buffer);
     pContext = platformMock_GetContext();
@@ -483,7 +483,7 @@ TEST(platformMock, Platform_CopyContextToBuffer)
     char       data[128];
     Buffer     buffer;
     uint32_t*  pContext;
-    
+
     pContext = platformMock_GetContext();
     pContext[0] = 0x11111111;
     pContext[1] = 0x22222222;

@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 #ifndef _PLATFORM_MOCK_H_
 #define _PLATFORM_MOCK_H_
 
-#include <token.h>
-#include <platforms.h>
+#include <core/token.h>
+#include <core/platforms.h>
 
 #define INITIAL_PC 0x10000000
 

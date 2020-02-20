@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 
 extern "C"
 {
-#include "hex_convert.h"
+#include <core/hex_convert.h>
 }
 
 // Include C++ headers for test harness.
@@ -35,28 +35,28 @@ TEST_GROUP(HexConvert)
 TEST(HexConvert, ExtractLowNibble)
 {
     uint8_t value = 0xaf;
-    
+
     LONGS_EQUAL( 0xf, EXTRACT_LO_NIBBLE(value) );
 }
 
 TEST(HexConvert, ExtractHighNibble)
 {
     uint8_t value = 0xfa;
-    
+
     LONGS_EQUAL( 0xf, EXTRACT_HI_NIBBLE(value) );
 }
 
 TEST(HexConvert, NibbleToHexChar0)
 {
     uint8_t nibble = 0x0;
-    
+
     BYTES_EQUAL( '0', NibbleToHexChar[nibble] );
 }
 
 TEST(HexConvert, NibbleToHexCharF)
 {
     uint8_t nibble = 0xF;
-    
+
     BYTES_EQUAL( 'f', NibbleToHexChar[nibble] );
 }
 
@@ -136,12 +136,12 @@ TEST(HexConvert, HexCharToNibble_InvalidG)
 {
     int value;
     int exceptionThrown = 0;
-    
+
     __try
         value = HexCharToNibble('G');
     __catch
         exceptionThrown = 1;
-        
+
     LONGS_EQUAL( -1, value );
     CHECK_TRUE( exceptionThrown );
     LONGS_EQUAL( invalidHexDigitException, getExceptionCode() );
@@ -151,12 +151,12 @@ TEST(HexConvert, HexCharToNibble_Invalidg)
 {
     int value;
     int exceptionThrown = 0;
-    
+
     __try
         value = HexCharToNibble('g');
     __catch
         exceptionThrown = 1;
-        
+
     LONGS_EQUAL( -1, value );
     CHECK_TRUE( exceptionThrown );
     LONGS_EQUAL( invalidHexDigitException, getExceptionCode() );

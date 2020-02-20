@@ -1,4 +1,4 @@
-/* Copyright 2016 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2016 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 /* Routines used to provide LPC43xx UART functionality to the mri debugger. */
 #include <string.h>
 #include <stdlib.h>
-#include "platforms.h"
-#include "../../architectures/armv7-m/debug_cm3.h"
+#include <core/platforms.h>
+#include <architectures/armv7-m/debug_cm3.h>
 #include "lpc43xx_init.h"
 
 

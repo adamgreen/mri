@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,18 +12,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/* Handler for continue gdb command. */
-#ifndef _CMD_CONTINUE_H_
-#define _CMD_CONTINUE_H_
+/* Handler for gdb query commands. */
+#ifndef _CMD_QUERY_H_
+#define _CMD_QUERY_H_
 
 #include <stdint.h>
 
 /* Real name of functions are in __mri namespace. */
-uint32_t __mriCmd_HandleContinueCommand(void);
-uint32_t __mriCmd_HandleContinueWithSignalCommand(void);
+uint32_t __mriCmd_HandleQueryCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
-#define HandleContinueCommand           __mriCmd_HandleContinueCommand
-#define HandleContinueWithSignalCommand __mriCmd_HandleContinueWithSignalCommand
+#define HandleQueryCommand __mriCmd_HandleQueryCommand
 
-#endif /* _CMD_CONTINUE_H_ */
+#endif /* _CMD_QUERY_H_ */

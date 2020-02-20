@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green     (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +19,9 @@
 
 #include <stdint.h>
 #include <stm32f4xx.h>
-#include <token.h>
+#include <core/token.h>
 
-typedef struct 
+typedef struct
 {
     USART_TypeDef*     pUartRegisters;
     uint32_t    txFunction;

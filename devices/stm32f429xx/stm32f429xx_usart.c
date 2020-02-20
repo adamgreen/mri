@@ -16,8 +16,8 @@
 /* Routines used to provide STM32F429xx USART functionality to the mri debugger. */
 #include <string.h>
 #include <stdlib.h>
-#include "platforms.h"
-#include "../../architectures/armv7-m/debug_cm3.h"
+#include <core/platforms.h>
+#include <architectures/armv7-m/debug_cm3.h>
 #include "stm32f429xx_init.h"
 #include "stm32f429xx_usart.h"
 

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,16 +12,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/* Handler for gdb query commands. */
-#ifndef _CMD_QUERY_H_
-#define _CMD_QUERY_H_
+/* Handlers for memory read and write gdb commands. */
+#ifndef _CMD_MEMORY_H_
+#define _CMD_MEMORY_H_
 
 #include <stdint.h>
 
 /* Real name of functions are in __mri namespace. */
-uint32_t __mriCmd_HandleQueryCommand(void);
+uint32_t __mriCmd_HandleMemoryReadCommand(void);
+uint32_t __mriCmd_HandleMemoryWriteCommand(void);
+uint32_t __mriCmd_HandleBinaryMemoryWriteCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
-#define HandleQueryCommand __mriCmd_HandleQueryCommand
+#define HandleMemoryReadCommand         __mriCmd_HandleMemoryReadCommand
+#define HandleMemoryWriteCommand        __mriCmd_HandleMemoryWriteCommand
+#define HandleBinaryMemoryWriteCommand  __mriCmd_HandleBinaryMemoryWriteCommand
 
-#endif /* _CMD_QUERY_H_ */
+#endif /* _CMD_MEMORY_H_ */

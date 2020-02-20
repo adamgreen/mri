@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 
 extern "C"
 {
-#include <try_catch.h>
-#include <mri.h>
-#include <gdb_console.h>
+#include <core/try_catch.h>
+#include <core/mri.h>
+#include <core/gdb_console.h>
 }
 #include <platformMock.h>
 
@@ -27,8 +27,8 @@ extern "C"
 
 TEST_GROUP(gdbConsole)
 {
-    int     m_expectedException;            
-    
+    int     m_expectedException;
+
     void setup()
     {
         m_expectedException = noException;
@@ -42,7 +42,7 @@ TEST_GROUP(gdbConsole)
         clearExceptionCode();
         platformMock_Uninit();
     }
-    
+
     void validateExceptionCode(int expectedExceptionCode)
     {
         m_expectedException = expectedExceptionCode;

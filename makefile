@@ -1,4 +1,4 @@
-# Copyright 2015 Adam Green (https://github.com/adamgreen)
+# Copyright 2020 Adam Green (https://github.com/adamgreen)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ GCOV_HOST_GPPFLAGS      := $(HOST_GPPFLAGS) -fprofile-arcs -ftest-coverage
 GCOV_HOST_LDFLAGS       := $(HOST_LDFLAGS) -fprofile-arcs -ftest-coverage
 
 # Most of the needed headers are located here.
-INCLUDES := include cmsis
+INCLUDES := . cmsis
 
 # Start out with an empty header file dependency list.  Add module files as we go.
 DEPS :=
@@ -201,8 +201,8 @@ $(eval $(call make_tests,CPPUTEST,CppUTest/tests,,))
 
 # MRI Core sources to build and test.
 ARMV7M_CORE_OBJ    := $(call armv7m_objs,core)
-$(eval $(call make_library,CORE,core memory/native,libmricore.a,include))
-$(eval $(call make_tests,CORE,tests/tests tests/mocks,include tests/mocks,))
+$(eval $(call make_library,CORE,core memory/native,libmricore.a,.))
+$(eval $(call make_tests,CORE,tests/tests tests/mocks,. tests/mocks,))
 $(eval $(call run_gcov,CORE))
 
 # Sources for newlib and mbed's LocalFileSystem semihosting support.
@@ -236,17 +236,17 @@ $(eval $(call armv7m_module,LPC43XX,devices/lpc43xx))
 # mbed 1768 board
 $(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
                                  CORE SEMIHOST ARMV7M NATIVE_MEM LPC176X,\
-                                 boards/mbed1768 devices/lpc176x architecture/armv7-m cmsis/LPC17xx))
+                                 cmsis/LPC17xx))
 
 # Bambino 210 LPC4330 board
 $(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM LPC43XX,\
-                                 boards/bambino210 devices/lpc43xx architecture/armv7-m cmsis/LPC43xx))
+                                 cmsis/LPC43xx))
 
 # STM32F429i-Discovery STM32F429xx board
 $(eval $(call make_board_library,STM32F429_DISCO,boards/stm32f429-disco,libmri_stm32f429-disco.a,\
                                   CORE SEMIHOST ARMV7M_FPU NATIVE_MEM STM32F429XX,\
-                                  boards/stm32f429-disco devices/stm32f429xx architecture/armv7-m cmsis/STM32F429xx))
+                                  cmsis/STM32F429xx))
 
 # All boards to be built for ARM target.
 ARM_BOARDS : $(ARM_BOARD_LIBS)

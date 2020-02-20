@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@
 
 extern "C"
 {
-#include "platforms.h"
-#include "posix4win.h"
-#include "semihost.h"
-#include "buffer.h"
-#include "try_catch.h"
-#include "hex_convert.h"
-#include "memory.h"
+#include <core/platforms.h>
+#include <core/posix4win.h>
+#include <core/semihost.h>
+#include <core/buffer.h>
+#include <core/try_catch.h>
+#include <core/hex_convert.h>
+#include <core/memory.h>
 }
 #include "platformMock.h"
 
@@ -69,7 +69,7 @@ void Platform_Init(Token* pParameterTokens)
 {
     g_initCount++;
     Token_Copy(&g_initTokenCopy, pParameterTokens);
-    
+
     if (g_initException)
         __throw(g_initException);
 }
@@ -140,11 +140,11 @@ static size_t countPoundSigns(const char* p)
 static void copyChecksummedData(char* pDest, const char* pSrc)
 {
     char checksum = 0;
-    
+
     while (*pSrc)
     {
         char curr = *pSrc++;
-        
+
         *pDest++ = curr;
         switch (curr)
         {
@@ -232,7 +232,7 @@ uint32_t Platform_CommHasReceiveData(void)
             g_receiveIndex++;
         return 0;
     }
-    
+
     return 1;
 }
 
@@ -552,7 +552,7 @@ uint32_t platformMock_SetHardwareBreakpointKindArg(void)
 
 void platformMock_SetHardwareBreakpointException(uint32_t exceptionToThrow)
 {
-    g_setHardwareBreakpointException = exceptionToThrow;    
+    g_setHardwareBreakpointException = exceptionToThrow;
 }
 
 int platformMock_ClearHardwareBreakpointCalls(void)
@@ -572,7 +572,7 @@ uint32_t platformMock_ClearHardwareBreakpointKindArg(void)
 
 void platformMock_ClearHardwareBreakpointException(uint32_t exceptionToThrow)
 {
-    g_clearHardwareBreakpointException = exceptionToThrow;    
+    g_clearHardwareBreakpointException = exceptionToThrow;
 }
 
 int platformMock_SetHardwareWatchpointCalls(void)
@@ -597,7 +597,7 @@ PlatformWatchpointType platformMock_SetHardwareWatchpointTypeArg(void)
 
 void platformMock_SetHardwareWatchpointException(uint32_t exceptionToThrow)
 {
-    g_setHardwareWatchpointException = exceptionToThrow;    
+    g_setHardwareWatchpointException = exceptionToThrow;
 }
 
 int platformMock_ClearHardwareWatchpointCalls(void)
@@ -622,7 +622,7 @@ PlatformWatchpointType platformMock_ClearHardwareWatchpointTypeArg(void)
 
 void platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow)
 {
-    g_clearHardwareWatchpointException = exceptionToThrow;    
+    g_clearHardwareWatchpointException = exceptionToThrow;
 }
 
 // Stubs called from MRI core.

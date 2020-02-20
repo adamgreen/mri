@@ -1,4 +1,4 @@
-/* Copyright 2016 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2016 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
    limitations under the License.
 */
 /* Routines used by mri that are specific to the LPC176x device. */
-#include <try_catch.h>
-#include <platforms.h>
+#include <core/try_catch.h>
+#include <core/platforms.h>
 #include "lpc43xx_init.h"
-#include "../../architectures/armv7-m/armv7-m.h"
-#include "../../architectures/armv7-m/debug_cm3.h"
+#include <architectures/armv7-m/armv7-m.h>
+#include <architectures/armv7-m/debug_cm3.h>
 
 
 static const char g_memoryMapXml4330[] = "<?xml version=\"1.0\"?>"
@@ -59,14 +59,14 @@ void __mriLpc43xx_Init(Token* pParameterTokens)
     __catch
         __rethrow;
 
-    defaultExternalInterruptsToPriority1();    
+    defaultExternalInterruptsToPriority1();
     __mriLpc43xxUart_Init(pParameterTokens);
 }
 
 static void defaultExternalInterruptsToPriority1(void)
 {
     int              irq;
-    
+
     for (irq = DAC_IRQn ; irq <= QEI_IRQn ; irq++)
         NVIC_SetPriority((IRQn_Type)irq, 1);
 }

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 
 extern "C"
 {
-#include "try_catch.h"
+#include <core/try_catch.h>
 }
 
 // Include C++ headers for test harness.
@@ -24,7 +24,7 @@ extern "C"
 TEST_GROUP(TryCatch)
 {
     int m_exceptionThrown;
-    
+
     void setup()
     {
         m_exceptionThrown = 0;
@@ -33,43 +33,43 @@ TEST_GROUP(TryCatch)
     void teardown()
     {
     }
-    
+
     void flagExceptionHit()
     {
         m_exceptionThrown = 1;
     }
-    
+
     void throwNoException()
     {
     }
-    
+
     void throwBufferAndArgumentExceptions()
     {
         throwBufferOverrunException();
         throwInvalidArgumentException();
     }
-    
+
     void throwArgumentAndBufferExceptions()
     {
         throwInvalidArgumentException();
         throwBufferOverrunException();
     }
-    
+
     void throwBufferOverrunException()
     {
         __throw(bufferOverrunException);
     }
-    
+
     void throwInvalidArgumentException()
     {
         __throw(invalidArgumentException);
     }
-    
+
     int throwBufferOverrunExceptionAndReturnNegative1()
     {
         __throw_and_return(bufferOverrunException, -1);
     }
-    
+
     void rethrowBufferOverrunException()
     {
         __try
@@ -78,7 +78,7 @@ TEST_GROUP(TryCatch)
             __rethrow;
         __throw(invalidArgumentException);
     }
-    
+
     int rethrowBufferOverrunExceptionAndReturnNegative1()
     {
         __try
@@ -151,7 +151,7 @@ TEST(TryCatch, CatchFirstThrow)
     {
         flagExceptionHit();
     }
-    
+
     validateException(bufferOverrunException);
 }
 
@@ -166,19 +166,19 @@ TEST(TryCatch, CatchSecondThrow)
     {
         flagExceptionHit();
     }
-    
+
     validateException(invalidArgumentException);
 }
 
 TEST(TryCatch, ThrowAndReturn)
 {
     int value;
-    
+
     __try
         value = throwBufferOverrunExceptionAndReturnNegative1();
     __catch
         flagExceptionHit();
-        
+
     LONGS_EQUAL( -1, value );
     validateException(bufferOverrunException);
 }
@@ -195,7 +195,7 @@ TEST(TryCatch, RethrowBufferOverrunException)
 TEST(TryCatch, RethrowBufferOverrunExceptionAndReturnNegative1)
 {
     int value;
-    
+
     __try
         value = rethrowBufferOverrunExceptionAndReturnNegative1();
     __catch

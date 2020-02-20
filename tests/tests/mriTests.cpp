@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 
 extern "C"
 {
-#include <try_catch.h>
-#include <mri.h>
-#include <core.h>
-#include <token.h>
-#include <platforms.h>
+#include <core/try_catch.h>
+#include <core/mri.h>
+#include <core/core.h>
+#include <core/token.h>
+#include <core/platforms.h>
 
 void __mriDebugException(void);
 }
@@ -31,8 +31,8 @@ void __mriDebugException(void);
 
 TEST_GROUP(Mri)
 {
-    int     m_expectException;            
-    
+    int     m_expectException;
+
     void setup()
     {
         m_expectException = noException;
@@ -45,7 +45,7 @@ TEST_GROUP(Mri)
         clearExceptionCode();
         platformMock_Uninit();
     }
-    
+
     void validateExceptionCode(int expectedExceptionCode)
     {
         m_expectException = expectedExceptionCode;
@@ -62,7 +62,7 @@ TEST(Mri, __mriInit_MakeSureThatItCallsMriPlatformInit)
 TEST(Mri, __mriInit_MakeSureThatItPassesTokenizedStringIntoMriPlatformInit)
 {
     __mriInit("MRI_UART_MBED_USB MRI_UART_SHARE");
-    
+
     Token* pInitTokens = platformMock_GetInitTokenCopy();
     LONGS_EQUAL( 2, Token_GetTokenCount(pInitTokens) );
     STRCMP_EQUAL( "MRI_UART_MBED_USB", Token_GetToken(pInitTokens, 0) );
@@ -199,6 +199,6 @@ TEST(Mri, __mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunErr
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
     platformMock_SetPacketBufferSize(11);
         __mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$" MRI_ERROR_BUFFER_OVERRUN "#a9" 
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$" MRI_ERROR_BUFFER_OVERRUN "#a9"
                                                            "+$" MRI_ERROR_BUFFER_OVERRUN "#a9" "+") );
 }

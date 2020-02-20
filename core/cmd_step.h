@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,18 +12,18 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/* Handlers for gdb breakpoint and watchpoint commands. */
-#ifndef _CMD_BREAK_WATCH_H_
-#define _CMD_BREAK_WATCH_H_
+/* Handler for single step gdb command. */
+#ifndef _CMD_STEP_H_
+#define _CMD_STEP_H_
 
 #include <stdint.h>
 
 /* Real name of functions are in __mri namespace. */
-uint32_t __mriCmd_HandleBreakpointWatchpointSetCommand(void);
-uint32_t __mriCmd_HandleBreakpointWatchpointRemoveCommand(void);
+uint32_t __mriCmd_HandleSingleStepCommand(void);
+uint32_t __mriCmd_HandleSingleStepWithSignalCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
-#define HandleBreakpointWatchpointSetCommand    __mriCmd_HandleBreakpointWatchpointSetCommand
-#define HandleBreakpointWatchpointRemoveCommand __mriCmd_HandleBreakpointWatchpointRemoveCommand
+#define HandleSingleStepCommand           __mriCmd_HandleSingleStepCommand
+#define HandleSingleStepWithSignalCommand __mriCmd_HandleSingleStepWithSignalCommand
 
-#endif /* _CMD_BREAK_WATCH_H_ */
+#endif /* _CMD_STEP_H_ */

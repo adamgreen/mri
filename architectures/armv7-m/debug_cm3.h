@@ -18,7 +18,7 @@
 
 #include <cmsis.h>
 #include <stdio.h>
-#include <try_catch.h>
+#include <core/try_catch.h>
 
 /* Data Watchpoint and Trace Registers */
 typedef struct

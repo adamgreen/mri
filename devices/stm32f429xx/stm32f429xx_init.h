@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green     (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #define _STM32F429XX_H_
 
 #include <stdint.h>
-#include <token.h>
+#include <core/token.h>
 #include "stm32f429xx_usart.h"
 
 /* Flags that can be set in Stm32f429xxState::flags */

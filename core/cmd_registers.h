@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,18 +12,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/* Handler for single step gdb command. */
-#ifndef _CMD_STEP_H_
-#define _CMD_STEP_H_
+/* Command handler for gdb commands related to CPU registers. */
+#ifndef _CMD_REGISTERS_H_
+#define _CMD_REGISTERS_H_
 
 #include <stdint.h>
 
 /* Real name of functions are in __mri namespace. */
-uint32_t __mriCmd_HandleSingleStepCommand(void);
-uint32_t __mriCmd_HandleSingleStepWithSignalCommand(void);
+uint32_t __mriCmd_Send_T_StopResponse(void);
+uint32_t __mriCmd_HandleRegisterReadCommand(void);
+uint32_t __mriCmd_HandleRegisterWriteCommand(void);
 
 /* Macroes which allow code to drop the __mri namespace prefix. */
-#define HandleSingleStepCommand           __mriCmd_HandleSingleStepCommand
-#define HandleSingleStepWithSignalCommand __mriCmd_HandleSingleStepWithSignalCommand
+#define Send_T_StopResponse         __mriCmd_Send_T_StopResponse
+#define HandleRegisterReadCommand   __mriCmd_HandleRegisterReadCommand
+#define HandleRegisterWriteCommand  __mriCmd_HandleRegisterWriteCommand
 
-#endif /* _CMD_STEP_H_ */
+#endif /* _CMD_REGISTERS_H_ */

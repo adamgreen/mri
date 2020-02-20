@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (http://mbed.org/users/AdamGreen/)
+/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 extern "C"
 {
-#include "token.h"
+#include <core/token.h>
 }
 
 // Include C++ headers for test harness.
@@ -30,7 +30,7 @@ TEST_GROUP(Token)
     Token   m_token;
     int     m_expectedExceptionCode;
     char*   m_pTestString;
-    
+
     void setup()
     {
         Token_Init(&m_token);
@@ -45,30 +45,30 @@ TEST_GROUP(Token)
         clearExceptionCode();
         free(m_pTestString);
     }
-    
+
     void validateInitToken()
     {
         validateNullTokenPointers();
         LONGS_EQUAL( 0, m_token.tokenCount );
         LONGS_EQUAL( 0, m_token.copyOfString[0] );
     }
-    
+
     void validateNullTokenPointers()
     {
         size_t i;
-        
+
         for (i = 0 ; i < ARRAY_SIZE(m_token.tokenPointers) ; i++)
         {
             POINTERS_EQUAL( NULL, m_token.tokenPointers[i] );
         }
     }
-    
+
     void validateDefaultTokenWhitspaceSeparators()
     {
         const char* defaultWhitespaceSeparators = " \t";
         STRCMP_EQUAL( defaultWhitespaceSeparators, m_token.pTokenSeparators );
     }
-    
+
     char* allocateAndFillTestString(size_t size, char fillCharacter)
     {
         m_pTestString = (char*) malloc(size+1);
@@ -76,37 +76,37 @@ TEST_GROUP(Token)
         m_pTestString[size] = '\0';
         return m_pTestString;
     }
-    
+
     char* allocateRepeatingTokens(size_t numberOfTokens, const char* pTokenText)
     {
         size_t tokenSize = strlen(pTokenText);
         size_t totalAllocationSize = tokenSize * numberOfTokens + 1;
         char*  p;
-        
+
         m_pTestString = (char*)malloc(totalAllocationSize);
         p = m_pTestString;
-        
+
         for (size_t i = 0 ; i < numberOfTokens ; i++)
         {
             memcpy(p, pTokenText, tokenSize);
             p += tokenSize;
         }
         *p = '\0';
-        
+
         return m_pTestString;
     }
-    
+
     void expectExceptionToBeThrown(int expectedExceptionCode)
     {
         m_expectedExceptionCode = expectedExceptionCode;
     }
-    
+
     void validateTokenCopy(Token* pTokenCopy)
     {
         POINTERS_EQUAL( m_token.pTokenSeparators, pTokenCopy->pTokenSeparators );
         LONGS_EQUAL( m_token.tokenCount, pTokenCopy->tokenCount );
         STRCMP_EQUAL( m_token.copyOfString, pTokenCopy->copyOfString );
-        
+
         for (size_t i = 0 ; i < m_token.tokenCount ; i++)
         {
             STRCMP_EQUAL( m_token.tokenPointers[i], pTokenCopy->tokenPointers[i] );
@@ -217,10 +217,10 @@ TEST(Token, Token_GetToken_IndexOutOfRange)
 TEST(Token, Token_MatchingString_FoundInFirstToken)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test Tokens");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingString(&m_token, "Test");
     STRCMP_EQUAL( "Test", pMatchResult );
 }
@@ -228,10 +228,10 @@ TEST(Token, Token_MatchingString_FoundInFirstToken)
 TEST(Token, Token_MatchingString_FoundInSecondToken)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test Tokens");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingString(&m_token, "Tokens");
     STRCMP_EQUAL( "Tokens", pMatchResult );
 }
@@ -239,10 +239,10 @@ TEST(Token, Token_MatchingString_FoundInSecondToken)
 TEST(Token, Token_MatchingString_NotFound)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test Tokens");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingString(&m_token, "NotFound");
     POINTERS_EQUAL( NULL, pMatchResult );
 }
@@ -250,10 +250,10 @@ TEST(Token, Token_MatchingString_NotFound)
 TEST(Token, Token_MatchingString_NotFoundBecauseOfCaseMismatch)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test Tokens");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingString(&m_token, "TesT");
     POINTERS_EQUAL( NULL, pMatchResult );
 }
@@ -261,10 +261,10 @@ TEST(Token, Token_MatchingString_NotFoundBecauseOfCaseMismatch)
 TEST(Token, Token_MatchingStringPrefix_FoundInFirstToken)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test=Value1 Tokens=Value2");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingStringPrefix(&m_token, "Test=");
     STRCMP_EQUAL( "Test=Value1", pMatchResult );
 }
@@ -272,10 +272,10 @@ TEST(Token, Token_MatchingStringPrefix_FoundInFirstToken)
 TEST(Token, Token_MatchingStringPrefix_FoundInSecondToken)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test=Value1 Tokens=Value2");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingStringPrefix(&m_token, "Tokens=");
     STRCMP_EQUAL( "Tokens=Value2", pMatchResult );
 }
@@ -283,10 +283,10 @@ TEST(Token, Token_MatchingStringPrefix_FoundInSecondToken)
 TEST(Token, Token_MatchingStringPrefix_NotFound)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test=Value1 Tokens=Value2");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingStringPrefix(&m_token, "NotFound=");
     POINTERS_EQUAL( NULL, pMatchResult );
 }
@@ -294,10 +294,10 @@ TEST(Token, Token_MatchingStringPrefix_NotFound)
 TEST(Token, Token_MatchingStringPrefix_NotFoundBecauseOfCaseMismatch)
 {
     const char* pMatchResult = NULL;
-    
+
     Token_SplitString(&m_token, "Test=Value1 Tokens=Value2");
     clearExceptionCode();
-    
+
     pMatchResult = Token_MatchingStringPrefix(&m_token, "TesT=");
     POINTERS_EQUAL( NULL, pMatchResult );
 }

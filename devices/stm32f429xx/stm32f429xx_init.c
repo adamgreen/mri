@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green     (http://mbed.org/users/AdamGreen/)
+/* Copyright 2015 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +14,11 @@
    limitations under the License.
 */
 /* Routines used by mri that are specific to the STM32F429xx device. */
-#include <try_catch.h>
-#include <platforms.h>
+#include <core/try_catch.h>
+#include <core/platforms.h>
 #include "stm32f429xx_init.h"
-#include "../../architectures/armv7-m/armv7-m.h"
-#include "../../architectures/armv7-m/debug_cm3.h"
+#include <architectures/armv7-m/armv7-m.h>
+#include <architectures/armv7-m/debug_cm3.h>
 
 
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
