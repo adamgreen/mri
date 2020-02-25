@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -41,8 +41,11 @@ __mriExceptionHandler:
     b       mriGetSPAndCallHandler
 
 
+    .global __mriFaultHandler
+    .type __mriFaultHandler, function
+    .thumb_func
     /* Like MriExceptionHandler above but it also checks and handles stacking/unstacking faults. */
-mriFaultHandler:
+__mriFaultHandler:
     ldr     r0, =checkForStackError
     b       mriGetSPAndCallHandler
 
@@ -366,7 +369,7 @@ mriClearFaultStatusBitsAndReturn:
        Override Hard Faults and send to MriExceptionHandler.
     */
 HardFault_Handler:
-    b       mriFaultHandler
+    b       __mriFaultHandler
 
 
     .global MemManage_Handler
@@ -376,7 +379,7 @@ HardFault_Handler:
        Override MPU Memory Faults and send to MriExceptionHandler.
     */
 MemManage_Handler:
-    b       mriFaultHandler
+    b       __mriFaultHandler
 
 
     .global BusFault_Handler
@@ -386,7 +389,7 @@ MemManage_Handler:
        Override Bus Faults and send to MriExceptionHandler.
     */
 BusFault_Handler:
-    b       mriFaultHandler
+    b       __mriFaultHandler
 
 
     .global UsageFault_Handler
