@@ -13,3 +13,6 @@ gcov/
 # vim swap files
 *.swp
 *~
+
+# VSCode project files
+.vscode/
