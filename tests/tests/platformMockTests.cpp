@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -499,48 +499,48 @@ TEST(platformMock, Platform_CopyContextToBuffer)
                                                "44444444", 32) );
 }
 
-TEST(platformMock, Platform_SetHardwareBreakpoint_CountCallsAndLastArgs)
+TEST(platformMock, Platform_SetHardwareBreakpointOfGdbKind_CountCallsAndLastArgs)
 {
     CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointKindArg() );
-        Platform_SetHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+        Platform_SetHardwareBreakpointOfGdbKind(0xDEADBEEF, 0xBAADF00D);
     CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareBreakpointKindArg() );
-        Platform_SetHardwareBreakpoint(0xBAADF00D, 0xDEADBEEF);
+        Platform_SetHardwareBreakpointOfGdbKind(0xBAADF00D, 0xDEADBEEF);
     CHECK_EQUAL( 2, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xBAADF00D, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xDEADBEEF, platformMock_SetHardwareBreakpointKindArg() );
 }
 
-TEST(platformMock, Platform_SetHardwareBreakpoint_Throwing)
+TEST(platformMock, Platform_SetHardwareBreakpointOfGdbKind_Throwing)
 {
     platformMock_SetHardwareBreakpointException(invalidArgumentException);
-        Platform_SetHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+        Platform_SetHardwareBreakpointOfGdbKind(0xDEADBEEF, 0xBAADF00D);
     CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
     clearExceptionCode();
 }
 
-TEST(platformMock, Platform_ClearHardwareBreakpoint_CountCallsAndLastArgs)
+TEST(platformMock, Platform_ClearHardwareBreakpointOfGdbKind_CountCallsAndLastArgs)
 {
     CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointCalls() );
     CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointKindArg() );
-        Platform_ClearHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+        Platform_ClearHardwareBreakpointOfGdbKind(0xDEADBEEF, 0xBAADF00D);
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareBreakpointKindArg() );
-        Platform_ClearHardwareBreakpoint(0xBAADF00D, 0xDEADBEEF);
+        Platform_ClearHardwareBreakpointOfGdbKind(0xBAADF00D, 0xDEADBEEF);
     CHECK_EQUAL( 2, platformMock_ClearHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xBAADF00D, platformMock_ClearHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xDEADBEEF, platformMock_ClearHardwareBreakpointKindArg() );
 }
 
-TEST(platformMock, Platform_ClearHardwareBreakpoint_Throwing)
+TEST(platformMock, Platform_ClearHardwareBreakpointOfGdbKind_Throwing)
 {
     platformMock_ClearHardwareBreakpointException(invalidArgumentException);
-        Platform_ClearHardwareBreakpoint(0xDEADBEEF, 0xBAADF00D);
+        Platform_ClearHardwareBreakpointOfGdbKind(0xDEADBEEF, 0xBAADF00D);
     CHECK_EQUAL( invalidArgumentException, getExceptionCode() );
     clearExceptionCode();
 }

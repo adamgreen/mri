@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -452,6 +452,11 @@ int __mriPlatform_WasProgramCounterModifiedByUser(void)
     return FALSE;
 }
 
+uint32_t  __mriPlatform_GetProgramCounter(void)
+{
+    return g_programCounter;
+}
+
 
 
 // Single Stepping stubs called by MRI core.
@@ -626,7 +631,7 @@ void platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow)
 }
 
 // Stubs called from MRI core.
-__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
+__throws void  __mriPlatform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     g_setHardwareBreakpointCalls++;
     g_setHardwareBreakpointAddressArg = address;
@@ -635,11 +640,29 @@ __throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address, uint32_t ki
         __throw(g_setHardwareBreakpointException);
 }
 
-__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
+__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address)
+{
+    g_setHardwareBreakpointCalls++;
+    g_setHardwareBreakpointAddressArg = address;
+    g_setHardwareBreakpointKindArg = 0xFFFFFFFF;
+    if (g_setHardwareBreakpointException)
+        __throw(g_setHardwareBreakpointException);
+}
+
+__throws void  __mriPlatform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     g_clearHardwareBreakpointCalls++;
     g_clearHardwareBreakpointAddressArg = address;
     g_clearHardwareBreakpointKindArg = kind;
+    if (g_clearHardwareBreakpointException)
+        __throw(g_clearHardwareBreakpointException);
+}
+
+__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address)
+{
+    g_clearHardwareBreakpointCalls++;
+    g_clearHardwareBreakpointAddressArg = address;
+    g_clearHardwareBreakpointKindArg = 0xFFFFFFFF;
     if (g_clearHardwareBreakpointException)
         __throw(g_clearHardwareBreakpointException);
 }

@@ -180,7 +180,7 @@ static uint32_t getNvicVector(IRQn_Type irq);
 static void     setSvcStepFlag(void);
 static void     setSingleSteppingFlag(void);
 static void     setSingleSteppingFlag(void);
-static void     recordCurrentBasePriorityAndSwitchToPriority1(void);
+static void     recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void);
 static int      doesPCPointToBASEPRIUpdateInstruction(void);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
 static uint16_t getSecondHalfWordOfCurrentInstruction(void);
@@ -197,7 +197,7 @@ void Platform_EnableSingleStep(void)
     if (!doesPCPointToSVCInstruction())
     {
         setSingleSteppingFlag();
-        recordCurrentBasePriorityAndSwitchToPriority1();
+        recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts();
         enableSingleStep();
         return;
     }
@@ -239,7 +239,7 @@ static int doesPCPointToSVCInstruction(void)
 
 static void setHardwareBreakpointOnSvcHandler(void)
 {
-    Platform_SetHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1, 2);
+    Platform_SetHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
 }
 
 static uint32_t getNvicVector(IRQn_Type irq)
@@ -259,11 +259,11 @@ static void setSingleSteppingFlag(void)
     __mriCortexMState.flags |= CORTEXM_FLAGS_SINGLE_STEPPING;
 }
 
-static void recordCurrentBasePriorityAndSwitchToPriority1(void)
+static void recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void)
 {
     if (!doesPCPointToBASEPRIUpdateInstruction())
         recordCurrentBasePriority();
-    __set_BASEPRI(calculateBasePriorityForThisCPU(1));
+    __set_BASEPRI(calculateBasePriorityForThisCPU(NVIC_GetPriority(DebugMonitor_IRQn) + 1));
 }
 
 static int doesPCPointToBASEPRIUpdateInstruction(void)
@@ -687,7 +687,7 @@ static void clearSvcStepFlag(void)
 
 static void clearHardwareBreakpointOnSvcHandler(void)
 {
-    Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1, 2);
+    Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
 }
 
 
@@ -905,7 +905,7 @@ static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteC
 
 
 static int doesKindIndicate32BitInstruction(uint32_t kind);
-void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
+void Platform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     uint32_t* pFPBBreakpointComparator;
     int       is32BitInstruction;
@@ -935,7 +935,25 @@ static int doesKindIndicate32BitInstruction(uint32_t kind)
 }
 
 
-void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
+void Platform_SetHardwareBreakpoint(uint32_t address)
+{
+    uint32_t* pFPBBreakpointComparator;
+    uint16_t  currentInstructionWord;
+
+     __try
+    {
+        currentInstructionWord = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+        __rethrow;
+
+    pFPBBreakpointComparator = enableFPBBreakpoint(address, isInstruction32Bit(currentInstructionWord));
+    if (!pFPBBreakpointComparator)
+        __throw(exceededHardwareResourcesException);
+}
+
+
+void Platform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     int       is32BitInstruction;
 
@@ -945,6 +963,21 @@ void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
         __rethrow;
 
     disableFPBBreakpointComparator(address, is32BitInstruction);
+}
+
+
+void Platform_ClearHardwareBreakpoint(uint32_t address)
+{
+    uint16_t  currentInstructionWord;
+
+     __try
+    {
+        currentInstructionWord = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+        __rethrow;
+
+    disableFPBBreakpointComparator(address, isInstruction32Bit(currentInstructionWord));
 }
 
 

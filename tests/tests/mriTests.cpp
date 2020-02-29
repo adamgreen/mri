@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,6 +28,10 @@ void __mriDebugException(void);
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 
+static bool     g_callbackCalled;
+static int      g_callbackReturnValue;
+static void*    g_pvCallbackContext;
+
 
 TEST_GROUP(Mri)
 {
@@ -36,6 +40,8 @@ TEST_GROUP(Mri)
     void setup()
     {
         m_expectException = noException;
+        g_callbackCalled = false;
+        g_pvCallbackContext = (void*)-1;
         platformMock_Init();
     }
 
@@ -201,4 +207,126 @@ TEST(Mri, __mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunErr
         __mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$" MRI_ERROR_BUFFER_OVERRUN "#a9"
                                                            "+$" MRI_ERROR_BUFFER_OVERRUN "#a9" "+") );
+}
+
+
+
+
+TEST(Mri, __mriCoreSetTempBreakpoint_ShouldSucceedAndSetHardwareBreakpointAtSpecifiedAddressWithThumbBitCleared)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    CHECK_TRUE( __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xFFFFFFFF, platformMock_SetHardwareBreakpointKindArg() );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_TryToSetBreakpointTwiceAndSecondCallFails)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    CHECK_TRUE( __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xFFFFFFFF, platformMock_SetHardwareBreakpointKindArg() );
+
+    CHECK_FALSE( __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    // Should still just have hardware breakpoint from first successful call.
+    CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0xFFFFFFFF, platformMock_SetHardwareBreakpointKindArg() );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_SetHardwareBreakpointThrows_ShouldFail_ExceptionShouldBeCleared)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    platformMock_SetHardwareBreakpointException(exceededHardwareResourcesException);
+    CHECK_FALSE( __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_EQUAL( noException, getExceptionCode() );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_RunMriDebugException_DontHitBreakpoint_BreakpointShouldNotBeCleared)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+
+    __mriPlatform_SetProgramCounter(0xBAADF00B);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+
+    CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointCalls() );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_BreakpointShouldBeCleared)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+
+    __mriPlatform_SetProgramCounter(0xBAADF00D);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+
+    CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_ClearBreakpointThrows_BreakpointShouldStillBeCleared)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    __mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+
+    __mriPlatform_SetProgramCounter(0xBAADF00D);
+    platformMock_ClearHardwareBreakpointException(memFaultException);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+
+    CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
+}
+
+static int testCallback(void* pvContext){
+    g_callbackCalled = true;
+    g_pvCallbackContext = pvContext;
+    return g_callbackReturnValue;
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning0_ShouldContinueToCommandParser)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    __mriCore_SetTempBreakpoint(0xBAADF00D, testCallback, (void*)this);
+
+    g_callbackReturnValue = 0;
+    __mriPlatform_SetProgramCounter(0xBAADF00D);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+
+    CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_TRUE( g_callbackCalled );
+    POINTERS_EQUAL( this, g_pvCallbackContext );
+}
+
+TEST(Mri, __mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning1_ShouldReturnImmediately)
+{
+    __mriInit("MRI_UART_MBED_USB");
+
+    __mriCore_SetTempBreakpoint(0xBAADF00D, testCallback, NULL);
+
+    g_callbackReturnValue = 1;
+    __mriPlatform_SetProgramCounter(0xBAADF00D);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        __mriDebugException();
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("") );
+
+    CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_TRUE( g_callbackCalled );
+    POINTERS_EQUAL( NULL, g_pvCallbackContext );
 }
