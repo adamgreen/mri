@@ -13,8 +13,8 @@
    limitations under the License.
 */
 /* Routines used to provide LPC176x UART functionality to the mri debugger. */
-#ifndef _LPC43XX_UART_H_
-#define _LPC43XX_UART_H_
+#ifndef LPC43XX_UART_H_
+#define LPC43XX_UART_H_
 
 #include <stdint.h>
 #include <LPC43xx.h>
@@ -36,4 +36,4 @@ typedef struct
 
 void mriLpc43xxUart_Init(Token* pParameterTokens);
 
-#endif /* _LPC43XX_UART_H_ */
+#endif /* LPC43XX_UART_H_ */

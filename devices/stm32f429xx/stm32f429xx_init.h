@@ -14,8 +14,8 @@
    limitations under the License.
 */
 /* Routines used by mri that are specific to the STM32F429xx device. */
-#ifndef _STM32F429XX_H_
-#define _STM32F429XX_H_
+#ifndef STM32F429XX_H_
+#define STM32F429XX_H_
 
 #include <stdint.h>
 #include <core/token.h>
@@ -38,4 +38,4 @@ extern Stm32f429xxState mriStm32f429xxState;
 
 void mriStm32f429xx_Init(Token* pParameterTokens);
 
-#endif /* _STM32F429XX_H_ */
+#endif /* STM32F429XX_H_ */

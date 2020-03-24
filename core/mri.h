@@ -13,8 +13,8 @@
    limitations under the License.
 */
 /* Monitor for Remote Inspection. */
-#ifndef _MRI_H_
-#define _MRI_H_
+#ifndef MRI_H_
+#define MRI_H_
 
 #include <stdint.h>
 
@@ -131,4 +131,4 @@ int mriNewlib_SemihostFStat(int file, void *pStat);
 }
 #endif
 
-#endif /* _MRI_H_ */
+#endif /* MRI_H_ */

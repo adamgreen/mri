@@ -12,8 +12,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-#ifndef _PLATFORM_MOCK_H_
-#define _PLATFORM_MOCK_H_
+#ifndef PLATFORM_MOCK_H_
+#define PLATFORM_MOCK_H_
 
 #include <core/token.h>
 #include <core/platforms.h>
@@ -76,4 +76,4 @@ void                   platformMock_ClearHardwareWatchpointException(uint32_t ex
 int platformMock_GetSemihostCallReturnValue(void);
 int platformMock_GetSemihostCallErrno(void);
 
-#endif /* _PLATFORM_MOCK_H_ */
+#endif /* PLATFORM_MOCK_H_ */

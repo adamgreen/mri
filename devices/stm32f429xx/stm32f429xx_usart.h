@@ -14,8 +14,8 @@
    limitations under the License.
 */
 /* Routines used to provide STM32F429xx USART functionality to the mri debugger. */
-#ifndef _STM32F429XX_USART_H_
-#define _STM32F429XX_USART_H_
+#ifndef STM32F429XX_USART_H_
+#define STM32F429XX_USART_H_
 
 #include <stdint.h>
 #include <stm32f4xx.h>
@@ -31,4 +31,4 @@ typedef struct
 
 void mriStm32f429xxUart_Init(Token* pParameterTokens);
 
-#endif /* _STM32F429XX_USART_H_ */
+#endif /* STM32F429XX_USART_H_ */

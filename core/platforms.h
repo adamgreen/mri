@@ -14,8 +14,8 @@
 */
 /* Declaration of routines that need to be provided for a specific target hardware platform before mri can be used to
    as a debug conduit for it. */
-#ifndef _PLATFORMS_H_
-#define _PLATFORMS_H_
+#ifndef PLATFORMS_H_
+#define PLATFORMS_H_
 
 #include <stdint.h>
 #include <core/token.h>
@@ -141,4 +141,4 @@ uint32_t       mriPlatform_GetUidSize(void);
 #define Platform_GetUid                                     mriPlatform_GetUid
 #define Platform_GetUidSize                                 mriPlatform_GetUidSize
 
-#endif /* _PLATFORMS_H_ */
+#endif /* PLATFORMS_H_ */

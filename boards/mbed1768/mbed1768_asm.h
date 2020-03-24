@@ -13,10 +13,10 @@
    limitations under the License.
 */
 /* Assembly Language routines which expose mbed1768 board specifc functionality to the mri debugger. */
-#ifndef _MBED1768_ASM_H_
-#define _MBED1768_ASM_H_
+#ifndef MBED1768_ASM_H_
+#define MBED1768_ASM_H_
 
 int      mriDisableMbed(void);
 int      mriGetMbedUid(uint8_t* pOutputBuffer);
 
-#endif /* _MBED1768_ASM_H_ */
+#endif /* MBED1768_ASM_H_ */

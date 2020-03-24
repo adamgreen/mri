@@ -13,8 +13,8 @@
    limitations under the License.
 */
 /* Routines used by mri that are specific to the LPC176x device. */
-#ifndef _LPC176X_H_
-#define _LPC176X_H_
+#ifndef LPC176X_H_
+#define LPC176X_H_
 
 #include <stdint.h>
 #include <core/token.h>
@@ -32,4 +32,4 @@ extern Lpc176xState mriLpc176xState;
 
 void mriLpc176x_Init(Token* pParameterTokens);
 
-#endif /* _LPC176X_H_ */
+#endif /* LPC176X_H_ */

@@ -13,8 +13,8 @@
    limitations under the License.
 */
 /* Routines used by mri that are specific to the LPC43xx device. */
-#ifndef _LPC43XX_H_
-#define _LPC43XX_H_
+#ifndef LPC43XX_H_
+#define LPC43XX_H_
 
 #include <stdint.h>
 #include <core/token.h>
@@ -32,4 +32,4 @@ extern Lpc43xxState mriLpc43xxState;
 
 void mriLpc43xx_Init(Token* pParameterTokens);
 
-#endif /* _LPC43XX_H_ */
+#endif /* LPC43XX_H_ */

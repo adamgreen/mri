@@ -3,8 +3,6 @@ MRI already contains most of the code it requires to run on any ARMv7-M based Co
 support for a new device, you need to provide code which provides the following device specific functionality for MRI:
 * code which allows MRI to communicate to GDB via the device's specific UART hardware.
 * code which provides the XML that describes the memory layout for this particular device.
-* code which can default all device specific interrupt priorities to the second highest level, reserving the highest
-  priority for MRI itself.
 
 This page gives an overview of what is required if a developer wants to add support for another device/board to the MRI
 debug monitor.
@@ -85,7 +83,7 @@ __isr_vector:
 }}}
 
 This shows us that the handlers should be named **UART0_IRQHandler**, **UART1_IRQHandler**, **UART2_IRQHandler**,
-and **UART3_IRQHandler**.
+and **UART3_IRQHandler** for the LPC176x.
 
 ===device_init.h
 This header file exposes 3 important pieces of information about this device implementation:
@@ -131,11 +129,10 @@ void mriLpc176x_Init(Token* pParameterTokens)
     (void)dummyReference;
 
     __try
-        mriCortexMInit(pParameterTokens);
+        mriCortexMInit(pParameterTokens, CANActivity_IRQn);
     __catch
         __rethrow;
 
-    defaultExternalInterruptsToPriority1();
     mriLpc176xUart_Init(pParameterTokens);
 }
 }}}
@@ -146,25 +143,17 @@ Notes about this example:
   linker would most likely not bother to link in the UART handlers from this assembly language module and instead use
   the weak implementations found in the CMSIS startup code.
 * Calls {{{mriCortexMInit()}}} to initialize the ARMv7-M architecture level portion of MRI.  If this should fail then
-  it will return immediately rather than attempting to initialize device specific features.
-* Then calls {{{defaultExternalInterruptsToPriority1()}}}, a static routine defined in the same module, to initialize
-  all of the LPC176x external interrupts to priority 1, reserving priority 0 for debugger related interrupts/exceptions.
+  it will return immediately rather than attempting to initialize device specific features. The second parameter of
+  CANActivity_IRQn is the highest external device IRQn on the LPC176x. It is used to initialize all of the LPC176x 
+  external interrupts to priority 1, reserving priority 0 for debugger related interrupts/exceptions.
 * Finally it calls {{{mriLpc176xUart_Init()}}} to initialize the UART to be used for communicating to GDB.
 
 ===device_uart.h / device_uart.c
 These files provide device specific code to be used by MRI to communicate with GDB via the UART.  MRI requires that the
 following communication routines be implemented:
-| Platform_CommUartIndex() | Returns 0 if user selected UART is MRI_UART_0, 1 for MRI_UART_1, etc. |
 | Platform_CommHasReceiveData() | Returns 0 if no data from GDB has already been received and non-zero otherwise. |
 | Platform_CommReceiveChar() | Returns next received character from GDB. This call should block. |
 | Platform_CommSendChar() | Sends a character to GDB. |
-| Platform_CommCausedInterrupt() | Was a character received from GDB the reason for the halt. |
-| Platform_CommClearInterrupt() | Clear any active UART interrupts. |
-| Platform_CommSharingWithApplication() | Returns non-zero if application typically uses UART and MRI only uses it after a crash. |
-| Platform_CommShouldWaitForGdbConnect() | Does MRI need to wait for GDB to connect before progressing?  For example if it needs to wait for first '+' character from GDB to auto detect baud rate. |
-| Platform_CommIsWaitingForGdbToConnect() | Is MRI currently waiting for GDB to connect? |
-| Platform_CommPrepareToWaitForGdbConnection() | Typically used to start auto-baud detection. |
-| Platform_CommWaitForReceiveDataToStop() | Used to throw away received data if MRI has determined that first connection didn't originate from GDB. |
 
 The existing
 [[https://github.com/adamgreen/mri/blob/master/devices/lpc176x/lpc176x_uart.h | devices/lpc176x/lpc176x_uart.h]] and
