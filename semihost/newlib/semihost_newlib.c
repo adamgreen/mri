@@ -33,23 +33,23 @@ int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostPa
     uint32_t semihostOperation;
 
     semihostOperation = Platform_GetProgramCounter() | 1;
-    if (semihostOperation == (uint32_t)__mriNewlib_SemihostWrite)
+    if (semihostOperation == (uint32_t)mriNewlib_SemihostWrite)
         return handleNewlibSemihostWriteRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewlib_SemihostRead)
+    else if (semihostOperation == (uint32_t)mriNewlib_SemihostRead)
         return handleNewlibSemihostReadRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewLib_SemihostOpen)
+    else if (semihostOperation == (uint32_t)mriNewLib_SemihostOpen)
         return handleNewlibSemihostOpenRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewLib_SemihostUnlink)
+    else if (semihostOperation == (uint32_t)mriNewLib_SemihostUnlink)
         return handleNewlibSemihostUnlinkRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewlib_SemihostLSeek)
+    else if (semihostOperation == (uint32_t)mriNewlib_SemihostLSeek)
         return handleNewlibSemihostLSeekRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewlib_SemihostClose)
+    else if (semihostOperation == (uint32_t)mriNewlib_SemihostClose)
         return handleNewlibSemihostCloseRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewlib_SemihostFStat)
+    else if (semihostOperation == (uint32_t)mriNewlib_SemihostFStat)
         return handleNewlibSemihostFStatRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewLib_SemihostStat)
+    else if (semihostOperation == (uint32_t)mriNewLib_SemihostStat)
         return handleNewlibSemihostStatRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)__mriNewLib_SemihostRename)
+    else if (semihostOperation == (uint32_t)mriNewLib_SemihostRename)
         return handleNewlibSemihostRenameRequest(pSemihostParameters);
     else
         return 0;

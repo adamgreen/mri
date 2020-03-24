@@ -47,7 +47,7 @@ handler runs at a priority equal or higher than the UART, then it can't be broke
 amiss.
 
 This assembly language file provides a default handler for each UART interrupt supported by the device.  These default
-handlers will just branch immediately to the {{{__mriExceptionHandler}}} routine.  This routine is implemented by the
+handlers will just branch immediately to the {{{mriExceptionHandler}}} routine.  This routine is implemented by the
 existing ARMv7-M architecture level code.  The UART handlers are weak implementations so that the developer can provide
 their own strong implementation for the UARTs they plan to use for their own firmware, leaving the unused ones ready to
 be used by MRI for debugging.  This is an example implementation from
@@ -58,10 +58,10 @@ be used by MRI for debugging.  This is an example implementation from
     .type UART0_IRQHandler, function
     .thumb_func
     /* extern "C" void UART0_IRQHandler(void);
-       Override UART0 exceptions and send to __mriExceptionHandler.
+       Override UART0 exceptions and send to mriExceptionHandler.
     */
 UART0_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 }}}
 
 How many of these UART handlers should be provided and what should they be named?  The number depends on the amount of
@@ -99,12 +99,12 @@ An example can be found in
 [[https://github.com/adamgreen/mri/blob/master/devices/lpc176x/lpc176x_init.h | devices/lpc176x/lpc176x_init.h]].  In
 this example we see:
 * The **MRI_DEVICE_HAS_FPU** macro has been defined to have a value of 0 since the LPC1768 doesn't have a FPU.
-* {{{__mriLpc176x_Init()}}} is the name of the routine to be called from the {{{Platform_Init()}}} to initialize this
+* {{{mriLpc176x_Init()}}} is the name of the routine to be called from the {{{Platform_Init()}}} to initialize this
   device.
-* {{{__mriLpc176xState}}} is the name of the global state maintained for the LPC176X device code.
+* {{{mriLpc176xState}}} is the name of the global state maintained for the LPC176X device code.
 
-**Note:** The externally visible globals have been given names which begin with {{{__mri}}}.  All externally visible
-symbols in the MRI lib should start with this {{{__mri}}} prefix to reduce the chance that they will conflict with the
+**Note:** The externally visible globals have been given names which begin with {{{mri}}}.  All externally visible
+symbols in the MRI lib should start with this {{{mri}}} prefix to reduce the chance that they will conflict with the
 firmware into which it is being linked.  The
 [[https://github.com/adamgreen/mri/blob/master/tests/globalchk | globalchk]] bash script is used to check that this rule
 has been honoured.
@@ -124,32 +124,32 @@ void UART0_IRQHandler(void);
 
 
 static void defaultExternalInterruptsToPriority1(void);
-void __mriLpc176x_Init(Token* pParameterTokens)
+void mriLpc176x_Init(Token* pParameterTokens)
 {
     /* Reference handler in ASM module to make sure that is gets linked in. */
     void (* volatile dummyReference)(void) = UART0_IRQHandler;
     (void)dummyReference;
 
     __try
-        __mriCortexMInit(pParameterTokens);
+        mriCortexMInit(pParameterTokens);
     __catch
         __rethrow;
-        
-    defaultExternalInterruptsToPriority1();    
-    __mriLpc176xUart_Init(pParameterTokens);
+
+    defaultExternalInterruptsToPriority1();
+    mriLpc176xUart_Init(pParameterTokens);
 }
 }}}
 
 Notes about this example:
-* The initial dummy reference in {{{__mriLpc176x_Init()}}} to UART0_IRQHandler is performed so that code which gets
-  calls from {{{__mriInit()}}} will have a reference to something in device_asm.S.  Without this reference the GNU
+* The initial dummy reference in {{{mriLpc176x_Init()}}} to UART0_IRQHandler is performed so that code which gets
+  calls from {{{mriInit()}}} will have a reference to something in device_asm.S.  Without this reference the GNU
   linker would most likely not bother to link in the UART handlers from this assembly language module and instead use
   the weak implementations found in the CMSIS startup code.
-* Calls {{{__mriCortexMInit()}}} to initialize the ARMv7-M architecture level portion of MRI.  If this should fail then
+* Calls {{{mriCortexMInit()}}} to initialize the ARMv7-M architecture level portion of MRI.  If this should fail then
   it will return immediately rather than attempting to initialize device specific features.
 * Then calls {{{defaultExternalInterruptsToPriority1()}}}, a static routine defined in the same module, to initialize
   all of the LPC176x external interrupts to priority 1, reserving priority 0 for debugger related interrupts/exceptions.
-* Finally it calls {{{__mriLpc176xUart_Init()}}} to initialize the UART to be used for communicating to GDB.
+* Finally it calls {{{mriLpc176xUart_Init()}}} to initialize the UART to be used for communicating to GDB.
 
 ===device_uart.h / device_uart.c
 These files provide device specific code to be used by MRI to communicate with GDB via the UART.  MRI requires that the
@@ -186,24 +186,24 @@ a pretty good example:
 {{{
 void Platform_Init(Token* pParameterTokens)
 {
-    __mriLpc43xx_Init(pParameterTokens);
+    mriLpc43xx_Init(pParameterTokens);
 }
 
 
-const uint8_t* __mriPlatform_GetUid(void)
+const uint8_t* mriPlatform_GetUid(void)
 {
     return NULL;
 }
 
 
-uint32_t __mriPlatform_GetUidSize(void)
+uint32_t mriPlatform_GetUidSize(void)
 {
     return 0;
 }
 }}}
 
 The main thing it does is implement {{{Platform_Init()}}} which just calls the device specific initialization routine,
-{{{__mriLpc43xx_Init()}}}.  The mbed interface chip on the LPC1768 board actually contains a UID which is used by the
+{{{mriLpc43xx_Init()}}}.  The mbed interface chip on the LPC1768 board actually contains a UID which is used by the
 ethernet drivers to obtain the MAC address.  The Bambino doesn't have this so it just returns an empty UID in the above
 example.
 

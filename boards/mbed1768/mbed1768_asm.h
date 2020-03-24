@@ -16,7 +16,7 @@
 #ifndef _MBED1768_ASM_H_
 #define _MBED1768_ASM_H_
 
-int      __mriDisableMbed(void);
-int      __mriGetMbedUid(uint8_t* pOutputBuffer);
+int      mriDisableMbed(void);
+int      mriGetMbedUid(uint8_t* pOutputBuffer);
 
 #endif /* _MBED1768_ASM_H_ */

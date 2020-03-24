@@ -18,7 +18,7 @@ extern "C"
 #include <core/try_catch.h>
 #include <core/mri.h>
 
-void __mriDebugException(void);
+void mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -34,7 +34,7 @@ TEST_GROUP(cmdContinue)
     {
         m_expectedException = noException;
         platformMock_Init();
-        __mriInit("MRI_UART_MBED_USB");
+        mriInit("MRI_UART_MBED_USB");
     }
 
     void teardown()
@@ -55,7 +55,7 @@ TEST(cmdContinue, SkipOverHardcodedBreakpoints)
 {
     platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
@@ -64,7 +64,7 @@ TEST(cmdContinue, SkipOverHardcodedBreakpoints)
 TEST(cmdContinue, SetProgramCountWithContinueCommand)
 {
     platformMock_CommInitReceiveChecksummedData("+$cf00d#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
@@ -73,7 +73,7 @@ TEST(cmdContinue, SetProgramCountWithContinueCommand)
 TEST(cmdContinue, SetSignalOnly)
 {
     platformMock_CommInitReceiveChecksummedData("+$C0b#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
@@ -82,7 +82,7 @@ TEST(cmdContinue, SetSignalOnly)
 TEST(cmdContinue, SetSignalWithAddress)
 {
     platformMock_CommInitReceiveChecksummedData("+$C0b;f00d#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
@@ -92,7 +92,7 @@ TEST(cmdContinue, SetSignalSkipOverHardcodedBreakpoints)
 {
     platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
     platformMock_CommInitReceiveChecksummedData("+$C0b#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
@@ -101,7 +101,7 @@ TEST(cmdContinue, SetSignalSkipOverHardcodedBreakpoints)
 TEST(cmdContinue, SetSignalCommandWithMissingSignalValue)
 {
     platformMock_CommInitReceiveChecksummedData("+$C#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
@@ -110,7 +110,7 @@ TEST(cmdContinue, SetSignalCommandWithMissingSignalValue)
 TEST(cmdContinue, SetSignalCommandWithMissingAddressAfterSemicolon)
 {
     platformMock_CommInitReceiveChecksummedData("+$C0b;#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );

@@ -24,10 +24,10 @@
     .type USART1_IRQHandler, function
     .thumb_func
     /* extern "C" void USART1_IRQHandler(void);
-       Override USART1 exceptions and send to __mriExceptionHandler.
+       Override USART1 exceptions and send to mriExceptionHandler.
     */
 USART1_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 
 
     .global USART2_IRQHandler
@@ -35,10 +35,10 @@ USART1_IRQHandler:
     .type USART2_IRQHandler, function
     .thumb_func
     /* extern "C" void USART2_IRQHandler(void);
-       Override USART2 exceptions and send to __mriExceptionHandler.
+       Override USART2 exceptions and send to mriExceptionHandler.
     */
 USART2_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 
 
     .global USART3_IRQHandler
@@ -46,8 +46,8 @@ USART2_IRQHandler:
     .type USART3_IRQHandler, function
     .thumb_func
     /* extern "C" void USART3_IRQHandler(void);
-       Override USART3 exceptions and send to __mriExceptionHandler.
+       Override USART3 exceptions and send to mriExceptionHandler.
     */
 USART3_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 

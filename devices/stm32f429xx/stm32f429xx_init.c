@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green     (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,38 +34,27 @@ static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
                                      "<memory type=\"ram\" start=\"0x2001C000\" length=\"0x4000\"> </memory>"
                                      "<memory type=\"ram\" start=\"0x20020000\" length=\"0x10000\"> </memory>"
                                      "</memory-map>";
-Stm32f429xxState __mriStm32f429xxState;
+Stm32f429xxState mriStm32f429xxState;
 
 
 /* Reference this handler in the ASM module to make sure that it gets linked in. */
 void USART1_IRQHandler(void);
 
 
-static void defaultExternalInterruptsToPriority1(void);
-void __mriStm32f429xx_Init(Token* pParameterTokens)
+void mriStm32f429xx_Init(Token* pParameterTokens)
 {
     /* Reference handler in ASM module to make sure that is gets linked in. */
     void (* volatile dummyReference)(void) = USART1_IRQHandler;
     (void)dummyReference;
 
     __try
-        __mriCortexMInit(pParameterTokens);
+        mriCortexMInit(pParameterTokens, DMA2D_IRQn);
     __catch
         __rethrow;
 
-    defaultExternalInterruptsToPriority1();
-    __mriStm32f429xxUart_Init(pParameterTokens);
+    mriStm32f429xxUart_Init(pParameterTokens);
 }
 
-static void defaultExternalInterruptsToPriority1(void)
-{
-    int irq;
-    /* Set all priority to a lower non-zero priority. */
-    for (irq = WWDG_IRQn ; irq <= DMA2D_IRQn ; irq++)
-    {
-        NVIC_SetPriority((IRQn_Type)irq, 1);
-    }
-}
 
 
 uint32_t Platform_GetDeviceMemoryMapXmlSize(void)

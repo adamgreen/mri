@@ -34,8 +34,8 @@ typedef struct
     uint32_t                  flags;
 } Stm32f429xxState;
 
-extern Stm32f429xxState __mriStm32f429xxState;
+extern Stm32f429xxState mriStm32f429xxState;
 
-void __mriStm32f429xx_Init(Token* pParameterTokens);
+void mriStm32f429xx_Init(Token* pParameterTokens);
 
 #endif /* _STM32F429XX_H_ */

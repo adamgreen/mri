@@ -33,6 +33,6 @@ typedef struct
     uint32_t            pinSelectionValue;
 } UartConfiguration;
 
-void __mriLpc176xUart_Init(Token* pParameterTokens);
+void mriLpc176xUart_Init(Token* pParameterTokens);
 
 #endif /* _LPC176X_UART_H_ */

@@ -18,7 +18,7 @@ extern "C"
 #include <core/try_catch.h>
 #include <core/mri.h>
 
-void __mriDebugException(void);
+void mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -34,7 +34,7 @@ TEST_GROUP(cmdQuery)
     {
         m_expectedException = noException;
         platformMock_Init();
-        __mriInit("MRI_UART_MBED_USB");
+        mriInit("MRI_UART_MBED_USB");
     }
 
     void teardown()
@@ -54,7 +54,7 @@ TEST_GROUP(cmdQuery)
 TEST(cmdQuery, QuerySupported)
 {
     platformMock_CommInitReceiveChecksummedData("+$qSupported#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c"
                                                            "+$qXfer:memory-map:read+;qXfer:features:read+;PacketSize=89#fc+") );
 }
@@ -62,125 +62,125 @@ TEST(cmdQuery, QuerySupported)
 TEST(cmdQuery, QueryUnknown_ShouldReturnEmptyResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qUnknown#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$#00+") );
 }
 
 TEST(cmdQuery, QueryUnknownXfer_ShouldReturnEmptyResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:unknown#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$#00+") );
 }
 
 TEST(cmdQuery, QueryXfer_NoParameters_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_InvalidOperation_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:unknown#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_UnknownAnnex_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read:unknown:#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_TruncatedAnnex_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read:target.xml#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_NullAnnexWithAddressButNoLength_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::0#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_NonNullAnnex_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read:target.xml:0,0#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_ReadFirstTwoBytes)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::0,2#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$mTE#06+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_ReadLastTwoBytes)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::2,2#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$mST#14+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_ReadThroughEnd)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::2,3#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$lST#13+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_StartReadPastEnd)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::4,1#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$l#6c+") );
 }
 
 TEST(cmdQuery, QueryXferMemoryMap_VeryLargeRead)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:memory-map:read::0,256#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$lTEST#ac+") );
 }
 
 TEST(cmdQuery, QueryXferFeatures_InvalidOperation_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:features:unknown#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferFeatures_NullAnnex_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:features:read::0,0#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferFeatures_UnknownAnnex_ShouldReturnErrorResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:features:read:unknown:0,0#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
 }
 
 TEST(cmdQuery, QueryXferFeatures_ReadAllData)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:features:read:target.xml:0,5#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$mtest!#4e+") );
 }
 
 TEST(cmdQuery, QueryXferFeatures_VeryLargeRead)
 {
     platformMock_CommInitReceiveChecksummedData("+$qXfer:features:read:target.xml:0,256#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$ltest!#4d+") );
 }

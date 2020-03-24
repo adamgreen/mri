@@ -44,7 +44,7 @@ void Platform_Init(Token* pParameterTokens)
     __try
     {
         __throwing_func( disableMbedInterface() );
-        __throwing_func( __mriLpc176x_Init(pParameterTokens) );
+        __throwing_func( mriLpc176x_Init(pParameterTokens) );
     }
     __catch
     {
@@ -69,7 +69,7 @@ static void disableMbedInterface(void)
         return;
 
     fetchAndSaveMbedUid();
-    __mriDisableMbed();
+    mriDisableMbed();
 
     __try
         waitForDebuggerToDetach(debugDetachWaitTimeout);
@@ -81,7 +81,7 @@ static void disableMbedInterface(void)
 
 static void fetchAndSaveMbedUid(void)
 {
-    __mriGetMbedUid(g_state.mbedUid);
+    mriGetMbedUid(g_state.mbedUid);
 }
 
 static void setMbedDetectedFlag(void)
@@ -90,19 +90,19 @@ static void setMbedDetectedFlag(void)
 }
 
 
-const uint8_t* __mriPlatform_GetUid(void)
+const uint8_t* mriPlatform_GetUid(void)
 {
     return g_state.mbedUid;
 }
 
 
-uint32_t __mriPlatform_GetUidSize(void)
+uint32_t mriPlatform_GetUidSize(void)
 {
     return sizeof(g_state.mbedUid);
 }
 
 
-int __mriMbed1768_IsMbedDevice(void)
+int mriMbed1768_IsMbedDevice(void)
 {
     return (int)(g_state.flags & FLAGS_MBED_DETECTED);
 }

@@ -18,7 +18,7 @@ extern "C"
 #include <core/try_catch.h>
 #include <core/mri.h>
 
-void __mriDebugException(void);
+void mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -34,7 +34,7 @@ TEST_GROUP(cmdRegisters)
     {
         m_expectedException = noException;
         platformMock_Init();
-        __mriInit("MRI_UART_MBED_USB");
+        mriInit("MRI_UART_MBED_USB");
     }
 
     void teardown()
@@ -60,14 +60,14 @@ TEST(cmdRegisters, GetRegisters)
     pContext[3] = 0x44444444;
 
     platformMock_CommInitReceiveChecksummedData("+$g#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$11111111222222223333333344444444#50+") );
 }
 
 TEST(cmdRegisters, SetRegisters)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef0#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$OK#9a+") );
     uint32_t* pContext = platformMock_GetContext();
     CHECK_EQUAL ( 0x78563412, pContext[0] );
@@ -79,7 +79,7 @@ TEST(cmdRegisters, SetRegisters)
 TEST(cmdRegisters, SetRegisters_BufferTooShort)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_BUFFER_OVERRUN "#a9+") );
     uint32_t* pContext = platformMock_GetContext();
     CHECK_EQUAL ( 0x78563412, pContext[0] );

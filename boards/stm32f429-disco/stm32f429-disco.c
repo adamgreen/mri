@@ -23,17 +23,17 @@
 
 void Platform_Init(Token* pParameterTokens)
 {
-    __mriStm32f429xx_Init(pParameterTokens);
+    mriStm32f429xx_Init(pParameterTokens);
 }
 
 
-const uint8_t* __mriPlatform_GetUid(void)
+const uint8_t* mriPlatform_GetUid(void)
 {
     return NULL;
 }
 
 
-uint32_t __mriPlatform_GetUidSize(void)
+uint32_t mriPlatform_GetUidSize(void)
 {
     return 0;
 }

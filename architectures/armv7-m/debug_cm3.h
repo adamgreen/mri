@@ -91,15 +91,19 @@ static __INLINE void waitForDebuggerToDetach(uint32_t timeOut)
         __throw(timeoutException);
 }
 
-static __INLINE void enableDebugMonitorAtPriority0(void)
+static __INLINE void enableDebugMonitor()
 {
-    NVIC_SetPriority(DebugMonitor_IRQn, 0);
     CoreDebug->DEMCR |=  CoreDebug_DEMCR_MON_EN;
 }
 
 static __INLINE void enableDWTandITM(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA;
+}
+
+static __INLINE void disableDWTandITM(void)
+{
+    CoreDebug->DEMCR &= ~CoreDebug_DEMCR_TRCENA;
 }
 
 static __INLINE void disableSingleStep(void)
@@ -120,6 +124,11 @@ static __INLINE void clearMonitorPending(void)
 static __INLINE void setMonitorPending(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_MON_PEND;
+}
+
+static __INLINE uint32_t isMonitorPending(void)
+{
+    return CoreDebug->DEMCR & CoreDebug_DEMCR_MON_PEND;
 }
 
 /* Data Watchpoint and Trace Comparator Function Bits. */
@@ -659,6 +668,11 @@ static __INLINE void clearFPBComparators(void)
 static __INLINE void enableFPB(void)
 {
     FPB->CTRL |= (FP_CTRL_KEY | FP_CTRL_ENABLE);
+}
+
+static __INLINE void disableFPB(void)
+{
+    FPB->CTRL = FP_CTRL_KEY | (FPB->CTRL & ~FP_CTRL_ENABLE);
 }
 
 static __INLINE void initFPB(void)

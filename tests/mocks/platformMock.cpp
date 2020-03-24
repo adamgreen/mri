@@ -85,12 +85,6 @@ static char*       g_pAlloc2;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
-static int         g_commInterruptBit;
-static int         g_commShouldWaitForGdbConnect;
-static int         g_commIsWaitingForGdbToConnect;
-static int         g_commWaitForReceiveDataToStopCount;
-static int         g_commPrepareToWaitForGdbConnectionCount;
-static int         g_commSharingWithApplication;
 
 void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
@@ -193,36 +187,6 @@ static size_t getTransmitDataBufferSize()
     return g_pTransmitDataBufferCurr - g_pTransmitDataBufferStart;
 }
 
-void platformMock_CommSetInterruptBit(int setValue)
-{
-    g_commInterruptBit = setValue;
-}
-
-void platformMock_CommSetShouldWaitForGdbConnect(int setValue)
-{
-    g_commShouldWaitForGdbConnect = setValue;
-}
-
-void platformMock_CommSetIsWaitingForGdbToConnectIterations(int iterations)
-{
-    g_commIsWaitingForGdbToConnect = iterations;
-}
-
-int platformMock_GetCommWaitForReceiveDataToStopCalls(void)
-{
-    return g_commWaitForReceiveDataToStopCount;
-}
-
-int platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void)
-{
-    return g_commPrepareToWaitForGdbConnectionCount;
-}
-
-void platformMock_SetCommSharingWithApplication(int setValue)
-{
-    g_commSharingWithApplication = setValue;
-}
-
 // Platform_Comm* stubs called by MRI core.
 uint32_t Platform_CommHasReceiveData(void)
 {
@@ -267,45 +231,6 @@ void Platform_CommSendChar(int character)
         *g_pTransmitDataBufferCurr++ = (char)character;
 }
 
-int __mriPlatform_CommCausedInterrupt(void)
-{
-    return g_commInterruptBit;
-}
-
-void __mriPlatform_CommClearInterrupt(void)
-{
-    g_commInterruptBit = FALSE;
-}
-
-int __mriPlatform_CommShouldWaitForGdbConnect(void)
-{
-    return g_commShouldWaitForGdbConnect;
-}
-
-int __mriPlatform_CommIsWaitingForGdbToConnect(void)
-{
-    int returnValue = g_commIsWaitingForGdbToConnect;
-    if (returnValue)
-        g_commIsWaitingForGdbToConnect--;
-    return returnValue;
-}
-
-void __mriPlatform_CommWaitForReceiveDataToStop(void)
-{
-    g_commWaitForReceiveDataToStopCount++;
-}
-
-void __mriPlatform_CommPrepareToWaitForGdbConnection(void)
-{
-    g_commPrepareToWaitForGdbConnectionCount++;
-}
-
-int __mriPlatform_CommSharingWithApplication(void)
-{
-    return g_commSharingWithApplication;
-}
-
-
 
 // Instrumentation to entering and leaving of debugger.
 static int g_enteringDebuggerCount;
@@ -322,12 +247,12 @@ int platformMock_GetLeavingDebuggerCalls(void)
 }
 
 // Stubs called by MRI core.
-void __mriPlatform_EnteringDebugger(void)
+void mriPlatform_EnteringDebugger(void)
 {
     g_enteringDebuggerCount++;
 }
 
-void __mriPlatform_LeavingDebugger(void)
+void mriPlatform_LeavingDebugger(void)
 {
     g_leavingDebuggerCount++;
 }
@@ -347,12 +272,12 @@ void        platformMock_SetPacketBufferSize(uint32_t setValue)
 }
 
 // Packet Buffer stubs called by MRI core.
-char* __mriPlatform_GetPacketBuffer(void)
+char* mriPlatform_GetPacketBuffer(void)
 {
     return g_packetBuffer;
 }
 
-uint32_t  __mriPlatform_GetPacketBufferSize(void)
+uint32_t  mriPlatform_GetPacketBufferSize(void)
 {
     return g_packetBufferSize;
 }
@@ -374,12 +299,12 @@ int platformMock_GetHandleSemihostRequestCalls(void)
 }
 
 // Semihost stubs called by MRI core.
-int __mriSemihost_IsDebuggeeMakingSemihostCall(void)
+int mriSemihost_IsDebuggeeMakingSemihostCall(void)
 {
     return g_isDebuggeeMakingSemihostCall;
 }
 
-int __mriSemihost_HandleSemihostRequest(void)
+int mriSemihost_HandleSemihostRequest(void)
 {
     g_getHandleSemihostRequestCount++;
     return TRUE;
@@ -396,7 +321,7 @@ int platformMock_DisplayFaultCauseToGdbConsoleCalls(void)
 }
 
 // Fault/Semihost stubs called by MRI core.
-void __mriPlatform_DisplayFaultCauseToGdbConsole(void)
+void mriPlatform_DisplayFaultCauseToGdbConsole(void)
 {
     g_displayFaultCauseToGdbConsoleCount++;
 }
@@ -430,29 +355,29 @@ uint32_t platformMock_GetProgramCounterValue(void)
 }
 
 // Stubs called by MRI core.
-PlatformInstructionType __mriPlatform_TypeOfCurrentInstruction(void)
+PlatformInstructionType mriPlatform_TypeOfCurrentInstruction(void)
 {
     return g_instructionType;
 }
 
-void __mriPlatform_AdvanceProgramCounterToNextInstruction(void)
+void mriPlatform_AdvanceProgramCounterToNextInstruction(void)
 {
     g_advanceProgramCounterToNextInstruction++;
     g_programCounter += 4;
 }
 
-void __mriPlatform_SetProgramCounter(uint32_t newPC)
+void mriPlatform_SetProgramCounter(uint32_t newPC)
 {
     g_programCounter = newPC;
     g_setProgramCounterCalls++;
 }
 
-int __mriPlatform_WasProgramCounterModifiedByUser(void)
+int mriPlatform_WasProgramCounterModifiedByUser(void)
 {
     return FALSE;
 }
 
-uint32_t  __mriPlatform_GetProgramCounter(void)
+uint32_t  mriPlatform_GetProgramCounter(void)
 {
     return g_programCounter;
 }
@@ -462,12 +387,12 @@ uint32_t  __mriPlatform_GetProgramCounter(void)
 // Single Stepping stubs called by MRI core.
 static int g_singleStepping;
 
-void __mriPlatform_EnableSingleStep(void)
+void mriPlatform_EnableSingleStep(void)
 {
     g_singleStepping = TRUE;
 }
 
-int __mriPlatform_IsSingleStepping(void)
+int mriPlatform_IsSingleStepping(void)
 {
     return g_singleStepping;
 }
@@ -482,7 +407,7 @@ void platformMock_FaultOnSpecificMemoryCall(int callToFail)
 }
 
 // Stub called by MRI core.
-int __mriPlatform_WasMemoryFaultEncountered(void)
+int mriPlatform_WasMemoryFaultEncountered(void)
 {
     if (g_callToFail == 0)
         return FALSE;
@@ -503,17 +428,17 @@ uint32_t* platformMock_GetContext(void)
 }
 
 // Stubs called from MRI core.
-void __mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
+void mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
 {
     ReadMemoryIntoHexBuffer(pBuffer, &g_context, sizeof(g_context));
 }
 
-void __mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
+void mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
 {
     WriteHexBufferToMemory(pBuffer, &g_context, sizeof(g_context));
 }
 
-void __mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
+void mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
     Buffer_WriteString(pBuffer, "responseT");
 }
@@ -631,7 +556,7 @@ void platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow)
 }
 
 // Stubs called from MRI core.
-__throws void  __mriPlatform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
+__throws void  mriPlatform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     g_setHardwareBreakpointCalls++;
     g_setHardwareBreakpointAddressArg = address;
@@ -640,7 +565,7 @@ __throws void  __mriPlatform_SetHardwareBreakpointOfGdbKind(uint32_t address, ui
         __throw(g_setHardwareBreakpointException);
 }
 
-__throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address)
+__throws void  mriPlatform_SetHardwareBreakpoint(uint32_t address)
 {
     g_setHardwareBreakpointCalls++;
     g_setHardwareBreakpointAddressArg = address;
@@ -649,7 +574,7 @@ __throws void  __mriPlatform_SetHardwareBreakpoint(uint32_t address)
         __throw(g_setHardwareBreakpointException);
 }
 
-__throws void  __mriPlatform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
+__throws void  mriPlatform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
 {
     g_clearHardwareBreakpointCalls++;
     g_clearHardwareBreakpointAddressArg = address;
@@ -658,7 +583,7 @@ __throws void  __mriPlatform_ClearHardwareBreakpointOfGdbKind(uint32_t address, 
         __throw(g_clearHardwareBreakpointException);
 }
 
-__throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address)
+__throws void  mriPlatform_ClearHardwareBreakpoint(uint32_t address)
 {
     g_clearHardwareBreakpointCalls++;
     g_clearHardwareBreakpointAddressArg = address;
@@ -667,7 +592,7 @@ __throws void  __mriPlatform_ClearHardwareBreakpoint(uint32_t address)
         __throw(g_clearHardwareBreakpointException);
 }
 
-__throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+__throws void  mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
 {
     g_setHardwareWatchpointCalls++;
     g_setHardwareWatchpointAddressArg = address;
@@ -677,7 +602,7 @@ __throws void  __mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t si
         __throw(g_setHardwareWatchpointException);
 }
 
-__throws void  __mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+__throws void  mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
 {
     g_clearHardwareWatchpointCalls++;
     g_clearHardwareWatchpointAddressArg = address;
@@ -694,22 +619,22 @@ static char g_deviceMemoryMapXml[] = "TEST";
 static char g_targetXml[] = "test!";
 
 // Stubs called by MRI core.
-uint32_t __mriPlatform_GetDeviceMemoryMapXmlSize(void)
+uint32_t mriPlatform_GetDeviceMemoryMapXmlSize(void)
 {
     return sizeof(g_deviceMemoryMapXml) - 1;
 }
 
-const char*  __mriPlatform_GetDeviceMemoryMapXml(void)
+const char*  mriPlatform_GetDeviceMemoryMapXml(void)
 {
     return g_deviceMemoryMapXml;
 }
 
-uint32_t __mriPlatform_GetTargetXmlSize(void)
+uint32_t mriPlatform_GetTargetXmlSize(void)
 {
     return sizeof(g_targetXml) - 1;
 }
 
-const char*  __mriPlatform_GetTargetXml(void)
+const char*  mriPlatform_GetTargetXml(void)
 {
     return g_targetXml;
 }
@@ -731,7 +656,7 @@ int platformMock_GetSemihostCallErrno(void)
 }
 
 // Stubs called by MRI core.
-void __mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
+void mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 {
     g_semihostCallReturnValue = returnValue;
     g_semihostCallErrno = err;
@@ -746,12 +671,6 @@ void platformMock_Init(void)
     platformMock_CommInitTransmitDataBuffer(2 * sizeof(g_packetBuffer));
     platformMock_SetInitException(noException);
     memset(&g_initTokenCopy, 0, sizeof(g_initTokenCopy));
-    g_commInterruptBit = FALSE;
-    g_commShouldWaitForGdbConnect = FALSE;
-    g_commIsWaitingForGdbToConnect = 0;
-    g_commWaitForReceiveDataToStopCount = 0;
-    g_commPrepareToWaitForGdbConnectionCount = 0;
-    g_commSharingWithApplication = FALSE;
     g_initCount = 0;
     g_enteringDebuggerCount = 0;
     g_leavingDebuggerCount = 0;
@@ -799,15 +718,15 @@ void platformMock_Uninit(void)
 
 
 // Stubs for Platform APIs that act as NOPs when called from mriCore during testing.
-uint8_t __mriPlatform_DetermineCauseOfException(void)
+uint8_t mriPlatform_DetermineCauseOfException(void)
 {
     return SIGTRAP;
 }
 
-extern "C" void __mriPlatform_EnteringDebuggerHook(void)
+extern "C" void mriPlatform_EnteringDebuggerHook(void)
 {
 }
 
-extern "C" void __mriPlatform_LeavingDebuggerHook(void)
+extern "C" void mriPlatform_LeavingDebuggerHook(void)
 {
 }

@@ -260,25 +260,6 @@ TEST(platformMock, platformMockInit_GetInitTokenCopy)
     validateTokenCopy(pTokenCopy);
 }
 
-TEST(platformMock, Platform_CommCausedInterruptReturnsFalseByDefault)
-{
-    CHECK_FALSE( Platform_CommCausedInterrupt() );
-}
-
-TEST(platformMock, Platform_CommCausedInterruptReturnsTrueAfterSettingInMock)
-{
-    platformMock_CommSetInterruptBit(1);
-    CHECK_TRUE( Platform_CommCausedInterrupt() );
-}
-
-TEST(platformMock, Platform_CommCausedInterruptReturnsFalseAfterClearing)
-{
-    platformMock_CommSetInterruptBit(1);
-    CHECK_TRUE( Platform_CommCausedInterrupt() );
-    Platform_CommClearInterrupt();
-    CHECK_FALSE( Platform_CommCausedInterrupt() );
-}
-
 TEST(platformMock, Platform_EnteringDebugger_CountCalls)
 {
     CHECK_EQUAL( 0, platformMock_GetEnteringDebuggerCalls() );
@@ -295,50 +276,6 @@ TEST(platformMock, Platform_LeavingDebugger_CountCalls)
     CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
         Platform_LeavingDebugger();
     CHECK_EQUAL( 2, platformMock_GetLeavingDebuggerCalls() );
-}
-
-TEST(platformMock, Platform_CommShouldWaitForGdbConnect_ReturnsFalseByDefault)
-{
-    CHECK_FALSE( Platform_CommShouldWaitForGdbConnect() );
-}
-
-TEST(platformMock, Platform_CommShouldWaitForGdbConnect_ReturnsTrueAfterSettingInMock)
-{
-    CHECK_FALSE( Platform_CommShouldWaitForGdbConnect() );
-        platformMock_CommSetShouldWaitForGdbConnect(1);
-    CHECK_TRUE( Platform_CommShouldWaitForGdbConnect() );
-}
-
-TEST(platformMock, Platform_CommIsWaitingForGdbToConnect_ReturnsFalseByDefault)
-{
-    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
-}
-
-TEST(platformMock, Platform_CommIsWaitingForGdbToConnect_ReturnsTrueDefinedNumberOfTimes)
-{
-    platformMock_CommSetIsWaitingForGdbToConnectIterations(2);
-    CHECK_TRUE( Platform_CommIsWaitingForGdbToConnect() );
-    CHECK_TRUE( Platform_CommIsWaitingForGdbToConnect() );
-    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
-    CHECK_FALSE( Platform_CommIsWaitingForGdbToConnect() );
-}
-
-TEST(platformMock, Platform_CommWaitForReceiveDataToStop_CountCalls)
-{
-    CHECK_EQUAL( 0, platformMock_GetCommWaitForReceiveDataToStopCalls() );
-        Platform_CommWaitForReceiveDataToStop();
-    CHECK_EQUAL( 1, platformMock_GetCommWaitForReceiveDataToStopCalls() );
-        Platform_CommWaitForReceiveDataToStop();
-    CHECK_EQUAL( 2, platformMock_GetCommWaitForReceiveDataToStopCalls() );
-}
-
-TEST(platformMock, Platform_CommPrepareToWaitForGdbConnection_CountCalls)
-{
-    CHECK_EQUAL( 0, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
-        Platform_CommPrepareToWaitForGdbConnection();
-    CHECK_EQUAL( 1, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
-        Platform_CommPrepareToWaitForGdbConnection();
-    CHECK_EQUAL( 2, platformMock_GetCommPrepareToWaitForGdbConnectionCalls() );
 }
 
 TEST(platformMock, Semihost_HandleSemihostRequest_CountCalls)
@@ -385,17 +322,6 @@ TEST(platformMock, Platform_GetPacketBufferSize_SetSmallSize)
 {
     platformMock_SetPacketBufferSize(2);
     CHECK_EQUAL (2, Platform_GetPacketBufferSize() );
-}
-
-TEST(platformMock, Platform_CommSharingWithApplication_DefaultsToFalse)
-{
-    CHECK_FALSE ( Platform_CommSharingWithApplication() );
-}
-
-TEST(platformMock, Platform_CommSharingWithApplication_SetToReturnTrue)
-{
-    platformMock_SetCommSharingWithApplication(1);
-    CHECK_TRUE ( Platform_CommSharingWithApplication() );
 }
 
 TEST(platformMock, Platform_TypeOfCurrentInstruction_DefaultsToOther)

@@ -30,7 +30,7 @@ all : arm host
 
 gcov : RUN_CPPUTEST_TESTS GCOV_CORE
 
-clean : 
+clean :
 	@echo Cleaning MRI
 	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
 	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)
@@ -71,13 +71,14 @@ endif
 # Flags to use when cross-compiling ARMv7-M binaries.
 ARMV7M_GCCFLAGS := -Os -g3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
+ARMV7M_GCCFLAGS += -DMRI_THREAD_MRI=0
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
 ARMV7M_ASFLAGS  := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb -g3 -x assembler-with-cpp -MMD -MP
 
 # Flags to use when compiling binaries to run on this host system.
 HOST_GCCFLAGS := -O2 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
-HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common
+HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common -DMRI_THREAD_MRI=0
 HOST_GCCFLAGS += -include CppUTest/include/CppUTest/MemoryLeakDetectorMallocMacros.h
 HOST_GPPFLAGS := $(HOST_GCCFLAGS) -include CppUTest/include/CppUTest/MemoryLeakDetectorNewMacros.h
 HOST_GCCFLAGS += -std=gnu90

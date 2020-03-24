@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,21 +20,16 @@
 #include <core/token.h>
 #include "lpc43xx_uart.h"
 
-/* Flags that can be set in Lpc43xxState::flags */
-#define LPC43XX_UART_FLAGS_SHARE        1
-#define LPC43XX_UART_FLAGS_MANUAL_BAUD  2
-
 /* Flag to indicate whether context will contain FPU registers or not. */
 #define MRI_DEVICE_HAS_FPU 1
 
 typedef struct
 {
     const UartConfiguration*  pCurrentUart;
-    uint32_t                  flags;
 } Lpc43xxState;
 
-extern Lpc43xxState __mriLpc43xxState;
+extern Lpc43xxState mriLpc43xxState;
 
-void __mriLpc43xx_Init(Token* pParameterTokens);
+void mriLpc43xx_Init(Token* pParameterTokens);
 
 #endif /* _LPC43XX_H_ */

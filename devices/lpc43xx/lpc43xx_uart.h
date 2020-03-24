@@ -34,6 +34,6 @@ typedef struct
     uint32_t            rxFunction;
 } UartConfiguration;
 
-void __mriLpc43xxUart_Init(Token* pParameterTokens);
+void mriLpc43xxUart_Init(Token* pParameterTokens);
 
 #endif /* _LPC43XX_UART_H_ */

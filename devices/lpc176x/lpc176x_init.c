@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -43,36 +43,25 @@ static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"
                                        "<memory type=\"ram\" start=\"0x5000C000\" length=\"0x4000\"> </memory>"
                                        "<memory type=\"ram\" start=\"0xE0000000\" length=\"0x100000\"> </memory>"
                                      "</memory-map>";
-Lpc176xState __mriLpc176xState;
+Lpc176xState mriLpc176xState;
 
 
 /* Reference this handler in the ASM module to make sure that it gets linked in. */
 void UART0_IRQHandler(void);
 
 
-static void defaultExternalInterruptsToPriority1(void);
-void __mriLpc176x_Init(Token* pParameterTokens)
+void mriLpc176x_Init(Token* pParameterTokens)
 {
     /* Reference handler in ASM module to make sure that is gets linked in. */
     void (* volatile dummyReference)(void) = UART0_IRQHandler;
     (void)dummyReference;
 
     __try
-        __mriCortexMInit(pParameterTokens);
+        mriCortexMInit(pParameterTokens, CANActivity_IRQn);
     __catch
         __rethrow;
 
-    defaultExternalInterruptsToPriority1();
-    __mriLpc176xUart_Init(pParameterTokens);
-}
-
-static void defaultExternalInterruptsToPriority1(void)
-{
-    static const int CAN_IRQn = 34;
-    int              irq;
-
-    for (irq = WDT_IRQn ; irq <= CAN_IRQn ; irq++)
-        NVIC_SetPriority((IRQn_Type)irq, 1);
+    mriLpc176xUart_Init(pParameterTokens);
 }
 
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ TEST_GROUP(gdbConsole)
     {
         m_expectedException = noException;
         platformMock_Init();
-        __mriInit("MRI_UART_MBED_USB");
+        mriInit("MRI_UART_MBED_USB");
     }
 
     void teardown()
@@ -50,18 +50,10 @@ TEST_GROUP(gdbConsole)
     }
 };
 
-TEST(gdbConsole, WriteStringToGdbConsole_SendAsGdbPacketWhenNotShared)
+TEST(gdbConsole, WriteStringToGdbConsole_SendAsGdbPacket)
 {
-    platformMock_SetCommSharingWithApplication(0);
     WriteStringToGdbConsole("Test\n");
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O546573740a#89") );
-}
-
-TEST(gdbConsole, WriteStringToGdbConsole_SendRawStringWhenShared)
-{
-    platformMock_SetCommSharingWithApplication(1);
-    WriteStringToGdbConsole("Test string\n");
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("Test string\n") );
 }
 
 TEST(gdbConsole, WriteStringToGdbConsole_FailToSendAsGdbPacketBecauseOfSmallBuffer)
@@ -74,14 +66,12 @@ TEST(gdbConsole, WriteStringToGdbConsole_FailToSendAsGdbPacketBecauseOfSmallBuff
 
 TEST(gdbConsole, WriteHexValueToGdbConsole_SendMinimumValue)
 {
-    platformMock_SetCommSharingWithApplication(1);
     WriteHexValueToGdbConsole(0);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("0x00") );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O30783030#e7") );
 }
 
 TEST(gdbConsole, WriteHexValueToGdbConsole_SendMaximumValue)
 {
-    platformMock_SetCommSharingWithApplication(1);
     WriteHexValueToGdbConsole(~0U);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("0xffffffff") );
+    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O30786666666666666666#81") );
 }

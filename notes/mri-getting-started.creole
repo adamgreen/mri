@@ -53,7 +53,7 @@ Reading symbols from /depots/gcc4mbed/samples/FileTest/FileTest.elf...done.
 Remote debugging using /dev/tty.usbmodem412
 _start () at ../../src/gcc4mbed.c:37
 37	            __debugbreak();
-(gdb) 
+(gdb)
 }}}
 
 The last few lines of the GDB output indicate that our FileTest sample is currently halted at line 37 in gcc4mbed.c  This is the halt that I mentioned earlier which lets us get in and set some breakpoints before we let things actually startup.
@@ -62,18 +62,18 @@ The last few lines of the GDB output indicate that our FileTest sample is curren
 GDB is now waiting for us to give it some debugging commands so let's start out by looking at the code around the line we are currently halted at to get a feel for where we are in the sample code.  We can do this by issuing the **list** command:
 {{{
 (gdb) list
-32	    
+32
 33	    if (MRI_ENABLE)
 34	    {
-35	        __mriInit(MRI_INIT_PARAMETERS);
+35	        mriInit(MRI_INIT_PARAMETERS);
 36	        if (MRI_BREAK_ON_INIT)
 37	            __debugbreak();
 38	    }
-39	    
+39
 40	    __libc_init_array();
 41	    mainReturnValue = main();
 }}}
-So line 37 is actually a {{{__debugbreak()}}} instruction that was issued because the MRI_BREAK_ON_INIT variable was set in our debug build.  We can also see that {{{__libc_init_array()}}} and main() will actually be called after we start up the application again.  
+So line 37 is actually a {{{__debugbreak()}}} instruction that was issued because the MRI_BREAK_ON_INIT variable was set in our debug build.  We can also see that {{{__libc_init_array()}}} and main() will actually be called after we start up the application again.
 
 So we haven't even gotten to main() yet.  What function are we in then?  We can issue the **backtrace** command to GDB and have it list the current call stack.
 {{{
@@ -101,7 +101,7 @@ Ahh, now we are actually in the sample's main() C++ code itself.  Let's list out
 23	    unsigned char     TestBuffer[256];
 24	    unsigned char     ReadBuffer[256];
 25	    size_t            i;
-26	    
+26
 27	    // Fill in test buffer with every byte value possible.
 28	    for (i = 0 ; i < sizeof(TestBuffer) ; i++)
 29	    {
@@ -109,14 +109,14 @@ Ahh, now we are actually in the sample's main() C++ code itself.  Let's list out
 31	    }
 32	    memset(ReadBuffer, 0, sizeof(ReadBuffer));
 (gdb) list
-33	    
+33
 34	    // Create a file in the LocalFileSystem with this data.
 35	    FILE* fp = fopen(Filename, "w");
 36	    if (!fp)
 37	    {
 38	        error("Failed to open %s for writing\n", Filename);
 39	    }
-40	    
+40
 41	    int BytesWritten = fwrite(TestBuffer, 1, sizeof(TestBuffer), fp);
 42	    if (BytesWritten != sizeof(TestBuffer))
 }}}
@@ -146,7 +146,7 @@ Let's step over this memset() call and get to the next line:
 {{{
 (gdb) next
 35	    FILE* fp = fopen(Filename, "w");
-(gdb) 
+(gdb)
 }}}
 
 Lines 28 - 32 should have initialized 256 entries in the TestBuffer and ReadBuffer arrays.  Let's dump the contents of these 256 bytes of memory and see if they contain the expected data of all zeroes in ReadBuffer and ascending values in TestBuffer.  We use the **x** command (short for eXamine) for this:
@@ -242,7 +242,7 @@ Where are we again?  Let's issue another list command:
 30	        TestBuffer[i] = i;
 31	    }
 32	    memset(ReadBuffer, 0, sizeof(ReadBuffer));
-33	    
+33
 34	    // Create a file in the LocalFileSystem with this data.
 35	    FILE* fp = fopen(Filename, "w");
 36	    if (!fp)

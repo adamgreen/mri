@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,37 +23,37 @@
     .type UART0_IRQHandler, function
     .thumb_func
     /* extern "C" void UART0_IRQHandler(void);
-       Override UART0 exceptions and send to __mriExceptionHandler.
+       Override UART0 exceptions and send to mriExceptionHandler.
     */
 UART0_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 
     .global UART1_IRQHandler
     .weak   UART1_IRQHandler
     .type UART1_IRQHandler, function
     .thumb_func
     /* extern "C" void UART1_IRQHandler(void);
-       Override UART1 exceptions and send to __mriExceptionHandler.
+       Override UART1 exceptions and send to mriExceptionHandler.
     */
 UART1_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 
     .global UART2_IRQHandler
     .weak   UART2_IRQHandler
     .type UART2_IRQHandler, function
     .thumb_func
     /* extern "C" void UART2_IRQHandler(void);
-       Override UART2 exceptions and send to __mriExceptionHandler.
+       Override UART2 exceptions and send to mriExceptionHandler.
     */
 UART2_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler
 
     .global UART3_IRQHandler
     .weak   UART3_IRQHandler
     .type UART3_IRQHandler, function
     .thumb_func
     /* extern "C" void UART3_IRQHandler(void);
-       Override UART3 exceptions and send to __mriExceptionHandler.
+       Override UART3 exceptions and send to mriExceptionHandler.
     */
 UART3_IRQHandler:
-    b       __mriExceptionHandler
+    b       mriExceptionHandler

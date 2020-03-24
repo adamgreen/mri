@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,12 +27,6 @@ void        platformMock_CommInitReceiveData(const char* pDataToReceive1, const 
 void        platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
 int         platformMock_CommDoesTransmittedDataEqual(const char* thisString);
-void        platformMock_CommSetInterruptBit(int setValue);
-void        platformMock_CommSetShouldWaitForGdbConnect(int setValue);
-void        platformMock_CommSetIsWaitingForGdbToConnectIterations(int iterations);
-int         platformMock_GetCommWaitForReceiveDataToStopCalls(void);
-int         platformMock_GetCommPrepareToWaitForGdbConnectionCalls(void);
-void        platformMock_SetCommSharingWithApplication(int setValue);
 
 void        platformMock_SetInitException(int exceptionToThrow);
 int         platformMock_GetInitCount(void);

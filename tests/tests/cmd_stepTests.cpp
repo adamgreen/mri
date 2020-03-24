@@ -19,7 +19,7 @@ extern "C"
 #include <core/mri.h>
 #include <core/platforms.h>
 
-void __mriDebugException(void);
+void mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -35,7 +35,7 @@ TEST_GROUP(cmdStep)
     {
         m_expectedException = noException;
         platformMock_Init();
-        __mriInit("MRI_UART_MBED_USB");
+        mriInit("MRI_UART_MBED_USB");
     }
 
     void teardown()
@@ -56,7 +56,7 @@ TEST(cmdStep, BasicSingleStep)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$s#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -67,7 +67,7 @@ TEST(cmdStep, SingleStepOverHardcodedBreakpoints_MustContinueAfterToExit)
 {
     platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
     platformMock_CommInitReceiveChecksummedData("+$s#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$T05responseT#7c+") );
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -78,7 +78,7 @@ TEST(cmdStep, SetSignalOnly)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$S0b#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -89,7 +89,7 @@ TEST(cmdStep, SetSignalWithAddress)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$S0b;f00d#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -100,7 +100,7 @@ TEST(cmdStep, SetSignalSingleStepOverHardcodedBreakpoints_MustContinueAfterToExi
 {
     platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
     platformMock_CommInitReceiveChecksummedData("+$S0b#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$T05responseT#7c+") );
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -111,7 +111,7 @@ TEST(cmdStep, SetSignalWithMissingSignalValue)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$S#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
@@ -122,7 +122,7 @@ TEST(cmdStep, SetSignalCommandWithMissingAddressAfterSemicolon)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$S0b;#", "+$c#");
-        __mriDebugException();
+        mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
     CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );

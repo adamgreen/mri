@@ -18,7 +18,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
-/* The __mriDisableMbed() and __mriGetMbedUid() routines were extracted from
+/* The mriDisableMbed() and mriGetMbedUid() routines were extracted from
    the mbed SDK libraries to  allow the use of the MRI debugger on mbed devices
    without requiring the mbed SDK.  The assembly language code itself
    was written by the mbed team at ARM Limited but the function naming and
@@ -29,14 +29,14 @@
     .code 16
     .syntax unified
 
-    .global __mriDisableMbed
+    .global mriDisableMbed
     .thumb_func
-    /* extern "C" int __mriDisableMbed(void);
+    /* extern "C" int mriDisableMbed(void);
        Attempts to disable the debug interface on the mbed device.
 
        Returns -1 on failure.
     */
-__mriDisableMbed:
+mriDisableMbed:
     sub     sp, #8          // Allocate 4 byte parameter block on stack (round up to maintain 8 byte alignment.)
     add     r1, sp, #4      // R1 = pointer to 4 byte parameter block on stack.
     movw    r0, #261        // R0 = semi-host id for disabling JTAG port use from mbed interface chip.
@@ -49,14 +49,14 @@ __mriDisableMbed:
     bx      lr              //  and return to caller.
 
 
-    .global __mriGetMbedUid
+    .global mriGetMbedUid
     .thumb_func
-    /* extern "C" int __mriGetMbedUid(uint8_t* pOutputBuffer);
+    /* extern "C" int mriGetMbedUid(uint8_t* pOutputBuffer);
        Reads the unique device id from the mbed interface chip.
 
        Returns -1 on failure.
     */
-__mriGetMbedUid:
+mriGetMbedUid:
     sub     sp, #8          // Allocate 8 byte parameter block on stack.
     str     r0, [sp, #0]    // param[0] = pOutputBuffer  Pointer to output buffer for UID.
     movs    r0, #33

@@ -18,90 +18,90 @@
     .code 16
     .syntax unified
 
-    .global __mriNewlib_SemihostWrite
-    .type __mriNewlib_SemihostWrite, function
-    /* extern "C" int __mriNewlib_SemihostWrite(int file, char *ptr, int len);
+    .global mriNewlib_SemihostWrite
+    .type mriNewlib_SemihostWrite, function
+    /* extern "C" int mriNewlib_SemihostWrite(int file, char *ptr, int len);
        Issues semihost write call to PC via gdb.
     */
-__mriNewlib_SemihostWrite:
+mriNewlib_SemihostWrite:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewlib_SemihostRead
-    .type __mriNewlib_SemihostRead, function
-    /* extern "C" int __mriNewlib_SemihostRead(int file, char *ptr, int len);
+    .global mriNewlib_SemihostRead
+    .type mriNewlib_SemihostRead, function
+    /* extern "C" int mriNewlib_SemihostRead(int file, char *ptr, int len);
        Issues semihost read call to PC via gdb.
     */
-__mriNewlib_SemihostRead:
+mriNewlib_SemihostRead:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewLib_SemihostOpen
-    .type __mriNewLib_SemihostOpen, function
-    /* extern "C" int __mriNewLib_SemihostOpen(const char *pFilename, int flags, int mode);
+    .global mriNewLib_SemihostOpen
+    .type mriNewLib_SemihostOpen, function
+    /* extern "C" int mriNewLib_SemihostOpen(const char *pFilename, int flags, int mode);
        Issues semihost open file call to PC via gdb.
     */
-__mriNewLib_SemihostOpen:
+mriNewLib_SemihostOpen:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewLib_SemihostRename
-    .type __mriNewLib_SemihostRename, function
-    /* extern "C" int __mriNewLib_SemihostRename(const char *pOldFilename, const char *pNewFilename);
+    .global mriNewLib_SemihostRename
+    .type mriNewLib_SemihostRename, function
+    /* extern "C" int mriNewLib_SemihostRename(const char *pOldFilename, const char *pNewFilename);
        Issues file rename call to PC via GDB.
     */
-__mriNewLib_SemihostRename:
+mriNewLib_SemihostRename:
     bkpt    0xff
     bx      lr
 
-    .global __mriNewLib_SemihostUnlink
-    .type __mriNewLib_SemihostUnlink, function
-    /* extern "C" int __mriNewLib_SemihostUnlink(const char *pFilename);
+    .global mriNewLib_SemihostUnlink
+    .type mriNewLib_SemihostUnlink, function
+    /* extern "C" int mriNewLib_SemihostUnlink(const char *pFilename);
        Issues file delete (unlink) call to PC via GDB.
     */
-__mriNewLib_SemihostUnlink:
+mriNewLib_SemihostUnlink:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewLib_SemihostStat
-    .type __mriNewLib_SemihostStat, function
-    /* extern "C" int __mriNewLib_SemihostStat(const char *pFilename, struct stat *pStat);
+    .global mriNewLib_SemihostStat
+    .type mriNewLib_SemihostStat, function
+    /* extern "C" int mriNewLib_SemihostStat(const char *pFilename, struct stat *pStat);
        Issues stat call to PC via GDB.
     */
-__mriNewLib_SemihostStat:
+mriNewLib_SemihostStat:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewlib_SemihostLSeek
-    .type __mriNewlib_SemihostLSeek, function
-    /* extern "C" int __mriNewlib_SemihostLSeek(int file, int offset, int whence);
+    .global mriNewlib_SemihostLSeek
+    .type mriNewlib_SemihostLSeek, function
+    /* extern "C" int mriNewlib_SemihostLSeek(int file, int offset, int whence);
        Issues seek call to PC via GDB.
     */
-__mriNewlib_SemihostLSeek:
+mriNewlib_SemihostLSeek:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewlib_SemihostClose
-    .type __mriNewlib_SemihostClose, function
-    /* extern "C" int __mriNewlib_SemihostClose(int file);
+    .global mriNewlib_SemihostClose
+    .type mriNewlib_SemihostClose, function
+    /* extern "C" int mriNewlib_SemihostClose(int file);
        Issues file close call to PC via GDB.
     */
-__mriNewlib_SemihostClose:
+mriNewlib_SemihostClose:
     bkpt    0xff
     bx      lr
 
 
-    .global __mriNewlib_SemihostFStat
-    .type __mriNewlib_SemihostFStat, function
-    /* extern "C" int __mriNewlib_SemihostFStat(int file, struct stat *pStat);
+    .global mriNewlib_SemihostFStat
+    .type mriNewlib_SemihostFStat, function
+    /* extern "C" int mriNewlib_SemihostFStat(int file, struct stat *pStat);
        Issues stat call to PC via GDB.
     */
-__mriNewlib_SemihostFStat:
+mriNewlib_SemihostFStat:
     bkpt    0xff
     bx      lr

@@ -20,6 +20,7 @@
 #include <architectures/armv7-m/debug_cm3.h>
 #include "stm32f429xx_init.h"
 #include "stm32f429xx_usart.h"
+#include <architectures/armv7-m/armv7-m.h>
 
 /* Start indices at 0 such that UART1 is at index 0, UART2 is at index 1, etc. */
 static const UartConfiguration g_uartConfigurations[] =
@@ -56,7 +57,6 @@ static const UartConfiguration g_uartConfigurations[] =
 
 typedef struct
 {
-    int      share;
     uint32_t uartIndex;
     uint32_t baudRate;
 } UartParameters;
@@ -64,10 +64,9 @@ typedef struct
 
 static void     configureNVICForUartInterrupt(uint32_t index);
 static void     parseUartParameters(Token* pParameterTokens, UartParameters* pParameters);
-static void     setManualBaudFlag(void);
-static void     setUartSharedFlag(void);
 static void     saveUartToBeUsedByDebugger(uint32_t mriUart);
 static void     configureUartForExclusiveUseOfDebugger(UartParameters* pParameters);
+static int      commUartIndex(void);
 
 static uint32_t getDecimalDigit(char currChar)
 {
@@ -102,19 +101,13 @@ static uint32_t uint32FromString(const char* pString)
     return value;
 }
 
-void __mriStm32f429xxUart_Init(Token *pParameterTokens)
+void mriStm32f429xxUart_Init(Token *pParameterTokens)
 {
     UartParameters parameters;
 
-    /* STM32f429 does not support auto BaudRate. */
-    setManualBaudFlag();
-
     parseUartParameters(pParameterTokens, &parameters);
     saveUartToBeUsedByDebugger(parameters.uartIndex);
-    if (parameters.share)
-        setUartSharedFlag();
-    else
-        configureUartForExclusiveUseOfDebugger(&parameters);
+    configureUartForExclusiveUseOfDebugger(&parameters);
 }
 
 
@@ -141,9 +134,6 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
         /* Default baud rate to 230400. */
         pParameters->baudRate = 230400;
     }
-
-    if (Token_MatchingString(pParameterTokens, "MRI_UART_SHARE"))
-        pParameters->share = 1;
 }
 
 
@@ -151,15 +141,10 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
 static void saveUartToBeUsedByDebugger(uint32_t mriUart)
 {
     /* -1 is due to the array start by index 0.However,we start from UART"1". */
-    __mriStm32f429xxState.pCurrentUart = &g_uartConfigurations[mriUart-1];
+    mriStm32f429xxState.pCurrentUart = &g_uartConfigurations[mriUart-1];
 }
 
 
-
-static void setUartSharedFlag(void)
-{
-    __mriStm32f429xxState.flags |= STM32F429XX_UART_FLAGS_SHARE;
-}
 
 static void enableUartPeripheralCLOCK(uint32_t uart)
 {
@@ -316,7 +301,7 @@ static uint16_t usart_baud_calc(uint32_t base,USART_TypeDef *USARTx,uint32_t bau
     return (uint16_t)tmpreg;
 }
 
-void enableUART(UartParameters *pParameters)
+static void enableUART(UartParameters *pParameters)
 {
     uint32_t uart = pParameters->uartIndex;
     USART_TypeDef* _uart = g_uartConfigurations[uart-1].pUartRegisters;
@@ -387,7 +372,7 @@ void enableUART(UartParameters *pParameters)
 #define GPIO_MODER_PIN(n)               (uint32_t) (2*n)                   /* Pin bitshift */
 #define GPIO_MODER_ALT                  (uint32_t) (0x2)                   /* Alternative function mode */
 /* All GPIO(contains USARTs) on AHB1 */
-void enableGPIO(uint32_t uart)
+static void enableGPIO(uint32_t uart)
 {
     /* USART1:GPIO_A
      * USART2:GPIO_D
@@ -494,28 +479,23 @@ void enableGPIO(uint32_t uart)
 
 static void enableUartToInterruptOnReceivedChar(uint32_t index)
 {
-    __mriStm32f429xxState.pCurrentUart->pUartRegisters->CR1 |= USART_CR1_RXNEIE;
+    mriStm32f429xxState.pCurrentUart->pUartRegisters->CR1 |= USART_CR1_RXNEIE;
 }
 
-
-static void setManualBaudFlag(void)
-{
-    __mriStm32f429xxState.flags |= STM32F429XX_UART_FLAGS_MANUAL_BAUD;
-}
 
 /* If the order of g_uartConfigurations changes,fix it!
     Return 0 for USART1
     Return 1 for USART2
     Return 2 for USART3
 */
-int Platform_CommUartIndex(void)
+static int commUartIndex(void)
 {
-    return __mriStm32f429xxState.pCurrentUart - g_uartConfigurations;
+    return mriStm32f429xxState.pCurrentUart - g_uartConfigurations;
 }
 
 uint32_t Platform_CommHasReceiveData(void)
 {
-    return __mriStm32f429xxState.pCurrentUart->pUartRegisters->SR & USART_SR_RXNE;
+    return mriStm32f429xxState.pCurrentUart->pUartRegisters->SR & USART_SR_RXNE;
 }
 
 int Platform_CommReceiveChar(void)
@@ -524,72 +504,20 @@ int Platform_CommReceiveChar(void)
     {
         /* busy wait */
     }
-    return (__mriStm32f429xxState.pCurrentUart->pUartRegisters->DR & 0x1FF);
+    return (mriStm32f429xxState.pCurrentUart->pUartRegisters->DR & 0x1FF);
 }
 
 
 
 void Platform_CommSendChar(int Character)
 {
-    USART_TypeDef *uart = __mriStm32f429xxState.pCurrentUart->pUartRegisters;
+    USART_TypeDef *uart = mriStm32f429xxState.pCurrentUart->pUartRegisters;
     while (!(uart->SR & USART_SR_TXE))
     {
         /* busy wait */
     }
     uart->DR = (Character & 0x1FF);
 }
-
-int Platform_CommCausedInterrupt(void)
-{
-    int interruptSource = (int)getCurrentlyExecutingExceptionNumber()-16;
-
-    /* For USART1~3,the IRQn are continuous,others need check! */
-    int irq_num_base = USART1_IRQn;
-    int currentUartIRQ = irq_num_base + Platform_CommUartIndex();
-    return currentUartIRQ==interruptSource;
-}
-
-void Platform_CommClearInterrupt(void)
-{
-    /* Clear Interrupt flag,to avoid infinit loop in USARTx_Handler */
-    __mriStm32f429xxState.pCurrentUart->pUartRegisters->SR &= ~USART_SR_RXNE;
-}
-
-int Platform_CommSharingWithApplication(void)
-{
-    return __mriStm32f429xxState.flags & STM32F429XX_UART_FLAGS_SHARE;
-}
-
-static int isManualBaudRate(void)
-{
-    return (int)(__mriStm32f429xxState.flags & STM32F429XX_UART_FLAGS_MANUAL_BAUD);
-}
-
-int Platform_CommShouldWaitForGdbConnect(void)
-{
-    return !isManualBaudRate() && !Platform_CommSharingWithApplication();
-}
-
-int Platform_CommIsWaitingForGdbToConnect(void)
-{
-    /* stm32f429 does not support auto-baudrate */
-    return 0;
-}
-
-
-void Platform_CommPrepareToWaitForGdbConnection(void)
-{
-    /* stm32f429 does not support auto-baudrate */
-    return;
-}
-
-
-void Platform_CommWaitForReceiveDataToStop(void)
-{
-    /* stm32f429 does not support auto-baudrate */
-    return;
-}
-
 
 static void configureNVICForUartInterrupt(uint32_t index)
 {
@@ -598,8 +526,8 @@ static void configureNVICForUartInterrupt(uint32_t index)
      * For USART1~3,the IRQn are continuous,others need check!
      */
     IRQn_Type currentUartIRQ;
-    currentUartIRQ = (IRQn_Type)((int)irq_num_base + Platform_CommUartIndex()) ;
-    NVIC_SetPriority(currentUartIRQ, 0);
+    currentUartIRQ = (IRQn_Type)((int)irq_num_base + commUartIndex()) ;
+    mriCortexMSetPriority(currentUartIRQ, 0, 0);
     NVIC_EnableIRQ(currentUartIRQ);
 }
 
@@ -610,6 +538,5 @@ static void configureUartForExclusiveUseOfDebugger(UartParameters* pParameters)
     enableGPIO(uart_index);
     enableUART(pParameters);
     enableUartToInterruptOnReceivedChar(uart_index);
-    Platform_CommPrepareToWaitForGdbConnection();
     configureNVICForUartInterrupt(uart_index);
 }

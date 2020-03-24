@@ -1,4 +1,4 @@
-/* Copyright 2016 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ static const char g_memoryMapXml4337[] = "<?xml version=\"1.0\"?>"
                                          "<memory type=\"ram\" start=\"0x20000000\" length=\"0x8000\"> </memory>"
                                          "<memory type=\"ram\" start=\"0x20008000\" length=\"0x8000\"> </memory>"
                                          "</memory-map>";
-Lpc43xxState __mriLpc43xxState;
+Lpc43xxState mriLpc43xxState;
 
 
 
@@ -47,28 +47,18 @@ Lpc43xxState __mriLpc43xxState;
 void USART0_IRQHandler(void);
 
 
-static void defaultExternalInterruptsToPriority1(void);
-void __mriLpc43xx_Init(Token* pParameterTokens)
+void mriLpc43xx_Init(Token* pParameterTokens)
 {
     /* Reference handler in ASM module to make sure that is gets linked in. */
     void (* volatile dummyReference)(void) = USART0_IRQHandler;
     (void)dummyReference;
 
     __try
-        __mriCortexMInit(pParameterTokens);
+        mriCortexMInit(pParameterTokens, QEI_IRQn);
     __catch
         __rethrow;
 
-    defaultExternalInterruptsToPriority1();
-    __mriLpc43xxUart_Init(pParameterTokens);
-}
-
-static void defaultExternalInterruptsToPriority1(void)
-{
-    int              irq;
-
-    for (irq = DAC_IRQn ; irq <= QEI_IRQn ; irq++)
-        NVIC_SetPriority((IRQn_Type)irq, 1);
+    mriLpc43xxUart_Init(pParameterTokens);
 }
 
 
@@ -84,7 +74,7 @@ uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
 static int isLpc4337(void)
 {
     /* Code running on the LPC4337 will be in internal FLASH which is at higher address than LPC4330 SPIFI FLASH. */
-    return ((uint32_t)__mriLpc43xx_Init >= 0x1A000000);
+    return ((uint32_t)mriLpc43xx_Init >= 0x1A000000);
 }
 
 

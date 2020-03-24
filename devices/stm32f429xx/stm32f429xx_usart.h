@@ -29,6 +29,6 @@ typedef struct
 } UartConfiguration;
 
 
-void __mriStm32f429xxUart_Init(Token* pParameterTokens);
+void mriStm32f429xxUart_Init(Token* pParameterTokens);
 
 #endif /* _STM32F429XX_USART_H_ */
