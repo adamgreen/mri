@@ -54,7 +54,7 @@ void mriLpc43xx_Init(Token* pParameterTokens)
     (void)dummyReference;
 
     __try
-        mriCortexMInit(pParameterTokens, QEI_IRQn);
+        mriCortexMInit(pParameterTokens, 0, QEI_IRQn);
     __catch
         __rethrow;
 

@@ -134,10 +134,10 @@ void mriExceptionHandler(void);
 static void clearState(void);
 static void determineSubPriorityBitCount(void);
 static void configureDWTandFPB(void);
-static void defaultSvcAndSysTickInterruptsToPriority1(void);
-static void defaultExternalInterruptsToPriority1(IRQn_Type highestExternalIrq);
+static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority);
+static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq);
 static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority);
-void mriCortexMInit(Token* pParameterTokens, IRQn_Type highestExternalIrq)
+void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type highestExternalIrq)
 {
     if (!MRI_THREAD_MRI)
     {
@@ -152,21 +152,26 @@ void mriCortexMInit(Token* pParameterTokens, IRQn_Type highestExternalIrq)
     configureDWTandFPB();
     if (!MRI_THREAD_MRI)
     {
-        defaultSvcAndSysTickInterruptsToPriority1();
-        defaultExternalInterruptsToPriority1(highestExternalIrq);
+        defaultSvcAndSysTickInterruptsToLowerPriority(debugMonPriority+1);
+        defaultExternalInterruptsToLowerPriority(debugMonPriority+1, highestExternalIrq);
     }
     Platform_DisableSingleStep();
     clearMonitorPending();
     if (MRI_THREAD_MRI)
         enableDebugMonitorAtSpecifiedPriority(255);
     else
-        enableDebugMonitorAtSpecifiedPriority(0);
+        enableDebugMonitorAtSpecifiedPriority(debugMonPriority);
 }
 
 static void clearState(void)
 {
     memset(&mriCortexMState, 0, sizeof(mriCortexMState));
 }
+
+/* Cortex-M7 microcontrollers name the SHP priority registers SHPR unlike other ARMv7-M devices. */
+#if defined(__CORTEX_M) && (__CORTEX_M == 7U)
+#define SHP SHPR
+#endif
 
 static void determineSubPriorityBitCount(void)
 {
@@ -191,19 +196,19 @@ static void configureDWTandFPB(void)
     initFPB();
 }
 
-static void defaultSvcAndSysTickInterruptsToPriority1(void)
+static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority)
 {
-    mriCortexMSetPriority(SVCall_IRQn, 1, 0);
-    mriCortexMSetPriority(PendSV_IRQn, 1, 0);
-    mriCortexMSetPriority(SysTick_IRQn, 1, 0);
+    mriCortexMSetPriority(SVCall_IRQn, priority, 0);
+    mriCortexMSetPriority(PendSV_IRQn, priority, 0);
+    mriCortexMSetPriority(SysTick_IRQn, priority, 0);
 }
 
-static void defaultExternalInterruptsToPriority1(IRQn_Type highestExternalIrq)
+static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq)
 {
     int irq;
 
     for (irq = 0 ; irq <= highestExternalIrq ; irq++)
-        mriCortexMSetPriority((IRQn_Type)irq, 1, 0);
+        mriCortexMSetPriority((IRQn_Type)irq, priority, 0);
 }
 
 static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority)
@@ -259,7 +264,6 @@ static int      isSecondHalfWordOfMSR_BASEPRI(uint16_t instructionHalfWord1);
 static int      isSecondHalfWordOfMSR_BASEPRI_MAX(uint16_t instructionHalfWord1);
 static void     recordCurrentBasePriority(void);
 static void     setRestoreBasePriorityFlag(void);
-static uint8_t  getIrqPriority(IRQn_Type irq);
 static uint8_t  calculateBasePriorityForThisCPU(uint8_t basePriority);
 void Platform_EnableSingleStep(void)
 {
@@ -339,7 +343,7 @@ static void recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts
     if (!doesPCPointToBASEPRIUpdateInstruction())
         recordCurrentBasePriority();
     ScatterGather_Set(&mriCortexMState.context, BASEPRI,
-                      calculateBasePriorityForThisCPU(getIrqPriority(DebugMonitor_IRQn) + 1));
+                      calculateBasePriorityForThisCPU(mriCortexMGetPriority(DebugMonitor_IRQn) + 1));
 }
 
 static int doesPCPointToBASEPRIUpdateInstruction(void)
@@ -418,7 +422,14 @@ static void setRestoreBasePriorityFlag(void)
     mriCortexMFlags |= CORTEXM_FLAGS_RESTORE_BASEPRI;
 }
 
-static uint8_t getIrqPriority(IRQn_Type irq)
+static uint8_t calculateBasePriorityForThisCPU(uint8_t basePriority)
+{
+    /* Different Cortex-M3 chips support different number of bits in the priority register. */
+    return basePriority << mriCortexMState.subPriorityBitCount;
+}
+
+
+uint8_t mriCortexMGetPriority(IRQn_Type irq)
 {
     uint8_t priority;
 
@@ -431,12 +442,6 @@ static uint8_t getIrqPriority(IRQn_Type irq)
         priority = SCB->SHP[((uint32_t)irq & 0xF)-4];
     }
     return priority >> mriCortexMState.subPriorityBitCount;
-}
-
-static uint8_t calculateBasePriorityForThisCPU(uint8_t basePriority)
-{
-    /* Different Cortex-M3 chips support different number of bits in the priority register. */
-    return basePriority << mriCortexMState.subPriorityBitCount;
 }
 
 

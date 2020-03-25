@@ -57,7 +57,7 @@ void mriLpc176x_Init(Token* pParameterTokens)
     (void)dummyReference;
 
     __try
-        mriCortexMInit(pParameterTokens, CANActivity_IRQn);
+        mriCortexMInit(pParameterTokens, 0, CANActivity_IRQn);
     __catch
         __rethrow;
 

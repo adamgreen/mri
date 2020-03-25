@@ -111,8 +111,9 @@ extern uint64_t             mriCortexMDebuggerStack[CORTEXM_DEBUGGER_STACK_SIZE]
 extern volatile uint32_t    mriCortexMFlags;
 extern CortexMState         mriCortexMState;
 
-void mriCortexMInit(Token* pParameterTokens, IRQn_Type highestExternalIrq);
-void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority);
+void    mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type highestExternalIrq);
+void    mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority);
+uint8_t mriCortexMGetPriority(IRQn_Type irq);
 
 
 #endif /* !__ASSEMBLER__ */

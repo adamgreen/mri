@@ -48,7 +48,7 @@ void mriStm32f429xx_Init(Token* pParameterTokens)
     (void)dummyReference;
 
     __try
-        mriCortexMInit(pParameterTokens, DMA2D_IRQn);
+        mriCortexMInit(pParameterTokens, 0, DMA2D_IRQn);
     __catch
         __rethrow;
 
