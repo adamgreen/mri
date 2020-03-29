@@ -197,6 +197,10 @@ ethernet drivers to obtain the MAC address.  The Bambino doesn't have this so it
 example.
 
 
+==Debugger Stack
+The {{{mriCortexMDebuggerStack}}} is the stack used while the program is halted in MRI. Its size is set by the **CORTEXM_DEBUGGER_STACK_SIZE** global in [[https://github.com/adamgreen/mri/blob/master/architectures/armv7-m/armv7-m.h | armv7-m.h]] and might need to be increased if some of your **Platform_* ** implementations use more stack than the current device implementations. The {{{mriCortexMState.maxStackUsed}}} global is updated each time execution is resumed in the debuggee. It indicates the maximum amount of debugger stack used so far in bytes.
+
+
 ==Makefile Updates
 You will typically need to make two updates to the
 [[https://github.com/adamgreen/mri/blob/master/makefile | MRI makefile]] to get it building the new code that you have
