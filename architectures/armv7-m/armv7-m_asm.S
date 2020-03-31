@@ -17,7 +17,7 @@
     .code 16
     .syntax unified
 
-    #include "armv7-m.h"
+    #include <architectures/armv7-m/armv7-m.h>
 
 
     /* Bit in LR set to 0 when automatic stacking of floating point registers occurs during exception handling. */

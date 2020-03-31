@@ -1184,6 +1184,7 @@ const char* Platform_GetTargetXml(void)
 
 
 
+#if !MRI_THREAD_MRI
 /****************************************************************************************************/
 /* Handler/Kernel Mode MRI C code handlers to prepare environment before calling mriDebugException. */
 /****************************************************************************************************/
@@ -1458,3 +1459,5 @@ static void allocateFakeFloatRegAndCallMriDebugException(void)
 
     mriDebugException();
 }
+
+#endif /* !MRI_THREAD_MRI */
