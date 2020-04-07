@@ -26,7 +26,8 @@ void        platformMock_Uninit(void);
 void        platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
 void        platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
-int         platformMock_CommDoesTransmittedDataEqual(const char* thisString);
+const char* platformMock_CommChecksumData(const char* pData);
+const char* platformMock_CommGetTransmittedData(void);
 
 void        platformMock_SetInitException(int exceptionToThrow);
 int         platformMock_GetInitCount(void);

@@ -40,7 +40,6 @@ static void     copyChecksummedData(char* pDest, const char* pSrc);
 static void     commUninitTransmitDataBuffer();
 static uint32_t isReceiveBufferEmpty();
 static void     waitForReceiveData();
-static size_t   getTransmitDataBufferSize();
 
 
 
@@ -85,6 +84,7 @@ static char*       g_pAlloc2;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
+static char*       g_pChecksumData;
 
 void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
@@ -160,7 +160,7 @@ static void copyChecksummedData(char* pDest, const char* pSrc)
 void platformMock_CommInitTransmitDataBuffer(size_t Size)
 {
     commUninitTransmitDataBuffer();
-    g_pTransmitDataBufferStart = (char*)malloc(Size);
+    g_pTransmitDataBufferStart = (char*)malloc(Size+1);
     g_pTransmitDataBufferCurr = g_pTransmitDataBufferStart;
     g_pTransmitDataBufferEnd = g_pTransmitDataBufferStart + Size;
 }
@@ -173,18 +173,18 @@ static void commUninitTransmitDataBuffer()
     g_pTransmitDataBufferEnd = NULL;
 }
 
-int platformMock_CommDoesTransmittedDataEqual(const char* thisString)
+const char* platformMock_CommChecksumData(const char* pData)
 {
-    size_t stringLength = strlen(thisString);
-
-    if (getTransmitDataBufferSize() != stringLength)
-        return 0;
-    return !memcmp(thisString, g_pTransmitDataBufferStart, stringLength);
+    free(g_pChecksumData);
+    g_pChecksumData = allocateAndCopyChecksummedData(pData);
+    return g_pChecksumData;
 }
 
-static size_t getTransmitDataBufferSize()
+const char* platformMock_CommGetTransmittedData(void)
 {
-    return g_pTransmitDataBufferCurr - g_pTransmitDataBufferStart;
+    // Room was always reserved for NULL terminator at init time.
+    *g_pTransmitDataBufferCurr = '\0';
+    return g_pTransmitDataBufferStart;
 }
 
 // Platform_Comm* stubs called by MRI core.
@@ -671,6 +671,7 @@ void platformMock_Init(void)
     platformMock_CommInitTransmitDataBuffer(2 * sizeof(g_packetBuffer));
     platformMock_SetInitException(noException);
     memset(&g_initTokenCopy, 0, sizeof(g_initTokenCopy));
+    g_pChecksumData = NULL;
     g_initCount = 0;
     g_enteringDebuggerCount = 0;
     g_leavingDebuggerCount = 0;
@@ -710,8 +711,10 @@ void platformMock_Uninit(void)
 {
     free(g_pAlloc1);
     free(g_pAlloc2);
+    free(g_pChecksumData);
     g_pAlloc1 = NULL;
     g_pAlloc2 = NULL;
+    g_pChecksumData = NULL;
     commUninitTransmitDataBuffer();
 }
 

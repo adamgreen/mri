@@ -58,7 +58,7 @@ TEST(cmdStep, BasicSingleStep)
     platformMock_CommInitReceiveChecksummedData("+$s#");
         mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
@@ -69,7 +69,8 @@ TEST(cmdStep, SingleStepOverHardcodedBreakpoints_MustContinueAfterToExit)
     platformMock_CommInitReceiveChecksummedData("+$s#", "+$c#");
         mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$T05responseT#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 8, platformMock_GetProgramCounterValue() );
 }
@@ -80,7 +81,7 @@ TEST(cmdStep, SetSignalOnly)
     platformMock_CommInitReceiveChecksummedData("+$S0b#");
         mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
@@ -91,7 +92,7 @@ TEST(cmdStep, SetSignalWithAddress)
     platformMock_CommInitReceiveChecksummedData("+$S0b;f00d#");
         mriDebugException();
     CHECK_TRUE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( 0xF00D, platformMock_GetProgramCounterValue() );
 }
@@ -102,7 +103,8 @@ TEST(cmdStep, SetSignalSingleStepOverHardcodedBreakpoints_MustContinueAfterToExi
     platformMock_CommInitReceiveChecksummedData("+$S0b#", "+$c#");
         mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$T05responseT#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 8, platformMock_GetProgramCounterValue() );
 }
@@ -113,7 +115,8 @@ TEST(cmdStep, SetSignalWithMissingSignalValue)
     platformMock_CommInitReceiveChecksummedData("+$S#", "+$c#");
         mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                  platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
@@ -124,7 +127,8 @@ TEST(cmdStep, SetSignalCommandWithMissingAddressAfterSemicolon)
     platformMock_CommInitReceiveChecksummedData("+$S0b;#", "+$c#");
         mriDebugException();
     CHECK_FALSE ( Platform_IsSingleStepping() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_INVALID_ARGUMENT "#a6+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }

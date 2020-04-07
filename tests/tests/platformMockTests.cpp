@@ -190,42 +190,40 @@ TEST(platformMock, platformMock_CommReceive_TwoGdbPacketsWithCalculatedCRC)
     CHECK_FALSE( Platform_CommHasReceiveData() );
 }
 
-TEST(platformMock, TransmitAndCapture1Byte)
+TEST(platformMock, CommChecksummedData_NoPacketJustNack)
 {
-    platformMock_CommInitTransmitDataBuffer(2);
-
-    Platform_CommSendChar('-');
-
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-") );
+    STRCMP_EQUAL( "-", platformMock_CommChecksumData("-") );
 }
 
-TEST(platformMock, TransmitAndCapture2BytesWithOverflow)
+TEST(platformMock, CommChecksummedData_Ack_EmptyPacket_Ack)
 {
-    platformMock_CommInitTransmitDataBuffer(2);
-
-    Platform_CommSendChar('-');
-    Platform_CommSendChar('+');
-    Platform_CommSendChar('*');
-
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-+") );
+    STRCMP_EQUAL( "+$#00+", platformMock_CommChecksumData("+$#+") );
 }
 
-TEST(platformMock, TransmitAndFailToCompareByLength)
+TEST(platformMock, CommChecksummedData_Ack_SmallPacket_Nack)
 {
-    platformMock_CommInitTransmitDataBuffer(2);
-
-    Platform_CommSendChar('-');
-
-    CHECK_FALSE( platformMock_CommDoesTransmittedDataEqual("-+") );
+    STRCMP_EQUAL( "+$test#c0-", platformMock_CommChecksumData("+$test#-") );
 }
 
-TEST(platformMock, TransmitAndFailToCompareByData)
+TEST(platformMock, CommGetTransmittedData_Transmit1Byte)
 {
-    platformMock_CommInitTransmitDataBuffer(2);
+    platformMock_CommInitTransmitDataBuffer(1);
 
     Platform_CommSendChar('-');
 
-    CHECK_FALSE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL( "-", platformMock_CommGetTransmittedData() );
+}
+
+TEST(platformMock, CommGetTransmittedData_TransmitEmptyPacket)
+{
+    platformMock_CommInitTransmitDataBuffer(4);
+
+    Platform_CommSendChar('$');
+    Platform_CommSendChar('#');
+    Platform_CommSendChar('0');
+    Platform_CommSendChar('0');
+
+    STRCMP_EQUAL( "$#00", platformMock_CommGetTransmittedData() );
 }
 
 TEST(platformMock, platformMockInit_ThrowException)

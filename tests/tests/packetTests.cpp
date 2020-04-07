@@ -101,7 +101,7 @@ TEST(Packet, PacketGetFromGDB_Empty)
     platformMock_CommInitReceiveData("$#00");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_Short)
@@ -109,7 +109,7 @@ TEST(Packet, PacketGetFromGDB_Short)
     platformMock_CommInitReceiveData("$?#3f");
     tryPacketGet();
     validateBufferMatches("?");
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_ShortWithUpperCaseHexDigits)
@@ -117,7 +117,7 @@ TEST(Packet, PacketGetFromGDB_ShortWithUpperCaseHexDigits)
     platformMock_CommInitReceiveData("$?#3F");
     tryPacketGet();
     validateBufferMatches("?");
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_BadChecksum)
@@ -125,7 +125,7 @@ TEST(Packet, PacketGetFromGDB_BadChecksum)
     platformMock_CommInitReceiveData("$?#f3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("-+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
@@ -133,7 +133,7 @@ TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
     platformMock_CommInitReceiveData("$?#g3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("-+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("-+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_TwoPackets)
@@ -141,7 +141,7 @@ TEST(Packet, PacketGetFromGDB_TwoPackets)
     platformMock_CommInitReceiveData("$#00$?#3f");
     tryPacketGet();
     validateBufferMatches("?");
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_SearchForStartOfPacket)
@@ -149,7 +149,7 @@ TEST(Packet, PacketGetFromGDB_SearchForStartOfPacket)
     platformMock_CommInitReceiveData("#00$?#3f");
     tryPacketGet();
     validateBufferMatches("?");
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_StartOfPacketWithinPacket)
@@ -157,7 +157,7 @@ TEST(Packet, PacketGetFromGDB_StartOfPacketWithinPacket)
     platformMock_CommInitReceiveData("$?$?#3f");
     tryPacketGet();
     validateBufferMatches("?");
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketGetFromGDB_BufferTooSmall)
@@ -166,7 +166,7 @@ TEST(Packet, PacketGetFromGDB_BufferTooSmall)
     allocateBuffer(8);
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketSendToGDB_EmptyWithAck)
@@ -174,7 +174,7 @@ TEST(Packet, PacketSendToGDB_EmptyWithAck)
     allocateBuffer("");
     platformMock_CommInitReceiveData("+");
     tryPacketSend();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("$#00") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketSendToGDB_OkWithAck)
@@ -182,7 +182,7 @@ TEST(Packet, PacketSendToGDB_OkWithAck)
     allocateBuffer("OK");
     platformMock_CommInitReceiveData("+");
     tryPacketSend();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("$OK#9a") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$OK#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketSendToGDB_OkWithNackAndAck)
@@ -190,7 +190,7 @@ TEST(Packet, PacketSendToGDB_OkWithNackAndAck)
     allocateBuffer("OK");
     platformMock_CommInitReceiveData("-+");
     tryPacketSend();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("$OK#9a$OK#9a") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$OK#$OK#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
@@ -198,5 +198,5 @@ TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
     allocateBuffer("OK");
     platformMock_CommInitReceiveData("$");
     tryPacketSend();
-    CHECK_TRUE( platformMock_CommDoesTransmittedDataEqual("$OK#9a") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$OK#"), platformMock_CommGetTransmittedData() );
 }

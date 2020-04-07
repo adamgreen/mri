@@ -56,7 +56,8 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnSuccess)
     OpenParameters params = { 0x11111111, 0x22222222, 0x33333333, 0x44444444 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileOpenRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fopen,11111111/22222222,33333333,44444444#fb+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fopen,11111111/22222222,33333333,44444444#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -70,7 +71,8 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnError)
     OpenParameters params = { 0x11111111, 0x22222222, 0x33333333, 0x44444444 };
     platformMock_CommInitReceiveChecksummedData("+$F-1,12345678#");
         IssueGdbFileOpenRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fopen,11111111/22222222,33333333,44444444#fb+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fopen,11111111/22222222,33333333,44444444#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( -1, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -84,7 +86,8 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnErrorAndControlC)
     OpenParameters params = { 0x11111111, 0x22222222, 0x33333333, 0x44444444 };
     platformMock_CommInitReceiveChecksummedData("+$F-1,12345678,C#");
         IssueGdbFileOpenRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fopen,11111111/22222222,33333333,44444444#fb+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fopen,11111111/22222222,33333333,44444444#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( -1, platformMock_GetSemihostCallReturnValue() );
     CHECK_TRUE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -98,7 +101,8 @@ TEST(cmdFile, IssueGdbFileOpenRequest_ReturnInterruptErrorAndControlC)
     OpenParameters params = { 0x11111111, 0x22222222, 0x33333333, 0x44444444 };
     platformMock_CommInitReceiveChecksummedData("+$F-1,4,C#"); // 4 is EINTR
         IssueGdbFileOpenRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fopen,11111111/22222222,33333333,44444444#fb+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fopen,11111111/22222222,33333333,44444444#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_TRUE ( WasControlCFlagSentFromGdb() );
     CHECK_TRUE ( WasSemihostCallCancelledByGdb() );
     CHECK_EQUAL ( -1, GetSemihostReturnCode() );
@@ -112,7 +116,8 @@ TEST(cmdFile, IssueGdbFileWriteRequest_ReturnSuccess)
     TransferParameters params = { 0x11111111, 0x22222222, 0x33333333 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileWriteRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fwrite,11111111,22222222,33333333#a5+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fwrite,11111111,22222222,33333333#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -126,7 +131,8 @@ TEST(cmdFile, IssueGdbFileReadRequest_ReturnSuccess)
     TransferParameters params = { 0x11111111, 0x22222222, 0x33333333 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileReadRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fread,11111111,22222222,33333333#16+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fread,11111111,22222222,33333333#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -139,7 +145,8 @@ TEST(cmdFile, IssueGdbFileCloseRequest_ReturnSuccess)
 {
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileCloseRequest(0x12345678);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fclose,12345678#2c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fclose,12345678#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -153,7 +160,8 @@ TEST(cmdFile, IssueGdbFileSeekRequest_ReturnSuccess)
     SeekParameters params = { 0x11111111, 0x22222222, 0x33333333 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileSeekRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Flseek,11111111,22222222,33333333#8e+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Flseek,11111111,22222222,33333333#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -166,7 +174,8 @@ TEST(cmdFile, IssueGdbFileFStatRequest_ReturnSuccess)
 {
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileFStatRequest(0x11111111, 0x22222222);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Ffstat,11111111,22222222#d8+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Ffstat,11111111,22222222#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -180,7 +189,8 @@ TEST(cmdFile, IssueGdbFileUnlinkRequest_ReturnSuccess)
     RemoveParameters params = { 0x11111111, 0x22222222 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileUnlinkRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Funlink,11111111/22222222#4a+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Funlink,11111111/22222222#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -194,7 +204,8 @@ TEST(cmdFile, IssueGdbFileStatRequest_ReturnSuccess)
     StatParameters params = { 0x11111111, 0x22222222, 0x12345678 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileStatRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Fstat,11111111/22222222,12345678#45+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Fstat,11111111/22222222,12345678#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );
@@ -208,7 +219,8 @@ TEST(cmdFile, IssueGdbFileRenameRequest_ReturnSuccess)
     RenameParameters params = { 0x11111111, 0x22222222, 0x33333333, 0x44444444 };
     platformMock_CommInitReceiveChecksummedData("+$F0#");
         IssueGdbFileRenameRequest(&params);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$Frename,11111111/22222222,33333333/44444444#c4+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$Frename,11111111/22222222,33333333/44444444#+"),
+                   platformMock_CommGetTransmittedData() );
     CHECK_EQUAL ( 0, platformMock_GetSemihostCallReturnValue() );
     CHECK_FALSE ( WasControlCFlagSentFromGdb() );
     CHECK_FALSE ( WasSemihostCallCancelledByGdb() );

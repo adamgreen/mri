@@ -111,7 +111,7 @@ TEST(Mri, mriDebugExceptionOnFirstExceptionShouldSendTResponseAndParseCommands_S
     CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
     CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
     CHECK_FALSE( IsFirstException() );
 }
@@ -124,7 +124,7 @@ TEST(Mri, mriDebugExceptionOnSecondExceptionShouldDumpExceptionAndSendTResponseA
     CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
     CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
     CHECK_FALSE( IsFirstException() );
 
@@ -135,7 +135,7 @@ TEST(Mri, mriDebugExceptionOnSecondExceptionShouldDumpExceptionAndSendTResponseA
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
     CHECK_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(Mri, mriDebugException_SentStatusAndContinueCommands)
@@ -143,7 +143,8 @@ TEST(Mri, mriDebugException_SentStatusAndContinueCommands)
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$T05responseT#7c" "+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$T05responseT#" "+"),
+                   platformMock_CommGetTransmittedData() );
 }
 
 TEST(Mri, mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
@@ -151,7 +152,7 @@ TEST(Mri, mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$*#", "+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c" "+$#00" "+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#" "+"), platformMock_CommGetTransmittedData() );
 }
 
 
@@ -161,8 +162,9 @@ TEST(Mri, mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunError
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
     platformMock_SetPacketBufferSize(11);
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$" MRI_ERROR_BUFFER_OVERRUN "#a9"
-                                                           "+$" MRI_ERROR_BUFFER_OVERRUN "#a9" "+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$" MRI_ERROR_BUFFER_OVERRUN "#"
+                                                 "+$" MRI_ERROR_BUFFER_OVERRUN "#" "+"),
+                                                 platformMock_CommGetTransmittedData() );
 }
 
 
@@ -212,7 +214,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_DontHitBreakpoint_Breakp
     mriPlatform_SetProgramCounter(0xBAADF00B);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointCalls() );
@@ -227,7 +229,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_Breakpoint
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
 }
@@ -242,7 +244,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_ClearBreak
     platformMock_ClearHardwareBreakpointException(memFaultException);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
 }
@@ -263,7 +265,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning0_S
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
     CHECK_TRUE( g_callbackCalled );
@@ -280,7 +282,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning1_S
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
     CHECK_TRUE( g_callbackCalled );

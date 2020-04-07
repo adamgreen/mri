@@ -53,25 +53,25 @@ TEST_GROUP(gdbConsole)
 TEST(gdbConsole, WriteStringToGdbConsole_SendAsGdbPacket)
 {
     WriteStringToGdbConsole("Test\n");
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O546573740a#89") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$O546573740a#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(gdbConsole, WriteStringToGdbConsole_FailToSendAsGdbPacketBecauseOfSmallBuffer)
 {
     platformMock_SetPacketBufferSize(10);
     WriteStringToGdbConsole("Test\n");
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
     validateExceptionCode(bufferOverrunException);
 }
 
 TEST(gdbConsole, WriteHexValueToGdbConsole_SendMinimumValue)
 {
     WriteHexValueToGdbConsole(0);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O30783030#e7") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$O30783030#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(gdbConsole, WriteHexValueToGdbConsole_SendMaximumValue)
 {
     WriteHexValueToGdbConsole(~0U);
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$O30786666666666666666#81") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$O30786666666666666666#"), platformMock_CommGetTransmittedData() );
 }

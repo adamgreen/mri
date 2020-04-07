@@ -61,14 +61,15 @@ TEST(cmdRegisters, GetRegisters)
 
     platformMock_CommInitReceiveChecksummedData("+$g#", "+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$11111111222222223333333344444444#50+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$11111111222222223333333344444444#+"),
+                   platformMock_CommGetTransmittedData() );
 }
 
 TEST(cmdRegisters, SetRegisters)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef0#", "+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$OK#9a+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#+"), platformMock_CommGetTransmittedData() );
     uint32_t* pContext = platformMock_GetContext();
     CHECK_EQUAL ( 0x78563412, pContext[0] );
     CHECK_EQUAL ( 0x22222222, pContext[1] );
@@ -80,7 +81,8 @@ TEST(cmdRegisters, SetRegisters_BufferTooShort)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef#", "+$c#");
         mriDebugException();
-    CHECK_TRUE ( platformMock_CommDoesTransmittedDataEqual("$T05responseT#7c+$" MRI_ERROR_BUFFER_OVERRUN "#a9+") );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_BUFFER_OVERRUN "#+"),
+                   platformMock_CommGetTransmittedData() );
     uint32_t* pContext = platformMock_GetContext();
     CHECK_EQUAL ( 0x78563412, pContext[0] );
     CHECK_EQUAL ( 0x22222222, pContext[1] );
