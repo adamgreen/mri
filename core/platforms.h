@@ -39,6 +39,8 @@ uint32_t  mriPlatform_CommHasReceiveData(void);
 int       mriPlatform_CommReceiveChar(void);
 void      mriPlatform_CommSendChar(int character);
 
+uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer);
+
 uint8_t   mriPlatform_DetermineCauseOfException(void);
 void      mriPlatform_DisplayFaultCauseToGdbConsole(void);
 void      mriPlatform_EnableSingleStep(void);

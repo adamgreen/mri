@@ -264,6 +264,7 @@ void GdbCommandHandlingLoop(void)
     } while (!startDebuggeeUpAgain);
 }
 
+__attribute__((weak)) uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer);
 static int handleGDBCommand(void)
 {
     Buffer*         pBuffer = GetBuffer();
@@ -294,27 +295,27 @@ static int handleGDBCommand(void)
 
     getPacketFromGDB();
 
-    commandChar = Buffer_ReadChar(pBuffer);
-    for (i = 0 ; i < ARRAY_SIZE(commandTable) ; i++)
+    if (mriPlatform_HandleGDBComand)
+        handlerResult = mriPlatform_HandleGDBComand(pBuffer);
+    if (handlerResult == 0)
     {
-        if (commandTable[i].commandChar == commandChar)
+        Buffer_Reset(pBuffer);
+        commandChar = Buffer_ReadChar(pBuffer);
+        for (i = 0 ; i < ARRAY_SIZE(commandTable) ; i++)
         {
-            handlerResult = commandTable[i].Handler();
-            if (handlerResult & HANDLER_RETURN_RETURN_IMMEDIATELY)
+            if (commandTable[i].commandChar == commandChar)
             {
-                return handlerResult & HANDLER_RETURN_RESUME_PROGRAM;
-            }
-            else
-            {
+                handlerResult = commandTable[i].Handler();
                 break;
             }
         }
+        if (ARRAY_SIZE(commandTable) == i)
+            PrepareEmptyResponseForUnknownCommand();
     }
-    if (ARRAY_SIZE(commandTable) == i)
-        PrepareEmptyResponseForUnknownCommand();
 
-    SendPacketToGdb();
-    return (handlerResult & HANDLER_RETURN_RESUME_PROGRAM);
+    if ((handlerResult & HANDLER_RETURN_RETURN_IMMEDIATELY) == 0)
+        SendPacketToGdb();
+    return handlerResult & HANDLER_RETURN_RESUME_PROGRAM;
 }
 
 static void getPacketFromGDB(void)

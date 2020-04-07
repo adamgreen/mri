@@ -733,3 +733,8 @@ extern "C" void mriPlatform_EnteringDebuggerHook(void)
 extern "C" void mriPlatform_LeavingDebuggerHook(void)
 {
 }
+
+extern "C" uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer)
+{
+    return 0;
+}
