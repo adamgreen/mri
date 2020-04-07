@@ -97,16 +97,10 @@ extern "C"
             MRI_UART_2
             MRI_UART_3
 
-    By default the debug monitor expects to take full control of the UART to configure baud rate, etc.  However
-    including the following option will tell the monitor to assume that the user's firmware will configure and use the
-    serial port until the first exception occurs:
-        MRI_UART_SHARE
-
-    When not sharing the UART, MRI will typically try to use the auto-baud functionality of the device so that the user
-    can select the desired baud rate when they start GDB.  However it is possible to override this in the init string.
-    For example the following option would set the baud rate to 230400 (note that spaces aren't allowed before or after
+    The default baud rate is 230400 but it is possible to override this in the init string.
+    For example the following option would set the baud rate to 115200 (note that spaces aren't allowed before or after
     the '=' character):
-        MRI_UART_BAUD=230400
+        MRI_UART_BAUD=115200
     NOTE: LPC176x version of MRI supports a maximum baud rate of 3Mbaud and the core clock can't run faster than
           128MHz or calculating baud rate divisors will fail.
 */
