@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ TEST(cmdContinue, SkipOverHardcodedBreakpoints)
     CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
 }
 
-TEST(cmdContinue, SetProgramCountWithContinueCommand)
+TEST(cmdContinue, SetProgramCounterWithContinueCommand)
 {
     platformMock_CommInitReceiveChecksummedData("+$cf00d#");
         mriDebugException();
@@ -116,4 +116,23 @@ TEST(cmdContinue, SetSignalCommandWithMissingAddressAfterSemicolon)
                    platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, DetachCommand_ShouldWorkSimilarToContinueCommand_ButReturnOk)
+{
+    platformMock_CommInitReceiveChecksummedData("+$D#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, DetachCommand_ShouldWorkSimilarToContinueCommand_SkipOverHardcodedBreakpoints)
+{
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$D#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
 }

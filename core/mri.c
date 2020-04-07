@@ -280,6 +280,7 @@ static int handleGDBCommand(void)
         {Send_T_StopResponse,                       '?'},
         {HandleContinueCommand,                     'c'},
         {HandleContinueWithSignalCommand,           'C'},
+        {HandleDetachCommand,                       'D'},
         {HandleFileIOCommand,                       'F'},
         {HandleRegisterReadCommand,                 'g'},
         {HandleRegisterWriteCommand,                'G'},
