@@ -42,6 +42,9 @@ typedef struct
 {
     TempBreakpointCallbackPtr   pTempBreakpointCallback;
     void*                       pvTempBreakpointContext;
+    MriDebuggerHookPtr          pEnteringHook;
+    MriDebuggerHookPtr          pLeavingHook;
+    void*                       pvEnteringLeavingContext;
     Packet                      packet;
     Buffer                      buffer;
     uint32_t                    tempBreakpointAddress;
@@ -61,13 +64,6 @@ static MriCore g_mri;
 
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
-
-/* These two routines can be provided by the debuggee to get notified on debugger entry/exit.  Can be used to safely
-   turn off some external hardware so that it doesn't keep running while sitting at a breakpoint. */
-void mriPlatform_EnteringDebuggerHook(void) __attribute__((weak));
-void mriPlatform_LeavingDebuggerHook(void) __attribute__((weak));
-#define Platform_EnteringDebuggerHook mriPlatform_EnteringDebuggerHook
-#define Platform_LeavingDebuggerHook  mriPlatform_LeavingDebuggerHook
 
 static void clearCoreStructure(void);
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters);
@@ -155,6 +151,14 @@ static void setTempBreakpointFlag(void)
 }
 
 
+void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext)
+{
+    g_mri.pEnteringHook = pEnteringHook;
+    g_mri.pLeavingHook = pLeavingHook;
+    g_mri.pvEnteringLeavingContext = pvContext;
+}
+
+
 static int wasTempBreakpointHit(void);
 static void clearTempBreakpoint(void);
 static void clearTempBreakpointFlag(void);
@@ -181,7 +185,8 @@ void mriDebugException(void)
         }
     }
 
-    Platform_EnteringDebuggerHook();
+    if (g_mri.pEnteringHook)
+        g_mri.pEnteringHook(g_mri.pvEnteringLeavingContext);
     Platform_EnteringDebugger();
     determineSignalValue();
 
@@ -239,7 +244,8 @@ static int isDebugTrap(void)
 static void prepareForDebuggerExit(void)
 {
     Platform_LeavingDebugger();
-    Platform_LeavingDebuggerHook();
+    if (g_mri.pLeavingHook)
+        g_mri.pLeavingHook(g_mri.pvEnteringLeavingContext);
     clearFirstExceptionFlag();
 }
 

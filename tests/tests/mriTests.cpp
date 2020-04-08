@@ -288,3 +288,72 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning1_S
     CHECK_TRUE( g_callbackCalled );
     POINTERS_EQUAL( NULL, g_pvCallbackContext );
 }
+
+
+
+
+struct HookCounts
+{
+    uint32_t enteringCount;
+    uint32_t leavingCount;
+};
+
+static void enteringHook(void* pvContext)
+{
+    HookCounts* pCounts = (HookCounts*)pvContext;
+    pCounts->enteringCount++;
+}
+
+static void leavingHook(void* pvContext)
+{
+    HookCounts* pCounts = (HookCounts*)pvContext;
+    pCounts->leavingCount++;
+}
+
+TEST(Mri, mriSetDebuggerHooks_HookBothFunctions)
+{
+    HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
+
+    mriInit("MRI_UART_MBED_USB");
+
+    mriSetDebuggerHooks(enteringHook, leavingHook, &counts);
+
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+
+    LONGS_EQUAL(1, counts.enteringCount);
+    LONGS_EQUAL(1, counts.leavingCount);
+}
+
+TEST(Mri, mriSetDebuggerHooks_HookEnteringFunctionOnly)
+{
+    HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
+
+    mriInit("MRI_UART_MBED_USB");
+
+    mriSetDebuggerHooks(enteringHook, NULL, &counts);
+
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+
+    LONGS_EQUAL(1, counts.enteringCount);
+    LONGS_EQUAL(0, counts.leavingCount);
+}
+
+TEST(Mri, mriSetDebuggerHooks_HookLeavingFunctionOnly)
+{
+    HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
+
+    mriInit("MRI_UART_MBED_USB");
+
+    mriSetDebuggerHooks(NULL, leavingHook, &counts);
+
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+
+    LONGS_EQUAL(0, counts.enteringCount);
+    LONGS_EQUAL(1, counts.leavingCount);
+}

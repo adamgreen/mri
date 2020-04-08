@@ -106,6 +106,11 @@ extern "C"
 */
 void mriInit(const char* pDebuggerParameters);
 
+/* Set callbacks to be called before halting execution in the debug monitor and upon exit. This can be used by a
+   debuggee to pause or halt external hardware such as motors when halted in the debugger. The pvContext pointer
+   is passed into the hooks each time they are called. */
+typedef void (*MriDebuggerHookPtr)(void*);
+void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext);
 
 /* Simple assembly language stubs that can be called from user's newlib stubs routines which will cause the operations
    to be redirected to the GDB host via MRI. */
