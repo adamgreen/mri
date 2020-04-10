@@ -43,7 +43,8 @@ static uint32_t    handleQueryTransferFeaturesCommand(void);
 static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
 static uint32_t    handleMonitorCommand(void);
 static uint32_t    handleMonitorResetCommand(void);
-static uint32_t    handleShowFaultCommand(void);
+static uint32_t    handleMonitorShowFaultCommand(void);
+static uint32_t    handleMonitorHelpCommand(void);
 /* Handle the 'q' command used by gdb to communicate state to debug monitor and vice versa.
 
     Command Format: qSSS
@@ -288,6 +289,7 @@ static uint32_t handleMonitorCommand(void)
     Buffer*             pBuffer =GetBuffer();
     static const char   reset[] = "reset";
     static const char   showfault[] = "showfault";
+    static const char   help[] = "help";
 
     if (!Buffer_IsNextCharEqualTo(pBuffer, ','))
     {
@@ -301,12 +303,16 @@ static uint32_t handleMonitorCommand(void)
     }
     else if (Buffer_MatchesHexString(pBuffer, showfault, sizeof(showfault)-1))
     {
-        return handleShowFaultCommand();
+        return handleMonitorShowFaultCommand();
+    }
+    else if (Buffer_MatchesHexString(pBuffer, help, sizeof(help)-1))
+    {
+        return handleMonitorHelpCommand();
     }
     else
     {
-        PrepareEmptyResponseForUnknownCommand();
-        return 0;
+        WriteStringToGdbConsole("Unrecognized monitor command!\r\n");
+        return handleMonitorHelpCommand();
     }
 }
 
@@ -318,9 +324,18 @@ static uint32_t handleMonitorResetCommand(void)
     return 0;
 }
 
-static uint32_t handleShowFaultCommand(void)
+static uint32_t handleMonitorShowFaultCommand(void)
 {
     Platform_DisplayFaultCauseToGdbConsole();
+    PrepareStringResponse("OK");
+    return 0;
+}
+
+static uint32_t handleMonitorHelpCommand(void)
+{
+    WriteStringToGdbConsole("Supported monitor commands:\r\n");
+    WriteStringToGdbConsole("reset\r\n");
+    WriteStringToGdbConsole("showfault\r\n");
     PrepareStringResponse("OK");
     return 0;
 }

@@ -233,15 +233,6 @@ TEST(cmdQuery, QueryXferFeatures_VeryLargeRead)
 
 
 
-TEST(cmdQuery, QueryRcmd_UnknownMonitorCommand_ShouldFail)
-{
-    const char* pCommand = monitorCommand("unknown");
-    platformMock_CommInitReceiveChecksummedData(pCommand, "+$c#");
-        mriDebugException();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#+"),
-                   platformMock_CommGetTransmittedData() );
-}
-
 TEST(cmdQuery, QueryRcmd_WithMissingComma_ShouldFail)
 {
     platformMock_CommInitReceiveChecksummedData("+$qRcmd#", "+$c#");
@@ -274,4 +265,46 @@ TEST(cmdQuery, QueryRcmd_ShowFault_ShouldDumpException)
         mriDebugException();
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#+"), platformMock_CommGetTransmittedData() );
     LONGS_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+}
+
+TEST(cmdQuery, QueryRcmd_Help_ShouldDisplaySupportedCommands)
+{
+    const char* pCommand = monitorCommand("help");
+    platformMock_CommInitReceiveChecksummedData(pCommand, "++++$c#");
+    LONGS_EQUAL( 0, platformMock_GetResetDeviceCalls() );
+        mriDebugException();
+    char expectedConsoleOutput[3][64];
+    char expectedTransmitData[512];
+    stringToHex(expectedConsoleOutput[0], "Supported monitor commands:\r\n");
+    stringToHex(expectedConsoleOutput[1], "reset\r\n");
+    stringToHex(expectedConsoleOutput[2], "showfault\r\n");
+    snprintf(expectedTransmitData, sizeof(expectedTransmitData),
+             "$T05responseT#+$O%s#$O%s#$O%s#$OK#+",
+             expectedConsoleOutput[0],
+             expectedConsoleOutput[1],
+             expectedConsoleOutput[2]);
+    STRCMP_EQUAL ( platformMock_CommChecksumData(expectedTransmitData),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, QueryRcmd_UnknownMonitorCommand_ShouldDisplayErrorAndHelp)
+{
+    const char* pCommand = monitorCommand("unknown");
+    platformMock_CommInitReceiveChecksummedData(pCommand, "+++++$c#");
+    LONGS_EQUAL( 0, platformMock_GetResetDeviceCalls() );
+        mriDebugException();
+    char expectedConsoleOutput[4][64];
+    char expectedTransmitData[512];
+    stringToHex(expectedConsoleOutput[0], "Unrecognized monitor command!\r\n");
+    stringToHex(expectedConsoleOutput[1], "Supported monitor commands:\r\n");
+    stringToHex(expectedConsoleOutput[2], "reset\r\n");
+    stringToHex(expectedConsoleOutput[3], "showfault\r\n");
+    snprintf(expectedTransmitData, sizeof(expectedTransmitData),
+             "$T05responseT#+$O%s#$O%s#$O%s#$O%s#$OK#+",
+             expectedConsoleOutput[0],
+             expectedConsoleOutput[1],
+             expectedConsoleOutput[2],
+             expectedConsoleOutput[3]);
+    STRCMP_EQUAL ( platformMock_CommChecksumData(expectedTransmitData),
+                   platformMock_CommGetTransmittedData() );
 }
