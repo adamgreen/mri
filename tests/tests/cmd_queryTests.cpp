@@ -29,10 +29,12 @@ void mriDebugException(void);
 TEST_GROUP(cmdQuery)
 {
     int     m_expectedException;
+    char*   m_pCommandString;
 
     void setup()
     {
         m_expectedException = noException;
+        m_pCommandString = NULL;
         platformMock_Init();
         mriInit("MRI_UART_MBED_USB");
     }
@@ -40,6 +42,8 @@ TEST_GROUP(cmdQuery)
     void teardown()
     {
         LONGS_EQUAL ( m_expectedException, getExceptionCode() );
+        free(m_pCommandString);
+        m_pCommandString = NULL;
         clearExceptionCode();
         platformMock_Uninit();
     }
@@ -48,6 +52,34 @@ TEST_GROUP(cmdQuery)
     {
         m_expectedException = expectedExceptionCode;
         LONGS_EQUAL ( expectedExceptionCode, getExceptionCode() );
+    }
+
+    const char* monitorCommand(const char* pCommand)
+    {
+        const char commandPrefix[] = "+$qRcmd,";
+        size_t len = sizeof(commandPrefix)-1 + 2 * strlen(pCommand) + 1 + 1;
+        m_pCommandString = (char*)realloc(m_pCommandString, len);
+        memcpy(m_pCommandString, commandPrefix, sizeof(commandPrefix) - 1);
+        char* pDest = m_pCommandString + sizeof(commandPrefix) - 1;
+        pDest += stringToHex(pDest, pCommand);
+        *pDest++ = '#';
+        *pDest++ = '\0';
+        assert ( pDest - m_pCommandString == (int)len );
+
+        return m_pCommandString;
+    }
+
+    int stringToHex(char* pHexDest, const char* pSrc)
+    {
+        char* pStart = pHexDest;
+        while (*pSrc)
+        {
+            sprintf(pHexDest, "%02x", *pSrc++);
+            pHexDest += 2;
+        }
+        int len = pHexDest - pStart;
+        *pHexDest++ = '\0';
+        return len;
     }
 };
 
@@ -195,4 +227,41 @@ TEST(cmdQuery, QueryXferFeatures_VeryLargeRead)
         mriDebugException();
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$ltest!#+"),
                    platformMock_CommGetTransmittedData() );
+}
+
+
+
+
+
+TEST(cmdQuery, QueryRcmd_UnknownMonitorCommand_ShouldFail)
+{
+    const char* pCommand = monitorCommand("unknown");
+    platformMock_CommInitReceiveChecksummedData(pCommand, "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, QueryRcmd_WithMissingComma_ShouldFail)
+{
+    platformMock_CommInitReceiveChecksummedData("+$qRcmd#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, QueryRcmd_Reset_ShouldOutputMessage_MakesSureAckTransmitCompleted_CallsPlatformResetDevice)
+{
+    const char* pCommand = monitorCommand("reset");
+    platformMock_CommInitReceiveChecksummedData(pCommand, "++$c#");
+    LONGS_EQUAL( 0, platformMock_GetResetDeviceCalls() );
+        mriDebugException();
+    char expectedConsoleOutput[256];
+    char expectedTransmitData[512];
+    stringToHex(expectedConsoleOutput, "Will reset on next continue.\r\n");
+    snprintf(expectedTransmitData, sizeof(expectedTransmitData), "$T05responseT#+$O%s#$OK#+", expectedConsoleOutput);
+    STRCMP_EQUAL ( platformMock_CommChecksumData(expectedTransmitData),
+                   platformMock_CommGetTransmittedData() );
+    LONGS_EQUAL( 1, platformMock_GetResetDeviceCalls() );
+    LONGS_EQUAL( 1, platformMock_CommGetHasTransmitCompletedCallCount() );
 }

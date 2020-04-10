@@ -665,6 +665,14 @@ uint32_t Platform_CommHasReceiveData(void)
 }
 
 
+uint32_t  mriPlatform_CommHasTransmitCompleted(void)
+{
+    static const uint8_t transmitterEmpty = 1 << 6;
+
+    return mriLpc43xxState.pCurrentUart->pUartRegisters->LSR & transmitterEmpty;
+}
+
+
 static void     waitForUartToReceiveData(void);
 int Platform_CommReceiveChar(void)
 {

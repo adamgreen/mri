@@ -226,6 +226,13 @@ TEST(platformMock, CommGetTransmittedData_TransmitEmptyPacket)
     STRCMP_EQUAL( "$#00", platformMock_CommGetTransmittedData() );
 }
 
+TEST(platformMock, Platform_CommHasDataToTransmit_MockAlwaysReturnsFalseAndGetsCounted)
+{
+    LONGS_EQUAL( 0, platformMock_CommGetHasTransmitCompletedCallCount() );
+    CHECK_TRUE( Platform_CommHasTransmitCompleted() );
+    LONGS_EQUAL( 1, platformMock_CommGetHasTransmitCompletedCallCount() );
+}
+
 TEST(platformMock, platformMockInit_ThrowException)
 {
     int exceptionThrown = 0;
@@ -547,4 +554,12 @@ TEST(platformMock, Platform_SetSemihostCallReturnValue_GetValue)
         Platform_SetSemihostCallReturnAndErrnoValues(0x12345678, 0x87654321);
     CHECK_EQUAL ( 0x12345678, platformMock_GetSemihostCallReturnValue() );
     CHECK_EQUAL ( (int)0x87654321, platformMock_GetSemihostCallErrno() );
+}
+
+
+TEST(platformMock, Platform_ResetDevice_CountCalls)
+{
+    CHECK_EQUAL( 0, platformMock_GetResetDeviceCalls() );
+        Platform_ResetDevice();
+    CHECK_EQUAL( 1, platformMock_GetResetDeviceCalls() );
 }

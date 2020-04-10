@@ -85,6 +85,7 @@ static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
 static char*       g_pChecksumData;
+static int         g_hasTransmitCompletedCount;
 
 void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
@@ -187,6 +188,11 @@ const char* platformMock_CommGetTransmittedData(void)
     return g_pTransmitDataBufferStart;
 }
 
+int platformMock_CommGetHasTransmitCompletedCallCount(void)
+{
+    return g_hasTransmitCompletedCount;
+}
+
 // Platform_Comm* stubs called by MRI core.
 uint32_t Platform_CommHasReceiveData(void)
 {
@@ -205,6 +211,12 @@ static uint32_t isReceiveBufferEmpty()
     if (g_receiveIndex >= ARRAY_SIZE(g_receiveBuffers))
         return TRUE;
     return (uint32_t)(Buffer_BytesLeft(&g_receiveBuffers[g_receiveIndex]) == 0);
+}
+
+uint32_t  Platform_CommHasTransmitCompleted(void)
+{
+    g_hasTransmitCompletedCount++;
+    return TRUE;
 }
 
 int Platform_CommReceiveChar(void)
@@ -664,6 +676,21 @@ void mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 
 
 
+// Device Reset Instrumentation.
+static int g_resetCount;
+int platformMock_GetResetDeviceCalls(void)
+{
+    return g_resetCount;
+}
+
+// Stubs called by MRI core.
+void Platform_ResetDevice(void)
+{
+    g_resetCount++;
+}
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -671,6 +698,7 @@ void platformMock_Init(void)
     platformMock_CommInitTransmitDataBuffer(2 * sizeof(g_packetBuffer));
     platformMock_SetInitException(noException);
     memset(&g_initTokenCopy, 0, sizeof(g_initTokenCopy));
+    g_hasTransmitCompletedCount = 0;
     g_pChecksumData = NULL;
     g_initCount = 0;
     g_enteringDebuggerCount = 0;
@@ -705,6 +733,7 @@ void platformMock_Init(void)
     g_clearHardwareWatchpointTypeArg = MRI_PLATFORM_WRITE_WATCHPOINT;
     g_clearHardwareWatchpointException = noException;
     g_semihostCallReturnValue = 0;
+    g_resetCount = 0;
 }
 
 void platformMock_Uninit(void)

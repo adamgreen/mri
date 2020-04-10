@@ -28,6 +28,7 @@ void        platformMock_CommInitReceiveChecksummedData(const char* pDataToRecei
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
 const char* platformMock_CommChecksumData(const char* pData);
 const char* platformMock_CommGetTransmittedData(void);
+int         platformMock_CommGetHasTransmitCompletedCallCount(void);
 
 void        platformMock_SetInitException(int exceptionToThrow);
 int         platformMock_GetInitCount(void);
@@ -76,5 +77,7 @@ void                   platformMock_ClearHardwareWatchpointException(uint32_t ex
 
 int platformMock_GetSemihostCallReturnValue(void);
 int platformMock_GetSemihostCallErrno(void);
+
+int platformMock_GetResetDeviceCalls(void);
 
 #endif /* PLATFORM_MOCK_H_ */

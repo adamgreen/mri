@@ -498,6 +498,11 @@ uint32_t Platform_CommHasReceiveData(void)
     return mriStm32f429xxState.pCurrentUart->pUartRegisters->SR & USART_SR_RXNE;
 }
 
+uint32_t mriPlatform_CommHasTransmitCompleted(void)
+{
+    return mriStm32f429xxState.pCurrentUart->pUartRegisters->SR & USART_SR_TC;
+}
+
 int Platform_CommReceiveChar(void)
 {
     while(!Platform_CommHasReceiveData())

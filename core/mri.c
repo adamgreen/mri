@@ -57,10 +57,11 @@ typedef struct
 static MriCore g_mri;
 
 /* MriCore::flags bit definitions. */
-#define MRI_FLAGS_SUCCESSFUL_INIT   1
-#define MRI_FLAGS_FIRST_EXCEPTION   2
-#define MRI_FLAGS_SEMIHOST_CTRL_C   4
-#define MRI_FLAGS_TEMP_BREAKPOINT   8
+#define MRI_FLAGS_SUCCESSFUL_INIT   (1 << 0)
+#define MRI_FLAGS_FIRST_EXCEPTION   (1 << 1)
+#define MRI_FLAGS_SEMIHOST_CTRL_C   (1 << 2)
+#define MRI_FLAGS_TEMP_BREAKPOINT   (1 << 3)
+#define MRI_FLAGS_RESET_ON_CONTINUE (1 << 4)
 
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
@@ -166,6 +167,8 @@ static void determineSignalValue(void);
 static int  isDebugTrap(void);
 static void prepareForDebuggerExit(void);
 static void clearFirstExceptionFlag(void);
+static int hasResetBeenRequested(void);
+static void waitForAckToBeTransmitted(void);
 void mriDebugException(void)
 {
     int justSingleStepped = Platform_IsSingleStepping();
@@ -243,10 +246,27 @@ static int isDebugTrap(void)
 
 static void prepareForDebuggerExit(void)
 {
+    if (hasResetBeenRequested()) {
+        waitForAckToBeTransmitted();
+        Platform_ResetDevice();
+    }
     Platform_LeavingDebugger();
     if (g_mri.pLeavingHook)
         g_mri.pLeavingHook(g_mri.pvEnteringLeavingContext);
     clearFirstExceptionFlag();
+}
+
+static int hasResetBeenRequested(void)
+{
+    return (int)(g_mri.flags & MRI_FLAGS_RESET_ON_CONTINUE);
+}
+
+static void waitForAckToBeTransmitted(void)
+{
+    while ( !Platform_CommHasTransmitCompleted() )
+    {
+        // Waiting for ACK to be sent back to GDB for last command received.
+    }
 }
 
 static void clearFirstExceptionFlag(void)
@@ -356,6 +376,10 @@ int WasControlCFlagSentFromGdb(void)
     return (int)(g_mri.flags & MRI_FLAGS_SEMIHOST_CTRL_C);
 }
 
+void RequestResetOnNextContinue(void)
+{
+    g_mri.flags |= MRI_FLAGS_RESET_ON_CONTINUE;
+}
 
 
 void RecordControlCFlagSentFromGdb(int controlCFlag)

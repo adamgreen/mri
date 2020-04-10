@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -1065,6 +1065,87 @@ TEST(Buffer, Buffer_MatchesString_NoMatch)
     allocateBuffer(testString);
     __try
         isEqual = Buffer_MatchesString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_FALSE( isEqual );
+    LONGS_EQUAL( strlen(testString), Buffer_BytesLeft(&m_buffer) );
+    validateNoException();
+}
+
+
+
+TEST(Buffer, Buffer_MatchesHexString_TooSmall)
+{
+    static const char   testString[] = "72657365";
+    static const char   compareString[] = "reset";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_FALSE( isEqual );
+    validateBufferOverrunException();
+}
+
+TEST(Buffer, Buffer_MatchesHexString_Match)
+{
+    static const char   testString[] = "7265736574";
+    static const char   compareString[] = "reset";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_TRUE( isEqual );
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+    validateNoException();
+}
+
+TEST(Buffer, Buffer_MatchesHexString_MatchWithTrailingSpace)
+{
+    static const char   testString[] = "726573657420";
+    static const char   compareString[] = "reset";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_TRUE( isEqual );
+    LONGS_EQUAL( 2, Buffer_BytesLeft(&m_buffer) );
+    validateNoException();
+}
+
+TEST(Buffer, Buffer_MatchesHexString_NoMatch_LastCharGreater)
+{
+    static const char   testString[] = "7265736575";
+    static const char   compareString[] = "reset";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_FALSE( isEqual );
+    LONGS_EQUAL( strlen(testString), Buffer_BytesLeft(&m_buffer) );
+    validateNoException();
+}
+
+TEST(Buffer, Buffer_MatchesHexString_NoMatch_LastCharLesser)
+{
+    static const char   testString[] = "7265736573";
+    static const char   compareString[] = "reset";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
     __catch
         m_exceptionThrown = 1;
     CHECK_FALSE( isEqual );
