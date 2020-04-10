@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -264,4 +264,14 @@ TEST(cmdQuery, QueryRcmd_Reset_ShouldOutputMessage_MakesSureAckTransmitCompleted
                    platformMock_CommGetTransmittedData() );
     LONGS_EQUAL( 1, platformMock_GetResetDeviceCalls() );
     LONGS_EQUAL( 1, platformMock_CommGetHasTransmitCompletedCallCount() );
+}
+
+TEST(cmdQuery, QueryRcmd_ShowFault_ShouldDumpException)
+{
+    const char* pCommand = monitorCommand("showfault");
+    platformMock_CommInitReceiveChecksummedData(pCommand, "+$c#");
+    LONGS_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#+"), platformMock_CommGetTransmittedData() );
+    LONGS_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
 }

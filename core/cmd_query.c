@@ -43,6 +43,7 @@ static uint32_t    handleQueryTransferFeaturesCommand(void);
 static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
 static uint32_t    handleMonitorCommand(void);
 static uint32_t    handleMonitorResetCommand(void);
+static uint32_t    handleShowFaultCommand(void);
 /* Handle the 'q' command used by gdb to communicate state to debug monitor and vice versa.
 
     Command Format: qSSS
@@ -286,6 +287,7 @@ static uint32_t handleMonitorCommand(void)
 {
     Buffer*             pBuffer =GetBuffer();
     static const char   reset[] = "reset";
+    static const char   showfault[] = "showfault";
 
     if (!Buffer_IsNextCharEqualTo(pBuffer, ','))
     {
@@ -296,6 +298,10 @@ static uint32_t handleMonitorCommand(void)
     if (Buffer_MatchesHexString(pBuffer, reset, sizeof(reset)-1))
     {
         return handleMonitorResetCommand();
+    }
+    else if (Buffer_MatchesHexString(pBuffer, showfault, sizeof(showfault)-1))
+    {
+        return handleShowFaultCommand();
     }
     else
     {
@@ -308,6 +314,13 @@ static uint32_t handleMonitorResetCommand(void)
 {
     RequestResetOnNextContinue();
     WriteStringToGdbConsole("Will reset on next continue.\r\n");
+    PrepareStringResponse("OK");
+    return 0;
+}
+
+static uint32_t handleShowFaultCommand(void)
+{
+    Platform_DisplayFaultCauseToGdbConsole();
     PrepareStringResponse("OK");
     return 0;
 }
