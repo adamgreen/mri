@@ -83,7 +83,7 @@ uint32_t HandleQueryCommand(void)
 */
 static uint32_t handleQuerySupportedCommand(void)
 {
-    static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;PacketSize=";
+    static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;hwbreak+;swbreak+;PacketSize=";
     uint32_t          PacketSize = Platform_GetPacketBufferSize();
     Buffer*           pBuffer = GetInitializedBuffer();
 

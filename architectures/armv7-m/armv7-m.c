@@ -534,6 +534,54 @@ static uint8_t determineCauseOfDebugEvent(void)
 }
 
 
+PlatformTrapReason mriPlatform_GetTrapReason(void)
+{
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
+
+    uint32_t debugFaultStatus = mriCortexMState.dfsr;
+    if (debugFaultStatus & SCB_DFSR_BKPT)
+    {
+        // Was caused by hardware or software breakpoint. If PC points to BKPT then report as software breakpoint.
+        if (Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT)
+            reason.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
+        else
+            reason.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
+    }
+    else if (debugFaultStatus & SCB_DFSR_DWTTRAP)
+    {
+        DWT_COMP_Type* pCurrentComparator = DWT_COMP_ARRAY;
+        uint32_t       comparatorCount;
+        uint32_t       i;
+
+        comparatorCount = getDWTComparatorCount();
+        for (i = 0 ; i < comparatorCount ; i++)
+        {
+            uint32_t funcVal = pCurrentComparator->FUNCTION;
+            if (funcVal & DWT_COMP_FUNCTION_MATCHED)
+            {
+                uint32_t function = funcVal & DWT_COMP_FUNCTION_FUNCTION_MASK;
+                switch (function)
+                {
+                case DWT_COMP_FUNCTION_FUNCTION_DATA_READ:
+                    reason.type = MRI_PLATFORM_TRAP_TYPE_RWATCH;
+                    break;
+                case DWT_COMP_FUNCTION_FUNCTION_DATA_WRITE:
+                    reason.type = MRI_PLATFORM_TRAP_TYPE_WATCH;
+                    break;
+                case DWT_COMP_FUNCTION_FUNCTION_DATA_READWRITE:
+                    reason.type = MRI_PLATFORM_TRAP_TYPE_AWATCH;
+                    break;
+                }
+                reason.address = pCurrentComparator->COMP;
+            }
+            pCurrentComparator++;
+        }
+    }
+
+    return reason;
+}
+
+
 static void displayHardFaultCauseToGdbConsole(void);
 static void displayMemFaultCauseToGdbConsole(void);
 static void displayBusFaultCauseToGdbConsole(void);

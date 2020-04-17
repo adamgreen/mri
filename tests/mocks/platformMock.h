@@ -40,6 +40,7 @@ int         platformMock_GetLeavingDebuggerCalls(void);
 void        platformMock_SetIsDebuggeeMakingSemihostCall(int setValue);
 int         platformMock_GetHandleSemihostRequestCalls(void);
 
+void        platformMock_SetTrapReason(const PlatformTrapReason* reason);
 int         platformMock_DisplayFaultCauseToGdbConsoleCalls(void);
 
 void        platformMock_SetPacketBufferSize(uint32_t setValue);
@@ -79,5 +80,7 @@ int platformMock_GetSemihostCallReturnValue(void);
 int platformMock_GetSemihostCallErrno(void);
 
 int platformMock_GetResetDeviceCalls(void);
+
+void platformMock_RtosSetThreadId(uint32_t threadId);
 
 #endif /* PLATFORM_MOCK_H_ */

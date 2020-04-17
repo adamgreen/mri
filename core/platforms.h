@@ -42,8 +42,26 @@ void      mriPlatform_CommSendChar(int character);
 
 uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer);
 
-uint8_t   mriPlatform_DetermineCauseOfException(void);
-void      mriPlatform_DisplayFaultCauseToGdbConsole(void);
+typedef enum
+{
+    MRI_PLATFORM_TRAP_TYPE_UNKNOWN = 0,
+    MRI_PLATFORM_TRAP_TYPE_HWBREAK,
+    MRI_PLATFORM_TRAP_TYPE_SWBREAK,
+    MRI_PLATFORM_TRAP_TYPE_WATCH,
+    MRI_PLATFORM_TRAP_TYPE_RWATCH,
+    MRI_PLATFORM_TRAP_TYPE_AWATCH,
+} PlatformTrapType;
+
+typedef struct
+{
+    PlatformTrapType    type;
+    uint32_t            address;
+} PlatformTrapReason;
+
+uint8_t             mriPlatform_DetermineCauseOfException(void);
+PlatformTrapReason  mriPlatform_GetTrapReason(void);
+void                mriPlatform_DisplayFaultCauseToGdbConsole(void);
+
 void      mriPlatform_EnableSingleStep(void);
 void      mriPlatform_DisableSingleStep(void);
 int       mriPlatform_IsSingleStepping(void);
@@ -101,6 +119,8 @@ uint32_t       mriPlatform_GetUidSize(void);
 
 void           mriPlatform_ResetDevice(void);
 
+uint32_t       mriPlatform_RtosGetThreadId(void);
+
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define Platform_Init                                       mriPlatform_Init
@@ -119,6 +139,7 @@ void           mriPlatform_ResetDevice(void);
 #define Platform_CommReceiveChar                            mriPlatform_CommReceiveChar
 #define Platform_CommSendChar                               mriPlatform_CommSendChar
 #define Platform_DetermineCauseOfException                  mriPlatform_DetermineCauseOfException
+#define Platform_GetTrapReason                              mriPlatform_GetTrapReason
 #define Platform_DisplayFaultCauseToGdbConsole              mriPlatform_DisplayFaultCauseToGdbConsole
 #define Platform_EnableSingleStep                           mriPlatform_EnableSingleStep
 #define Platform_DisableSingleStep                          mriPlatform_DisableSingleStep
@@ -147,5 +168,6 @@ void           mriPlatform_ResetDevice(void);
 #define Platform_GetUid                                     mriPlatform_GetUid
 #define Platform_GetUidSize                                 mriPlatform_GetUidSize
 #define Platform_ResetDevice                                mriPlatform_ResetDevice
+#define Platform_RtosGetThreadId                            mriPlatform_RtosGetThreadId
 
 #endif /* PLATFORMS_H_ */

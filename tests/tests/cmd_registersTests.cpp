@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -88,4 +88,65 @@ TEST(cmdRegisters, SetRegisters_BufferTooShort)
     CHECK_EQUAL ( 0x22222222, pContext[1] );
     CHECK_EQUAL ( 0x33333333, pContext[2] );
     CHECK_EQUAL ( 0xffdebc9a, pContext[3] );
+}
+
+
+TEST(cmdRegisters, TResponse_ThreadIdOfZero_ShouldReturnNoThreadId)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_NonZeroThreadId_ShouldReturnThreadId)
+{
+    platformMock_RtosSetThreadId(0xBAADF00D);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_SoftwareBreakpointHit_ShouldReturnSWBREAKWithNoAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_SWBREAK, 0x1000 };
+    platformMock_SetTrapReason(&reason);
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05swbreak:;responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_HardwareBreakpointHit_ShouldReturnHWBREAKWithNoAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_HWBREAK, 0x1000 };
+    platformMock_SetTrapReason(&reason);
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05hwbreak:;responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_WriteWatchpointHit_ShouldReturnWATCHWithAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_WATCH, 0x1000 };
+    platformMock_SetTrapReason(&reason);
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05watch:1000;responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_ReadWatchpointHit_ShouldReturnRWATCHWithAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_RWATCH, 0x04 };
+    platformMock_SetTrapReason(&reason);
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05rwatch:04;responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdRegisters, TResponse_AccessWatchpointHit_ShouldReturnAWATCHWithAddress)
+{
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_AWATCH, 0x80000000 };
+    platformMock_SetTrapReason(&reason);
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05awatch:80000000;responseT#+"), platformMock_CommGetTransmittedData() );
 }

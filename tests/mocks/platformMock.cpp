@@ -325,14 +325,31 @@ int mriSemihost_HandleSemihostRequest(void)
 
 
 // Fault/Exception Related Instrumentation
-static int g_displayFaultCauseToGdbConsoleCount;
+static int                g_displayFaultCauseToGdbConsoleCount;
+static PlatformTrapReason g_trapReason;
 
 int platformMock_DisplayFaultCauseToGdbConsoleCalls(void)
 {
     return g_displayFaultCauseToGdbConsoleCount;
 }
 
-// Fault/Semihost stubs called by MRI core.
+void platformMock_SetTrapReason(const PlatformTrapReason* pReason)
+{
+    g_trapReason = *pReason;
+}
+
+
+// Fault/Exception stubs called by MRI core.
+uint8_t mriPlatform_DetermineCauseOfException(void)
+{
+    return SIGTRAP;
+}
+
+PlatformTrapReason mriPlatform_GetTrapReason(void)
+{
+    return g_trapReason;
+}
+
 void mriPlatform_DisplayFaultCauseToGdbConsole(void)
 {
     g_displayFaultCauseToGdbConsoleCount++;
@@ -691,6 +708,21 @@ void Platform_ResetDevice(void)
 
 
 
+// RTOS Thread related instrumentation.
+static uint32_t g_rtosThreadId;
+void platformMock_RtosSetThreadId(uint32_t threadId)
+{
+    g_rtosThreadId = threadId;
+}
+
+// Stubs called by MRI core.
+uint32_t Platform_RtosGetThreadId(void)
+{
+    return g_rtosThreadId;
+}
+
+
+
 // Mock Setup and Cleanup APIs.
 void platformMock_Init(void)
 {
@@ -698,6 +730,7 @@ void platformMock_Init(void)
     platformMock_CommInitTransmitDataBuffer(2 * sizeof(g_packetBuffer));
     platformMock_SetInitException(noException);
     memset(&g_initTokenCopy, 0, sizeof(g_initTokenCopy));
+    memset(&g_trapReason, 0, sizeof(g_trapReason));
     g_hasTransmitCompletedCount = 0;
     g_pChecksumData = NULL;
     g_initCount = 0;
@@ -734,6 +767,7 @@ void platformMock_Init(void)
     g_clearHardwareWatchpointException = noException;
     g_semihostCallReturnValue = 0;
     g_resetCount = 0;
+    g_rtosThreadId = 0;
 }
 
 void platformMock_Uninit(void)
@@ -750,11 +784,6 @@ void platformMock_Uninit(void)
 
 
 // Stubs for Platform APIs that act as NOPs when called from mriCore during testing.
-uint8_t mriPlatform_DetermineCauseOfException(void)
-{
-    return SIGTRAP;
-}
-
 extern "C" uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer)
 {
     return 0;

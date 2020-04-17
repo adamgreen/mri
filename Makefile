@@ -202,6 +202,7 @@ $(eval $(call make_tests,CPPUTEST,CppUTest/tests,,))
 
 # MRI Core sources to build and test.
 ARMV7M_CORE_OBJ    := $(call armv7m_objs,core)
+ARMV7M_CORE_OBJ    += $(call armv7m_objs,rtos)
 $(eval $(call make_library,CORE,core memory/native,libmricore.a,.))
 $(eval $(call make_tests,CORE,tests/tests tests/mocks,. tests/mocks,))
 $(eval $(call run_gcov,CORE))

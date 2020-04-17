@@ -563,3 +563,67 @@ TEST(platformMock, Platform_ResetDevice_CountCalls)
         Platform_ResetDevice();
     CHECK_EQUAL( 1, platformMock_GetResetDeviceCalls() );
 }
+
+
+TEST(platformMock, Platform_RtosGetThreadId_MockDefaultsToZero)
+{
+    CHECK_EQUAL( 0, Platform_RtosGetThreadId() );
+}
+
+TEST(platformMock, Platform_RtosGetThreadId_MakeSureMockCanReturnNonZeroValue)
+{
+    platformMock_RtosSetThreadId(0xBAADF00D);
+    CHECK_EQUAL( 0xBAADF00D, Platform_RtosGetThreadId() );
+}
+
+TEST(platformMock, Platform_GetTrapResponse_DefaultsToUnknownTrapType)
+{
+    PlatformTrapReason reason = Platform_GetTrapReason();
+    CHECK_EQUAL ( MRI_PLATFORM_TRAP_TYPE_UNKNOWN, reason.type );
+}
+
+TEST(platformMock, Platform_GetTrapResponse_MakeSureMockCanReturnOtherTypesAndNonZeroAddresses)
+{
+    PlatformTrapReason reasonSet;
+    PlatformTrapReason reasonActual;
+
+    // HWBREAK
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
+    reasonSet.address = 0xFFFFFFFF;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_HWBREAK, reasonActual.type );
+    CHECK_EQUAL( 0xFFFFFFFF, reasonActual.address );
+
+    // SWBREAK
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
+    reasonSet.address = 0x00001000;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_SWBREAK, reasonActual.type );
+    CHECK_EQUAL( 0x00001000, reasonActual.address );
+
+    // WATCH
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_WATCH;
+    reasonSet.address = 0x20000000;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_WATCH, reasonActual.type );
+    CHECK_EQUAL( 0x20000000, reasonActual.address );
+
+    // RWATCH
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_RWATCH;
+    reasonSet.address = 0x20000002;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_RWATCH, reasonActual.type );
+    CHECK_EQUAL( 0x20000002, reasonActual.address );
+
+    // AWATCH
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_AWATCH;
+    reasonSet.address = 0x2FFFFFFC;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_AWATCH, reasonActual.type );
+    CHECK_EQUAL( 0x2FFFFFFC, reasonActual.address );
+}
