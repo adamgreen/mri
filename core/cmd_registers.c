@@ -68,14 +68,6 @@ static void writeTrapReasonToBuffer(Buffer* pBuffer)
     PlatformTrapReason reason = Platform_GetTrapReason();
     switch (reason.type)
     {
-    case MRI_PLATFORM_TRAP_TYPE_SWBREAK:
-        pReason = "swbreak";
-        outputAddress = 0;
-        break;
-    case MRI_PLATFORM_TRAP_TYPE_HWBREAK:
-        pReason = "hwbreak";
-        outputAddress = 0;
-        break;
     case MRI_PLATFORM_TRAP_TYPE_WATCH:
         pReason = "watch";
         outputAddress = 1;

@@ -587,22 +587,6 @@ TEST(platformMock, Platform_GetTrapResponse_MakeSureMockCanReturnOtherTypesAndNo
     PlatformTrapReason reasonSet;
     PlatformTrapReason reasonActual;
 
-    // HWBREAK
-    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
-    reasonSet.address = 0xFFFFFFFF;
-    platformMock_SetTrapReason(&reasonSet);
-    reasonActual = Platform_GetTrapReason();
-    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_HWBREAK, reasonActual.type );
-    CHECK_EQUAL( 0xFFFFFFFF, reasonActual.address );
-
-    // SWBREAK
-    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
-    reasonSet.address = 0x00001000;
-    platformMock_SetTrapReason(&reasonSet);
-    reasonActual = Platform_GetTrapReason();
-    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_SWBREAK, reasonActual.type );
-    CHECK_EQUAL( 0x00001000, reasonActual.address );
-
     // WATCH
     reasonSet.type = MRI_PLATFORM_TRAP_TYPE_WATCH;
     reasonSet.address = 0x20000000;

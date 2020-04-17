@@ -106,24 +106,6 @@ TEST(cmdRegisters, TResponse_NonZeroThreadId_ShouldReturnThreadId)
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
-TEST(cmdRegisters, TResponse_SoftwareBreakpointHit_ShouldReturnSWBREAKWithNoAddress)
-{
-    platformMock_CommInitReceiveChecksummedData("+$c#");
-    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_SWBREAK, 0x1000 };
-    platformMock_SetTrapReason(&reason);
-        mriDebugException();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05swbreak:;responseT#+"), platformMock_CommGetTransmittedData() );
-}
-
-TEST(cmdRegisters, TResponse_HardwareBreakpointHit_ShouldReturnHWBREAKWithNoAddress)
-{
-    platformMock_CommInitReceiveChecksummedData("+$c#");
-    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_HWBREAK, 0x1000 };
-    platformMock_SetTrapReason(&reason);
-        mriDebugException();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05hwbreak:;responseT#+"), platformMock_CommGetTransmittedData() );
-}
-
 TEST(cmdRegisters, TResponse_WriteWatchpointHit_ShouldReturnWATCHWithAddress)
 {
     platformMock_CommInitReceiveChecksummedData("+$c#");
