@@ -35,6 +35,7 @@
 #include <core/cmd_query.h>
 #include <core/cmd_break_watch.h>
 #include <core/cmd_step.h>
+#include <core/cmd_vcont.h>
 #include <core/memory.h>
 
 
@@ -49,6 +50,7 @@ typedef struct
     Buffer                      buffer;
     uint32_t                    tempBreakpointAddress;
     uint32_t                    flags;
+    AddressRange                rangeForSingleStepping;
     int                         semihostReturnCode;
     int                         semihostErrno;
     uint8_t                     signalValue;
@@ -57,11 +59,12 @@ typedef struct
 static MriCore g_mri;
 
 /* MriCore::flags bit definitions. */
-#define MRI_FLAGS_SUCCESSFUL_INIT   (1 << 0)
-#define MRI_FLAGS_FIRST_EXCEPTION   (1 << 1)
-#define MRI_FLAGS_SEMIHOST_CTRL_C   (1 << 2)
-#define MRI_FLAGS_TEMP_BREAKPOINT   (1 << 3)
-#define MRI_FLAGS_RESET_ON_CONTINUE (1 << 4)
+#define MRI_FLAGS_SUCCESSFUL_INIT       (1 << 0)
+#define MRI_FLAGS_FIRST_EXCEPTION       (1 << 1)
+#define MRI_FLAGS_SEMIHOST_CTRL_C       (1 << 2)
+#define MRI_FLAGS_TEMP_BREAKPOINT       (1 << 3)
+#define MRI_FLAGS_RESET_ON_CONTINUE     (1 << 4)
+#define MRI_FLAGS_RANGED_SINGLE_STEP    (1 << 5)
 
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
@@ -163,6 +166,8 @@ void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pL
 static int wasTempBreakpointHit(void);
 static void clearTempBreakpoint(void);
 static void clearTempBreakpointFlag(void);
+static int areSingleSteppingInRange(void);
+static void clearSingleSteppingInRange(void);
 static void determineSignalValue(void);
 static int  isDebugTrap(void);
 static void prepareForDebuggerExit(void);
@@ -188,10 +193,22 @@ void mriDebugException(void)
         }
     }
 
+    determineSignalValue();
+    if (areSingleSteppingInRange())
+    {
+        uint32_t pc = Platform_GetProgramCounter();
+        if (pc >= g_mri.rangeForSingleStepping.start && pc < g_mri.rangeForSingleStepping.end)
+        {
+            Platform_DisableSingleStep();
+            Platform_EnableSingleStep();
+            return;
+        }
+    }
+    clearSingleSteppingInRange();
+
     if (g_mri.pEnteringHook)
         g_mri.pEnteringHook(g_mri.pvEnteringLeavingContext);
     Platform_EnteringDebugger();
-    determineSignalValue();
 
     if (isDebugTrap() &&
         Semihost_IsDebuggeeMakingSemihostCall() &&
@@ -214,7 +231,7 @@ void mriDebugException(void)
 static int wasTempBreakpointHit(void)
 {
     return (isTempBreakpointSet() &&
-            clearThumbBitOfAddress(Platform_GetProgramCounter()) == g_mri.tempBreakpointAddress);
+        clearThumbBitOfAddress(Platform_GetProgramCounter()) == g_mri.tempBreakpointAddress);
 }
 
 static void clearTempBreakpoint(void)
@@ -232,6 +249,26 @@ static void clearTempBreakpoint(void)
 static void clearTempBreakpointFlag(void)
 {
     g_mri.flags &= ~MRI_FLAGS_TEMP_BREAKPOINT;
+}
+
+static int areSingleSteppingInRange(void)
+{
+    // Ignore ranged single stepping if CTRL+C was pressed or...
+    if (g_mri.signalValue == SIGINT)
+        return 0;
+    // if a debug breakpoint/watchpoint was hit.
+    if (g_mri.signalValue == SIGTRAP)
+    {
+        PlatformTrapReason reason = Platform_GetTrapReason();
+        if (reason.type != MRI_PLATFORM_TRAP_TYPE_UNKNOWN)
+            return 0;
+    }
+    return g_mri.flags & MRI_FLAGS_RANGED_SINGLE_STEP;
+}
+
+static void clearSingleSteppingInRange(void)
+{
+    g_mri.flags &= ~MRI_FLAGS_RANGED_SINGLE_STEP;
 }
 
 static void determineSignalValue(void)
@@ -312,6 +349,7 @@ static int handleGDBCommand(void)
         {HandleRegisterWriteCommand,                'G'},
         {HandleMemoryReadCommand,                   'm'},
         {HandleMemoryWriteCommand,                  'M'},
+        {HandleVContCommands,                       'v'},
         {HandleQueryCommand,                        'q'},
         {HandleSingleStepCommand,                   's'},
         {HandleSingleStepWithSignalCommand,         'S'},
@@ -380,6 +418,13 @@ void RequestResetOnNextContinue(void)
 {
     g_mri.flags |= MRI_FLAGS_RESET_ON_CONTINUE;
 }
+
+void SetSingleSteppingRange(const AddressRange* pRange)
+{
+    g_mri.rangeForSingleStepping = *pRange;
+    g_mri.flags |= MRI_FLAGS_RANGED_SINGLE_STEP;
+}
+
 
 
 void RecordControlCFlagSentFromGdb(int controlCFlag)

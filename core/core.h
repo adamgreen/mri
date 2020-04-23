@@ -20,6 +20,14 @@
 #include <stdint.h>
 #include <core/buffer.h>
 
+
+typedef struct
+{
+    uint32_t start;
+    uint32_t end;
+} AddressRange;
+
+
 /* Real name of functions are in mri namespace. */
 void    mriDebugException(void);
 
@@ -36,6 +44,7 @@ void    mriCore_FlagSemihostCallAsHandled(void);
 int     mriCore_IsFirstException(void);
 int     mriCore_WasSuccessfullyInit(void);
 void    mriCore_RequestResetOnNextContinue(void);
+void    mriCore_SetSingleSteppingRange(const AddressRange* pRange);
 
 void    mriCore_SetSignalValue(uint8_t signalValue);
 uint8_t mriCore_GetSignalValue(void);
@@ -62,6 +71,7 @@ int     mriCore_SetTempBreakpoint(uint32_t breakpointAddress, TempBreakpointCall
 #define IsFirstException                mriCore_IsFirstException
 #define WasSuccessfullyInit             mriCore_WasSuccessfullyInit
 #define RequestResetOnNextContinue      mriCore_RequestResetOnNextContinue
+#define SetSingleSteppingRange          mriCore_SetSingleSteppingRange
 #define SetSignalValue                  mriCore_SetSignalValue
 #define GetSignalValue                  mriCore_GetSignalValue
 #define SetSemihostReturnValues         mriCore_SetSemihostReturnValues

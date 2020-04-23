@@ -576,6 +576,17 @@ TEST(platformMock, Platform_RtosGetThreadId_MakeSureMockCanReturnNonZeroValue)
     CHECK_EQUAL( 0xBAADF00D, Platform_RtosGetThreadId() );
 }
 
+TEST(platformMock, Platform_DetermineCauseOfException_DefaultsToSIGTRAP)
+{
+    CHECK_EQUAL( SIGTRAP, Platform_DetermineCauseOfException() );
+}
+
+TEST(platformMock, Platform_DetermineCauseOfException_SetToReturnSIGINT)
+{
+    platformMock_SetCauseOfException(SIGINT);
+    CHECK_EQUAL( SIGINT, Platform_DetermineCauseOfException() );
+}
+
 TEST(platformMock, Platform_GetTrapResponse_DefaultsToUnknownTrapType)
 {
     PlatformTrapReason reason = Platform_GetTrapReason();
@@ -586,6 +597,22 @@ TEST(platformMock, Platform_GetTrapResponse_MakeSureMockCanReturnOtherTypesAndNo
 {
     PlatformTrapReason reasonSet;
     PlatformTrapReason reasonActual;
+
+    // HWBREAK
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
+    reasonSet.address = 0xFFFFFFFF;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_HWBREAK, reasonActual.type );
+    CHECK_EQUAL( 0xFFFFFFFF, reasonActual.address );
+
+    // SWBREAK
+    reasonSet.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
+    reasonSet.address = 0x00001000;
+    platformMock_SetTrapReason(&reasonSet);
+    reasonActual = Platform_GetTrapReason();
+    CHECK_EQUAL( MRI_PLATFORM_TRAP_TYPE_SWBREAK, reasonActual.type );
+    CHECK_EQUAL( 0x00001000, reasonActual.address );
 
     // WATCH
     reasonSet.type = MRI_PLATFORM_TRAP_TYPE_WATCH;

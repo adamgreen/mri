@@ -99,6 +99,11 @@ void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* p
 
 void platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
+    free(g_pAlloc1);
+    free(g_pAlloc2);
+    g_pAlloc1 = NULL;
+    g_pAlloc2 = NULL;
+
     g_pAlloc1 = allocateAndCopyChecksummedData(pDataToReceive1);
     Buffer_Init(&g_receiveBuffers[0], g_pAlloc1, strlen(g_pAlloc1));
     if (pDataToReceive2)
@@ -325,8 +330,14 @@ int mriSemihost_HandleSemihostRequest(void)
 
 
 // Fault/Exception Related Instrumentation
+static uint8_t            g_causeOfException;
 static int                g_displayFaultCauseToGdbConsoleCount;
 static PlatformTrapReason g_trapReason;
+
+void platformMock_SetCauseOfException(uint8_t signal)
+{
+    g_causeOfException = signal;
+}
 
 int platformMock_DisplayFaultCauseToGdbConsoleCalls(void)
 {
@@ -342,7 +353,7 @@ void platformMock_SetTrapReason(const PlatformTrapReason* pReason)
 // Fault/Exception stubs called by MRI core.
 uint8_t mriPlatform_DetermineCauseOfException(void)
 {
-    return SIGTRAP;
+    return g_causeOfException;
 }
 
 PlatformTrapReason mriPlatform_GetTrapReason(void)
@@ -738,6 +749,7 @@ void platformMock_Init(void)
     g_leavingDebuggerCount = 0;
     g_isDebuggeeMakingSemihostCall = FALSE;
     g_getHandleSemihostRequestCount = 0;
+    g_causeOfException = SIGTRAP;
     g_displayFaultCauseToGdbConsoleCount = 0;
     g_packetBufferSize = sizeof(g_packetBuffer);
     g_instructionType = MRI_PLATFORM_INSTRUCTION_OTHER;
@@ -787,4 +799,8 @@ void platformMock_Uninit(void)
 extern "C" uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer)
 {
     return 0;
+}
+
+extern "C" void mriPlatform_DisableSingleStep(void)
+{
 }

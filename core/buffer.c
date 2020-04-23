@@ -407,6 +407,7 @@ static int doesBufferContainThisString(Buffer* pBuffer, const char* pDesiredStri
     return (strncmp(pBufferString, pDesiredString, stringLength) == 0) &&
            (Buffer_BytesLeft(pBuffer) == stringLength ||
             pBufferString[stringLength] == ':' ||
+            pBufferString[stringLength] == ';' ||
             pBufferString[stringLength] == ',');
 }
 

@@ -234,11 +234,78 @@ void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority)
 }
 
 
-static void clearSingleSteppingFlag(void);
+static void     cleanupIfSingleStepping(void);
+static void     restoreBasePriorityIfNeeded(void);
+static uint32_t shouldRestoreBasePriority(void);
+static void     clearRestoreBasePriorityFlag(void);
+static void     removeHardwareBreakpointOnSvcHandlerIfNeeded(void);
+static int      shouldRemoveHardwareBreakpointOnSvcHandler(void);
+static void     clearSvcStepFlag(void);
+static void     clearHardwareBreakpointOnSvcHandler(void);
+static uint32_t getNvicVector(IRQn_Type irq);
+static void     clearSingleSteppingFlag(void);
 void Platform_DisableSingleStep(void)
 {
+    cleanupIfSingleStepping();
     disableSingleStep();
     clearSingleSteppingFlag();
+}
+
+static void cleanupIfSingleStepping(void)
+{
+    restoreBasePriorityIfNeeded();
+    removeHardwareBreakpointOnSvcHandlerIfNeeded();
+}
+
+static void restoreBasePriorityIfNeeded(void)
+{
+    if (shouldRestoreBasePriority())
+    {
+        clearRestoreBasePriorityFlag();
+        ScatterGather_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.originalBasePriority);
+        mriCortexMState.originalBasePriority = 0;
+    }
+}
+
+static uint32_t shouldRestoreBasePriority(void)
+{
+    return mriCortexMFlags & CORTEXM_FLAGS_RESTORE_BASEPRI;
+}
+
+static void clearRestoreBasePriorityFlag(void)
+{
+    mriCortexMFlags &= ~CORTEXM_FLAGS_RESTORE_BASEPRI;
+}
+
+static void removeHardwareBreakpointOnSvcHandlerIfNeeded(void)
+{
+    if (shouldRemoveHardwareBreakpointOnSvcHandler())
+    {
+        clearSvcStepFlag();
+        clearHardwareBreakpointOnSvcHandler();
+    }
+}
+
+static int shouldRemoveHardwareBreakpointOnSvcHandler(void)
+{
+    return mriCortexMFlags & CORTEXM_FLAGS_SVC_STEP;
+}
+
+static void clearSvcStepFlag(void)
+{
+    mriCortexMFlags &= ~CORTEXM_FLAGS_SVC_STEP;
+}
+
+static void clearHardwareBreakpointOnSvcHandler(void)
+{
+    Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
+}
+
+static uint32_t getNvicVector(IRQn_Type irq)
+{
+    const uint32_t           nvicBaseVectorOffset = 16;
+    volatile const uint32_t* pVectors = (volatile const uint32_t*)SCB->VTOR;
+    return pVectors[irq + nvicBaseVectorOffset];
 }
 
 static void clearSingleSteppingFlag(void)
@@ -249,7 +316,6 @@ static void clearSingleSteppingFlag(void)
 
 static int      doesPCPointToSVCInstruction(void);
 static void     setHardwareBreakpointOnSvcHandler(void);
-static uint32_t getNvicVector(IRQn_Type irq);
 static void     setSvcStepFlag(void);
 static void     setSingleSteppingFlag(void);
 static void     setSingleSteppingFlag(void);
@@ -319,13 +385,6 @@ static int doesPCPointToSVCInstruction(void)
 static void setHardwareBreakpointOnSvcHandler(void)
 {
     Platform_SetHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
-}
-
-static uint32_t getNvicVector(IRQn_Type irq)
-{
-    const uint32_t           nvicBaseVectorOffset = 16;
-    volatile const uint32_t* pVectors = (volatile const uint32_t*)SCB->VTOR;
-    return pVectors[irq + nvicBaseVectorOffset];
 }
 
 static void setSvcStepFlag(void)
@@ -495,8 +554,8 @@ uint8_t Platform_DetermineCauseOfException(void)
         /* Debug Monitor */
         return determineCauseOfDebugEvent();
     default:
-        /* NOTE: Catch all signal will be SIGSTOP. */
-        return SIGSTOP;
+        /* NOTE: Catch all signal will be SIGINT. */
+        return SIGINT;
     }
 }
 
@@ -536,13 +595,23 @@ static uint8_t determineCauseOfDebugEvent(void)
 
 static PlatformTrapReason findMatchedWatchpoint(void);
 static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator);
-PlatformTrapReason mriPlatform_GetTrapReason(void)
+PlatformTrapReason Platform_GetTrapReason(void)
 {
     PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
 
     uint32_t debugFaultStatus = mriCortexMState.dfsr;
-    if (debugFaultStatus & SCB_DFSR_DWTTRAP)
+    if (debugFaultStatus & SCB_DFSR_BKPT)
+    {
+        /* Was caused by hardware or software breakpoint. If PC points to BKPT then report as software breakpoint. */
+        if (Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT)
+            reason.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
+        else
+            reason.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
+    }
+    else if (debugFaultStatus & SCB_DFSR_DWTTRAP)
+    {
         reason = findMatchedWatchpoint();
+    }
     return reason;
 }
 
@@ -774,14 +843,6 @@ static void displayUsageFaultCauseToGdbConsole(void)
 
 
 static void     clearMemoryFaultFlag(void);
-static void     cleanupIfSingleStepping(void);
-static void     restoreBasePriorityIfNeeded(void);
-static uint32_t shouldRestoreBasePriority(void);
-static void     clearRestoreBasePriorityFlag(void);
-static void     removeHardwareBreakpointOnSvcHandlerIfNeeded(void);
-static int      shouldRemoveHardwareBreakpointOnSvcHandler(void);
-static void     clearSvcStepFlag(void);
-static void     clearHardwareBreakpointOnSvcHandler(void);
 static int      isExternalInterrupt(uint32_t exceptionNumber);
 static void     setControlCFlag(void);
 static void     setActiveDebugFlag(void);
@@ -789,7 +850,7 @@ void Platform_EnteringDebugger(void)
 {
     clearMemoryFaultFlag();
     mriCortexMState.originalPC = Platform_GetProgramCounter();
-    cleanupIfSingleStepping();
+    Platform_DisableSingleStep();
     if (isExternalInterrupt(mriCortexMState.exceptionNumber))
         setControlCFlag();
     setActiveDebugFlag();
@@ -798,57 +859,6 @@ void Platform_EnteringDebugger(void)
 static void clearMemoryFaultFlag(void)
 {
     mriCortexMFlags &= ~CORTEXM_FLAGS_FAULT_DURING_DEBUG;
-}
-
-static void cleanupIfSingleStepping(void)
-{
-    restoreBasePriorityIfNeeded();
-    removeHardwareBreakpointOnSvcHandlerIfNeeded();
-    Platform_DisableSingleStep();
-}
-
-static void restoreBasePriorityIfNeeded(void)
-{
-    if (shouldRestoreBasePriority())
-    {
-        clearRestoreBasePriorityFlag();
-        ScatterGather_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.originalBasePriority);
-        mriCortexMState.originalBasePriority = 0;
-    }
-}
-
-static uint32_t shouldRestoreBasePriority(void)
-{
-    return mriCortexMFlags & CORTEXM_FLAGS_RESTORE_BASEPRI;
-}
-
-static void clearRestoreBasePriorityFlag(void)
-{
-    mriCortexMFlags &= ~CORTEXM_FLAGS_RESTORE_BASEPRI;
-}
-
-static void removeHardwareBreakpointOnSvcHandlerIfNeeded(void)
-{
-    if (shouldRemoveHardwareBreakpointOnSvcHandler())
-    {
-        clearSvcStepFlag();
-        clearHardwareBreakpointOnSvcHandler();
-    }
-}
-
-static int shouldRemoveHardwareBreakpointOnSvcHandler(void)
-{
-    return mriCortexMFlags & CORTEXM_FLAGS_SVC_STEP;
-}
-
-static void clearSvcStepFlag(void)
-{
-    mriCortexMFlags &= ~CORTEXM_FLAGS_SVC_STEP;
-}
-
-static void clearHardwareBreakpointOnSvcHandler(void)
-{
-    Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
 }
 
 static int isExternalInterrupt(uint32_t exceptionNumber)

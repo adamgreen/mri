@@ -40,6 +40,7 @@ int         platformMock_GetLeavingDebuggerCalls(void);
 void        platformMock_SetIsDebuggeeMakingSemihostCall(int setValue);
 int         platformMock_GetHandleSemihostRequestCalls(void);
 
+void        platformMock_SetCauseOfException(uint8_t signal);
 void        platformMock_SetTrapReason(const PlatformTrapReason* reason);
 int         platformMock_DisplayFaultCauseToGdbConsoleCalls(void);
 
