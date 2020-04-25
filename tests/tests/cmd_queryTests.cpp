@@ -308,3 +308,85 @@ TEST(cmdQuery, QueryRcmd_UnknownMonitorCommand_ShouldDisplayErrorAndHelp)
     STRCMP_EQUAL ( platformMock_CommChecksumData(expectedTransmitData),
                    platformMock_CommGetTransmittedData() );
 }
+
+
+
+
+TEST(cmdQuery, qfThreadInfo_ShouldReturnEmptyResponseIfZeroThreadCount)
+{
+    platformMock_RtosSetThreadCount(0);
+    platformMock_RtosSetThreadArrayPointer(NULL);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qfThreadInfo_ReturnOneThread)
+{
+    uint32_t threadIds[] = { 0xBAADBEEF };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$mbaadbeef#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qfThreadInfo_ReturnTwoThreads_WithPacketBufferJustLargeEnoughForBothThreadIds)
+{
+    uint32_t threadIds[] = { 0x11111111, 0x22222222 };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_SetPacketBufferSize(18);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111,22222222#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qfThreadInfo_UseBufferTooSmallForTwoThreadIds_ShouldTruncateToOneThread)
+{
+    uint32_t threadIds[] = { 0x11111111, 0x22222222 };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_SetPacketBufferSize(17);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qfThreadInfo_SetThreeThreads_ReturnTwoNonZeroThreads)
+{
+    uint32_t threadIds[] = { 0x11111111, 0x00000000, 0x22222222 };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111,22222222#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qsThreadInfo_AfterReturningOneThread_ShouldReturnLtoIndicateLastThreadHasBeenSent)
+{
+    uint32_t threadIds[] = { 0xBAADBEEF };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$qsThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$mbaadbeef#" "+$l#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qsThreadInfo_AfterAlreadyReturningFirstThreadOfTwo_ShouldReturnSecondThread)
+{
+    uint32_t threadIds[] = { 0x11111111, 0x22222222 };
+    platformMock_RtosSetThreadCount(sizeof(threadIds)/sizeof(threadIds[0]));
+    platformMock_RtosSetThreadArrayPointer(threadIds);
+    platformMock_SetPacketBufferSize(12);
+    platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$qsThreadInfo#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111#" "+$m22222222#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}

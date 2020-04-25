@@ -77,32 +77,43 @@ void Platform_Init(Token* pParameterTokens)
 
 // Platform_Comm* Instrumentation
 static const char  g_emptyPacket[] = "$#00";
-static Buffer      g_receiveBuffers[2];
+static Buffer      g_receiveBuffers[3];
 static size_t      g_receiveIndex;
 static char*       g_pAlloc1;
 static char*       g_pAlloc2;
+static char*       g_pAlloc3;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
 static char*       g_pChecksumData;
 static int         g_hasTransmitCompletedCount;
 
-void platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
+void platformMock_CommInitReceiveData(const char* pDataToReceive1,
+                                      const char* pDataToReceive2 /* = NULL */,
+                                      const char* pDataToReceive3 /* = NULL */)
 {
     Buffer_Init(&g_receiveBuffers[0], (char*)pDataToReceive1, strlen(pDataToReceive1));
     if (pDataToReceive2)
         Buffer_Init(&g_receiveBuffers[1], (char*)pDataToReceive2, strlen(pDataToReceive2));
     else
         Buffer_Init(&g_receiveBuffers[1], (char*)g_emptyPacket, strlen(g_emptyPacket));
+    if (pDataToReceive3)
+        Buffer_Init(&g_receiveBuffers[2], (char*)pDataToReceive3, strlen(pDataToReceive3));
+    else
+        Buffer_Init(&g_receiveBuffers[2], (char*)g_emptyPacket, strlen(g_emptyPacket));
     g_receiveIndex = 0;
 }
 
-void platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
+void platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1,
+                                                 const char* pDataToReceive2 /* = NULL */,
+                                                 const char* pDataToReceive3 /* = NULL */)
 {
     free(g_pAlloc1);
     free(g_pAlloc2);
+    free(g_pAlloc3);
     g_pAlloc1 = NULL;
     g_pAlloc2 = NULL;
+    g_pAlloc3 = NULL;
 
     g_pAlloc1 = allocateAndCopyChecksummedData(pDataToReceive1);
     Buffer_Init(&g_receiveBuffers[0], g_pAlloc1, strlen(g_pAlloc1));
@@ -114,6 +125,15 @@ void platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, co
     else
     {
         Buffer_Init(&g_receiveBuffers[1], (char*)g_emptyPacket, strlen(g_emptyPacket));
+    }
+    if (pDataToReceive3)
+    {
+        g_pAlloc3 = allocateAndCopyChecksummedData(pDataToReceive3);
+        Buffer_Init(&g_receiveBuffers[2], g_pAlloc3, strlen(g_pAlloc3));
+    }
+    else
+    {
+        Buffer_Init(&g_receiveBuffers[2], (char*)g_emptyPacket, strlen(g_emptyPacket));
     }
     g_receiveIndex = 0;
 }
@@ -282,7 +302,7 @@ void mriPlatform_LeavingDebugger(void)
 static char     g_packetBuffer[1 + (16 + 1) * (sizeof(uint32_t) * 2)];
 static uint32_t g_packetBufferSize;
 
-void        platformMock_SetPacketBufferSize(uint32_t setValue)
+void platformMock_SetPacketBufferSize(uint32_t setValue)
 {
     assert ( setValue <= sizeof(g_packetBuffer) );
     g_packetBufferSize = setValue;
@@ -721,15 +741,39 @@ void Platform_ResetDevice(void)
 
 // RTOS Thread related instrumentation.
 static uint32_t g_rtosThreadId;
+static uint32_t g_rtosThreadCount;
+static const uint32_t* g_rtosThreadArray;
+
 void platformMock_RtosSetThreadId(uint32_t threadId)
 {
     g_rtosThreadId = threadId;
 }
 
+void platformMock_RtosSetThreadCount(uint32_t threadCount)
+{
+    g_rtosThreadCount = threadCount;
+}
+
+void platformMock_RtosSetThreadArrayPointer(const uint32_t* pThreadArray)
+{
+    g_rtosThreadArray = pThreadArray;
+}
+
+
 // Stubs called by MRI core.
 uint32_t Platform_RtosGetThreadId(void)
 {
     return g_rtosThreadId;
+}
+
+uint32_t Platform_RtosGetThreadCount(void)
+{
+    return g_rtosThreadCount;
+}
+
+const uint32_t* mriPlatform_RtosGetThreadArray(void)
+{
+    return g_rtosThreadArray;
 }
 
 
@@ -780,15 +824,19 @@ void platformMock_Init(void)
     g_semihostCallReturnValue = 0;
     g_resetCount = 0;
     g_rtosThreadId = 0;
+    g_rtosThreadCount = 0;
+    g_rtosThreadArray = NULL;
 }
 
 void platformMock_Uninit(void)
 {
     free(g_pAlloc1);
     free(g_pAlloc2);
+    free(g_pAlloc3);
     free(g_pChecksumData);
     g_pAlloc1 = NULL;
     g_pAlloc2 = NULL;
+    g_pAlloc3 = NULL;
     g_pChecksumData = NULL;
     commUninitTransmitDataBuffer();
 }

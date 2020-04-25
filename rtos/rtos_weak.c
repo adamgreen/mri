@@ -19,3 +19,12 @@ __attribute__((weak)) uint32_t Platform_RtosGetThreadId(void)
 {
     return 0;
 }
+__attribute__((weak)) uint32_t Platform_RtosGetThreadCount(void)
+{
+    return 0;
+}
+
+__attribute__((weak)) const uint32_t* Platform_RtosGetThreadArray(void)
+{
+    return NULL;
+}

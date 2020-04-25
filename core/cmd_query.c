@@ -23,6 +23,12 @@
 #include <core/gdb_console.h>
 
 
+/* Pointers used to track thread IDs as they are dumped by qfThreadInfo/qsThreadInfo. */
+static const uint32_t* g_pRtosThreadsStart;
+static const uint32_t* g_pRtosThreadsEnd;
+static const uint32_t* g_pRtosThreadsCurr;
+
+
 typedef struct
 {
     const char* pAnnex;
@@ -41,6 +47,9 @@ static void        validateAnnexIsNull(const char* pAnnex);
 static void        handleQueryTransferReadCommand(AnnexOffsetLength* pArguments);
 static uint32_t    handleQueryTransferFeaturesCommand(void);
 static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
+static uint32_t    handleQueryFirstThreadInfoCommand(void);
+static uint32_t    handleQuerySubsequentThreadInfoCommand(void);
+static uint32_t    outputThreadIds(Buffer* pBuffer);
 static uint32_t    handleMonitorCommand(void);
 static uint32_t    handleMonitorResetCommand(void);
 static uint32_t    handleMonitorShowFaultCommand(void);
@@ -55,6 +64,8 @@ uint32_t HandleQueryCommand(void)
     Buffer*             pBuffer = GetBuffer();
     static const char   qSupportedCommand[] = "Supported";
     static const char   qXferCommand[] = "Xfer";
+    static const char   qfThreadInfo[] = "fThreadInfo";
+    static const char   qsThreadInfo[] = "sThreadInfo";
     static const char   qRcmdCommand[] = "Rcmd";
 
     if (Buffer_MatchesString(pBuffer, qSupportedCommand, sizeof(qSupportedCommand)-1))
@@ -64,6 +75,14 @@ uint32_t HandleQueryCommand(void)
     else if (Buffer_MatchesString(pBuffer, qXferCommand, sizeof(qXferCommand)-1))
     {
         return handleQueryTransferCommand();
+    }
+    else if (Buffer_MatchesString(pBuffer, qfThreadInfo, sizeof(qfThreadInfo)-1))
+    {
+        return handleQueryFirstThreadInfoCommand();
+    }
+    else if (Buffer_MatchesString(pBuffer, qsThreadInfo, sizeof(qsThreadInfo)-1))
+    {
+        return handleQuerySubsequentThreadInfoCommand();
     }
     else if (Buffer_MatchesString(pBuffer, qRcmdCommand, sizeof(qRcmdCommand)-1))
     {
@@ -277,6 +296,76 @@ static void validateAnnexIs(const char* pAnnex, const char* pExpected)
 {
     if (pAnnex == NULL || 0 != strcmp(pAnnex, pExpected))
         __throw(invalidArgumentException);
+}
+
+/* Handle the "qfThreadInfo" command used by gdb to start retrieving list of RTOS thread IDs.
+
+    Reponse Format: mAAAAAAAA[,BBBBBBBB]...
+                        -or-
+                    l
+    Where AAAAAAAA is the hexadecimal representation of the first RTOS thread-id.
+          BBBBBBBB is the hexadecimal representation of the second RTOS thread-id.
+          Can have as many thread-ids in the response as will fit in a packet.
+          The 'l' response indicates that there are no more thread-ids to be listed.
+*/
+static uint32_t handleQueryFirstThreadInfoCommand(void)
+{
+    uint32_t          threadCount = Platform_RtosGetThreadCount();
+    Buffer*           pBuffer = GetInitializedBuffer();
+
+    if (threadCount == 0)
+    {
+        PrepareEmptyResponseForUnknownCommand();
+        return 0;
+    }
+
+    g_pRtosThreadsStart = Platform_RtosGetThreadArray();
+    g_pRtosThreadsCurr = g_pRtosThreadsStart;
+    g_pRtosThreadsEnd = g_pRtosThreadsStart + threadCount;
+    return outputThreadIds(pBuffer);
+}
+
+/* Handle the "qsThreadInfo" command used by gdb subsequent calls to retrieve list of RTOS thread IDs.
+
+    Reponse Format: mAAAAAAAA[,BBBBBBBB]...
+                        -or-
+                    l
+    Where AAAAAAAA is the hexadecimal representation of the first RTOS thread-id.
+          BBBBBBBB is the hexadecimal representation of the second RTOS thread-id.
+          Can have as many thread-ids in the response as will fit in a packet.
+          The 'l' response indicates that there are no more thread-ids to be listed.
+*/
+static uint32_t handleQuerySubsequentThreadInfoCommand(void)
+{
+    return outputThreadIds(GetInitializedBuffer());
+}
+
+static uint32_t outputThreadIds(Buffer* pBuffer)
+{
+    int firstElement = 1;
+
+    if (g_pRtosThreadsCurr >= g_pRtosThreadsEnd)
+    {
+        Buffer_WriteChar(pBuffer, 'l');
+        return 0;
+    }
+
+    Buffer_WriteChar(pBuffer, 'm');
+    while (Buffer_BytesLeft(pBuffer) >= 9 && g_pRtosThreadsCurr < g_pRtosThreadsEnd)
+    {
+        if (*g_pRtosThreadsCurr == 0)
+        {
+            /* Skip over NULL thread ids. */
+            g_pRtosThreadsCurr++;
+            continue;
+        }
+
+        if (!firstElement)
+            Buffer_WriteChar(pBuffer, ',');
+        Buffer_WriteUIntegerAsHex(pBuffer, *g_pRtosThreadsCurr++);
+        firstElement = 0;
+    }
+    return 0;
 }
 
 /* Handle the "qRcmd" command used by gdb to send "monitor" commands to the stub.

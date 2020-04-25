@@ -23,8 +23,12 @@
 void        platformMock_Init(void);
 void        platformMock_Uninit(void);
 
-void        platformMock_CommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
-void        platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 = NULL);
+void        platformMock_CommInitReceiveData(const char* pDataToReceive1,
+                                             const char* pDataToReceive2 = NULL,
+                                             const char* pDataToReceive3 = NULL);
+void        platformMock_CommInitReceiveChecksummedData(const char* pDataToReceive1,
+                                                        const char* pDataToReceive2 = NULL,
+                                                        const char* pDataToReceive3 = NULL);
 void        platformMock_CommInitTransmitDataBuffer(size_t Size);
 const char* platformMock_CommChecksumData(const char* pData);
 const char* platformMock_CommGetTransmittedData(void);
@@ -83,5 +87,7 @@ int platformMock_GetSemihostCallErrno(void);
 int platformMock_GetResetDeviceCalls(void);
 
 void platformMock_RtosSetThreadId(uint32_t threadId);
+void platformMock_RtosSetThreadCount(uint32_t threadCount);
+void platformMock_RtosSetThreadArrayPointer(const uint32_t* pThreadArray);
 
 #endif /* PLATFORM_MOCK_H_ */
