@@ -390,3 +390,31 @@ TEST(cmdQuery, qsThreadInfo_AfterAlreadyReturningFirstThreadOfTwo_ShouldReturnSe
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111#" "+$m22222222#" "+"),
                    platformMock_CommGetTransmittedData() );
 }
+
+TEST(cmdQuery, qThreadExtraInfo_ReturnEmptyPacketByDefault)
+{
+    platformMock_CommInitReceiveChecksummedData("+$qThreadExtraInfo,baadbeef#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qThreadExtraInfo_ReturnHexadizedText)
+{
+    const char* pTestString = "test";
+    platformMock_RtosSetExtraThreadInfo(0xbaadbeef, pTestString);
+    platformMock_CommInitReceiveChecksummedData("+$qThreadExtraInfo,baadbeef#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$74657374#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdQuery, qThreadExtraInfo_UseColonInsteadOfComma_ShouldReturnInvalidArgumentError)
+{
+    const char* pTestString = "test";
+    platformMock_RtosSetExtraThreadInfo(0xbaadbeef, pTestString);
+    platformMock_CommInitReceiveChecksummedData("+$qThreadExtraInfo:baadbeef#", "+$c#");
+        mriDebugException();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}

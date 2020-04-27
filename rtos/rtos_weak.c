@@ -28,3 +28,8 @@ __attribute__((weak)) const uint32_t* Platform_RtosGetThreadArray(void)
 {
     return NULL;
 }
+
+__attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
+{
+    return NULL;
+}

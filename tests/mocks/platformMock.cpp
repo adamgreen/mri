@@ -742,7 +742,9 @@ void Platform_ResetDevice(void)
 // RTOS Thread related instrumentation.
 static uint32_t g_rtosThreadId;
 static uint32_t g_rtosThreadCount;
-static const uint32_t* g_rtosThreadArray;
+static const uint32_t* g_pRtosThreads;
+static uint32_t    g_rtosExtraThreadInfoThreadId;
+static const char* g_pRtosExtraThreadInfo;
 
 void platformMock_RtosSetThreadId(uint32_t threadId)
 {
@@ -756,7 +758,13 @@ void platformMock_RtosSetThreadCount(uint32_t threadCount)
 
 void platformMock_RtosSetThreadArrayPointer(const uint32_t* pThreadArray)
 {
-    g_rtosThreadArray = pThreadArray;
+    g_pRtosThreads = pThreadArray;
+}
+
+void platformMock_RtosSetExtraThreadInfo(uint32_t threadId, const char* pExtraThreadInfo)
+{
+    g_rtosExtraThreadInfoThreadId = threadId;
+    g_pRtosExtraThreadInfo = pExtraThreadInfo;
 }
 
 
@@ -773,7 +781,15 @@ uint32_t Platform_RtosGetThreadCount(void)
 
 const uint32_t* mriPlatform_RtosGetThreadArray(void)
 {
-    return g_rtosThreadArray;
+    return g_pRtosThreads;
+}
+
+const char* mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID)
+{
+    if (threadID == g_rtosExtraThreadInfoThreadId)
+        return g_pRtosExtraThreadInfo;
+    else
+        return NULL;
 }
 
 
@@ -825,7 +841,9 @@ void platformMock_Init(void)
     g_resetCount = 0;
     g_rtosThreadId = 0;
     g_rtosThreadCount = 0;
-    g_rtosThreadArray = NULL;
+    g_pRtosThreads = NULL;
+    g_rtosExtraThreadInfoThreadId = 0;
+    g_pRtosExtraThreadInfo = NULL;
 }
 
 void platformMock_Uninit(void)

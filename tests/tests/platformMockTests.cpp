@@ -735,3 +735,17 @@ TEST(platformMock, Platform_RtosGetThreadArray_HaveItReturnRealArray)
     platformMock_RtosSetThreadArrayPointer(testArray);
     CHECK_EQUAL( testArray, Platform_RtosGetThreadArray() );
 }
+
+TEST(platformMock, Platform_RtosGetExtraThreadInfo_MockDefaultsToNULL)
+{
+    CHECK_EQUAL( NULL, Platform_RtosGetExtraThreadInfo(0xbaadbeef) );
+}
+
+TEST(platformMock, Platform_RtosGetExtraThreadInfo_ReturnsSetStringWhenThreadIdMatches_AndNullWhenItDoesNot)
+{
+    const char* pTestString = "TestString";
+
+    platformMock_RtosSetExtraThreadInfo(0xbaadbeef, pTestString);
+    CHECK_EQUAL( pTestString, Platform_RtosGetExtraThreadInfo(0xbaadbeef) );
+    CHECK_EQUAL( NULL, Platform_RtosGetExtraThreadInfo(0xbaadf00d) );
+}

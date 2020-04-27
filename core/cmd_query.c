@@ -50,6 +50,7 @@ static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
 static uint32_t    handleQueryFirstThreadInfoCommand(void);
 static uint32_t    handleQuerySubsequentThreadInfoCommand(void);
 static uint32_t    outputThreadIds(Buffer* pBuffer);
+static uint32_t    handleQueryThreadExtraInfoCommand(void);
 static uint32_t    handleMonitorCommand(void);
 static uint32_t    handleMonitorResetCommand(void);
 static uint32_t    handleMonitorShowFaultCommand(void);
@@ -66,6 +67,7 @@ uint32_t HandleQueryCommand(void)
     static const char   qXferCommand[] = "Xfer";
     static const char   qfThreadInfo[] = "fThreadInfo";
     static const char   qsThreadInfo[] = "sThreadInfo";
+    static const char   qThreadExtraInfo[] = "ThreadExtraInfo";
     static const char   qRcmdCommand[] = "Rcmd";
 
     if (Buffer_MatchesString(pBuffer, qSupportedCommand, sizeof(qSupportedCommand)-1))
@@ -83,6 +85,10 @@ uint32_t HandleQueryCommand(void)
     else if (Buffer_MatchesString(pBuffer, qsThreadInfo, sizeof(qsThreadInfo)-1))
     {
         return handleQuerySubsequentThreadInfoCommand();
+    }
+    else if (Buffer_MatchesString(pBuffer, qThreadExtraInfo, sizeof(qThreadExtraInfo)-1))
+    {
+        return handleQueryThreadExtraInfoCommand();
     }
     else if (Buffer_MatchesString(pBuffer, qRcmdCommand, sizeof(qRcmdCommand)-1))
     {
@@ -365,6 +371,37 @@ static uint32_t outputThreadIds(Buffer* pBuffer)
         Buffer_WriteUIntegerAsHex(pBuffer, *g_pRtosThreadsCurr++);
         firstElement = 0;
     }
+    return 0;
+}
+
+/* Handle the "qThreadExtraInfo" command used by gdb to request extra information about a particular thread as a string.
+
+    Command Format: qThreadExtraInfo,AAAAAAAA
+    Where AAAAAAAA is the thread-id of the thread for which extra string information should be fetched.
+        memory-map
+
+    Reponse Format: XX...
+    Where XX is the hexadecimal representation of the ASCII extra thread info string.
+*/
+static uint32_t handleQueryThreadExtraInfoCommand(void)
+{
+    Buffer*     pBuffer = GetBuffer();
+    const char* pThreadExtraInfo = NULL;
+    uint32_t    threadId;
+
+    if (!Buffer_IsNextCharEqualTo(pBuffer, ','))
+    {
+        PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
+        return 0;
+    }
+
+    threadId = Buffer_ReadUIntegerAsHex(pBuffer);
+    pThreadExtraInfo = Platform_RtosGetExtraThreadInfo(threadId);
+
+    pBuffer = GetInitializedBuffer();
+    if (pThreadExtraInfo != NULL)
+        Buffer_WriteStringAsHex(pBuffer, pThreadExtraInfo);
+
     return 0;
 }
 
