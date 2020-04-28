@@ -72,8 +72,6 @@ int       mriPlatform_WasProgramCounterModifiedByUser(void);
 int       mriPlatform_WasMemoryFaultEncountered(void);
 
 void      mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer);
-void      mriPlatform_CopyContextToBuffer(Buffer* pBuffer);
-void      mriPlatform_CopyContextFromBuffer(Buffer* pBuffer);
 
 uint32_t     mriPlatform_GetDeviceMemoryMapXmlSize(void);
 const char*  mriPlatform_GetDeviceMemoryMapXml(void);
@@ -153,8 +151,6 @@ const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID);
 #define Platform_WasProgramCounterModifiedByUser            mriPlatform_WasProgramCounterModifiedByUser
 #define Platform_WasMemoryFaultEncountered                  mriPlatform_WasMemoryFaultEncountered
 #define Platform_WriteTResponseRegistersToBuffer            mriPlatform_WriteTResponseRegistersToBuffer
-#define Platform_CopyContextToBuffer                        mriPlatform_CopyContextToBuffer
-#define Platform_CopyContextFromBuffer                      mriPlatform_CopyContextFromBuffer
 #define Platform_GetDeviceMemoryMapXmlSize                  mriPlatform_GetDeviceMemoryMapXmlSize
 #define Platform_GetTargetXmlSize                           mriPlatform_GetTargetXmlSize
 #define Platform_GetTargetXml                               mriPlatform_GetTargetXml

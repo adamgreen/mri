@@ -17,8 +17,7 @@ extern "C"
 {
 #include <core/try_catch.h>
 #include <core/mri.h>
-
-void mriDebugException(void);
+#include <core/core.h>
 }
 #include <platformMock.h>
 
@@ -53,14 +52,14 @@ TEST_GROUP(cmdRegisters)
 
 TEST(cmdRegisters, GetRegisters)
 {
-    uint32_t* pContext = platformMock_GetContext();
+    uint32_t* pContext = platformMock_GetContextEntries();
     pContext[0] = 0x11111111;
     pContext[1] = 0x22222222;
     pContext[2] = 0x33333333;
     pContext[3] = 0x44444444;
 
     platformMock_CommInitReceiveChecksummedData("+$g#", "+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$11111111222222223333333344444444#+"),
                    platformMock_CommGetTransmittedData() );
 }
@@ -68,9 +67,9 @@ TEST(cmdRegisters, GetRegisters)
 TEST(cmdRegisters, SetRegisters)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef0#", "+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#+"), platformMock_CommGetTransmittedData() );
-    uint32_t* pContext = platformMock_GetContext();
+    uint32_t* pContext = platformMock_GetContextEntries();
     CHECK_EQUAL ( 0x78563412, pContext[0] );
     CHECK_EQUAL ( 0x22222222, pContext[1] );
     CHECK_EQUAL ( 0x33333333, pContext[2] );
@@ -80,21 +79,21 @@ TEST(cmdRegisters, SetRegisters)
 TEST(cmdRegisters, SetRegisters_BufferTooShort)
 {
     platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef#", "+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_BUFFER_OVERRUN "#+"),
                    platformMock_CommGetTransmittedData() );
-    uint32_t* pContext = platformMock_GetContext();
+    uint32_t* pContext = platformMock_GetContextEntries();
     CHECK_EQUAL ( 0x78563412, pContext[0] );
     CHECK_EQUAL ( 0x22222222, pContext[1] );
     CHECK_EQUAL ( 0x33333333, pContext[2] );
-    CHECK_EQUAL ( 0xffdebc9a, pContext[3] );
+    CHECK_EQUAL ( 0x00debc9a, pContext[3] );
 }
 
 
 TEST(cmdRegisters, TResponse_ThreadIdOfZero_ShouldReturnNoThreadId)
 {
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
@@ -102,7 +101,7 @@ TEST(cmdRegisters, TResponse_NonZeroThreadId_ShouldReturnThreadId)
 {
     platformMock_RtosSetThreadId(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
@@ -111,7 +110,7 @@ TEST(cmdRegisters, TResponse_WriteWatchpointHit_ShouldReturnWATCHWithAddress)
     platformMock_CommInitReceiveChecksummedData("+$c#");
     PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_WATCH, 0x1000 };
     platformMock_SetTrapReason(&reason);
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05watch:1000;responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
@@ -120,7 +119,7 @@ TEST(cmdRegisters, TResponse_ReadWatchpointHit_ShouldReturnRWATCHWithAddress)
     platformMock_CommInitReceiveChecksummedData("+$c#");
     PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_RWATCH, 0x04 };
     platformMock_SetTrapReason(&reason);
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05rwatch:04;responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
@@ -129,6 +128,6 @@ TEST(cmdRegisters, TResponse_AccessWatchpointHit_ShouldReturnAWATCHWithAddress)
     platformMock_CommInitReceiveChecksummedData("+$c#");
     PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_AWATCH, 0x80000000 };
     platformMock_SetTrapReason(&reason);
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05awatch:80000000;responseT#+"), platformMock_CommGetTransmittedData() );
 }

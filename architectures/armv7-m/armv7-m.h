@@ -58,7 +58,7 @@
 
 #include <stdint.h>
 #include <core/token.h>
-#include <core/scatter_gather.h>
+#include <core/context.h>
 
 
 /* Give friendly names to the indices of important registers in the context scatter gather list. */
@@ -91,7 +91,7 @@
 
 typedef struct
 {
-    ScatterGather       context;
+    MriContext          context;
     uint32_t            taskSP;
     uint32_t            sp;
     uint32_t            exceptionNumber;

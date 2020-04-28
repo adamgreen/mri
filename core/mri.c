@@ -46,6 +46,7 @@ typedef struct
     MriDebuggerHookPtr          pEnteringHook;
     MriDebuggerHookPtr          pLeavingHook;
     void*                       pvEnteringLeavingContext;
+    MriContext*                 pContext;
     Packet                      packet;
     Buffer                      buffer;
     uint32_t                    tempBreakpointAddress;
@@ -174,9 +175,12 @@ static void prepareForDebuggerExit(void);
 static void clearFirstExceptionFlag(void);
 static int hasResetBeenRequested(void);
 static void waitForAckToBeTransmitted(void);
-void mriDebugException(void)
+void mriDebugException(MriContext* pContext)
 {
-    int justSingleStepped = Platform_IsSingleStepping();
+    int justSingleStepped;
+
+    SetContext(pContext);
+    justSingleStepped = Platform_IsSingleStepping();
 
     if (wasTempBreakpointHit())
     {
@@ -425,6 +429,16 @@ void SetSingleSteppingRange(const AddressRange* pRange)
     g_mri.flags |= MRI_FLAGS_RANGED_SINGLE_STEP;
 }
 
+
+MriContext* GetContext(void)
+{
+    return g_mri.pContext;
+}
+
+void SetContext(MriContext* pContext)
+{
+    g_mri.pContext = pContext;
+}
 
 
 void RecordControlCFlagSentFromGdb(int controlCFlag)

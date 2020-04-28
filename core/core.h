@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <core/buffer.h>
+#include <core/context.h>
 
 
 typedef struct
@@ -29,7 +30,7 @@ typedef struct
 
 
 /* Real name of functions are in mri namespace. */
-void    mriDebugException(void);
+void    mriDebugException(MriContext* pContext);
 
 void    mriCore_InitBuffer(void);
 Buffer* mriCore_GetBuffer(void);
@@ -45,6 +46,9 @@ int     mriCore_IsFirstException(void);
 int     mriCore_WasSuccessfullyInit(void);
 void    mriCore_RequestResetOnNextContinue(void);
 void    mriCore_SetSingleSteppingRange(const AddressRange* pRange);
+
+MriContext* mriCore_GetContext(void);
+void        mriCore_SetContext(MriContext* pContext);
 
 void    mriCore_SetSignalValue(uint8_t signalValue);
 uint8_t mriCore_GetSignalValue(void);
@@ -72,6 +76,8 @@ int     mriCore_SetTempBreakpoint(uint32_t breakpointAddress, TempBreakpointCall
 #define WasSuccessfullyInit             mriCore_WasSuccessfullyInit
 #define RequestResetOnNextContinue      mriCore_RequestResetOnNextContinue
 #define SetSingleSteppingRange          mriCore_SetSingleSteppingRange
+#define GetContext                      mriCore_GetContext
+#define SetContext                      mriCore_SetContext
 #define SetSignalValue                  mriCore_SetSignalValue
 #define GetSignalValue                  mriCore_GetSignalValue
 #define SetSemihostReturnValues         mriCore_SetSemihostReturnValues

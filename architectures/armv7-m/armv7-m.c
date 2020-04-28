@@ -262,7 +262,7 @@ static void restoreBasePriorityIfNeeded(void)
     if (shouldRestoreBasePriority())
     {
         clearRestoreBasePriorityFlag();
-        ScatterGather_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.originalBasePriority);
+        Context_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.originalBasePriority);
         mriCortexMState.originalBasePriority = 0;
     }
 }
@@ -401,8 +401,8 @@ static void recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts
 {
     if (!doesPCPointToBASEPRIUpdateInstruction())
         recordCurrentBasePriority();
-    ScatterGather_Set(&mriCortexMState.context, BASEPRI,
-                      calculateBasePriorityForThisCPU(mriCortexMGetPriority(DebugMonitor_IRQn) + 1));
+    Context_Set(&mriCortexMState.context, BASEPRI,
+                calculateBasePriorityForThisCPU(mriCortexMGetPriority(DebugMonitor_IRQn) + 1));
 }
 
 static int doesPCPointToBASEPRIUpdateInstruction(void)
@@ -472,7 +472,7 @@ static int isSecondHalfWordOfMSR_BASEPRI_MAX(uint16_t instructionHalfWord1)
 
 static void recordCurrentBasePriority(void)
 {
-    mriCortexMState.originalBasePriority = ScatterGather_Get(&mriCortexMState.context, BASEPRI);
+    mriCortexMState.originalBasePriority = Context_Get(&mriCortexMState.context, BASEPRI);
     setRestoreBasePriorityFlag();
 }
 
@@ -916,13 +916,13 @@ static void checkStack(void)
 
 uint32_t Platform_GetProgramCounter(void)
 {
-    return ScatterGather_Get(&mriCortexMState.context, PC);
+    return Context_Get(&mriCortexMState.context, PC);
 }
 
 
 void Platform_SetProgramCounter(uint32_t newPC)
 {
-    ScatterGather_Set(&mriCortexMState.context, PC, newPC);
+    Context_Set(&mriCortexMState.context, PC, newPC);
 }
 
 
@@ -1026,10 +1026,10 @@ PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 {
     PlatformSemihostParameters parameters;
 
-    parameters.parameter1 = ScatterGather_Get(&mriCortexMState.context, R0);
-    parameters.parameter2 = ScatterGather_Get(&mriCortexMState.context, R1);
-    parameters.parameter3 = ScatterGather_Get(&mriCortexMState.context, R2);
-    parameters.parameter4 = ScatterGather_Get(&mriCortexMState.context, R3);
+    parameters.parameter1 = Context_Get(&mriCortexMState.context, R0);
+    parameters.parameter2 = Context_Get(&mriCortexMState.context, R1);
+    parameters.parameter3 = Context_Get(&mriCortexMState.context, R2);
+    parameters.parameter4 = Context_Get(&mriCortexMState.context, R3);
 
     return parameters;
 }
@@ -1037,7 +1037,7 @@ PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 
 void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 {
-    ScatterGather_Set(&mriCortexMState.context, R0, returnValue);
+    Context_Set(&mriCortexMState.context, R0, returnValue);
     if (returnValue < 0)
         errno = err;
 }
@@ -1059,10 +1059,10 @@ static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, ui
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 void Platform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
-    sendRegisterForTResponse(pBuffer, R7, ScatterGather_Get(&mriCortexMState.context, R7));
-    sendRegisterForTResponse(pBuffer, SP, ScatterGather_Get(&mriCortexMState.context, SP));
-    sendRegisterForTResponse(pBuffer, LR, ScatterGather_Get(&mriCortexMState.context, LR));
-    sendRegisterForTResponse(pBuffer, PC, ScatterGather_Get(&mriCortexMState.context, PC));
+    sendRegisterForTResponse(pBuffer, R7, Context_Get(&mriCortexMState.context, R7));
+    sendRegisterForTResponse(pBuffer, SP, Context_Get(&mriCortexMState.context, SP));
+    sendRegisterForTResponse(pBuffer, LR, Context_Get(&mriCortexMState.context, LR));
+    sendRegisterForTResponse(pBuffer, PC, Context_Get(&mriCortexMState.context, PC));
 }
 
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue)
@@ -1080,41 +1080,6 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCo
 
     for (i = 0 ; i < byteCount ; i++)
         Buffer_WriteByteAsHex(pBuffer, *pByte++);
-}
-
-
-void Platform_CopyContextToBuffer(Buffer* pBuffer)
-{
-    uint32_t count = ScatterGather_Count(&mriCortexMState.context);
-    uint32_t i;
-
-    for (i = 0 ; i < count ; i++) {
-        uint32_t reg = ScatterGather_Get(&mriCortexMState.context, i);
-        writeBytesToBufferAsHex(pBuffer, &reg, sizeof(reg));
-    }
-}
-
-
-static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
-void Platform_CopyContextFromBuffer(Buffer* pBuffer)
-{
-    uint32_t count = ScatterGather_Count(&mriCortexMState.context);
-    uint32_t i;
-
-    for (i = 0 ; i < count ; i++) {
-        uint32_t reg;
-        readBytesFromBufferAsHex(pBuffer, &reg, sizeof(reg));
-        ScatterGather_Set(&mriCortexMState.context, i, reg);
-    }
-}
-
-static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount)
-{
-    uint8_t* pByte = (uint8_t*)pBytes;
-    size_t   i;
-
-    for (i = 0 ; i < byteCount; i++)
-        *pByte++ = Buffer_ReadByteAsHex(pBuffer);
 }
 
 
@@ -1265,7 +1230,7 @@ void Platform_ResetDevice(void)
     #define CONTEXT_ENTRIES     6
 #endif
 
-static ScatterGatherEntry   g_contextEntries[CONTEXT_ENTRIES];
+static ContextSection   g_contextEntries[CONTEXT_ENTRIES];
 
 
 /* Lower nibble of EXC_RETURN in LR will have one of these values if interrupted code was running in thread mode.
@@ -1425,7 +1390,7 @@ void mriCortexMExceptionHandler(IntegerRegisters* pIntegerRegs, uint32_t* pFloat
     if (needToFakeFloatRegs)
         allocateFakeFloatRegAndCallMriDebugException();
     else
-        mriDebugException();
+        mriDebugException(&mriCortexMState.context);
 }
 
 static void recordAndClearFaultStatusBits(uint32_t exceptionNumber)
@@ -1513,7 +1478,7 @@ static int prepareThreadContext(ExceptionStack* pExceptionStack, IntegerRegister
         entryCount += 1;
     }
 
-    ScatterGather_Init(&mriCortexMState.context, g_contextEntries, entryCount);
+    Context_Init(&mriCortexMState.context, g_contextEntries, entryCount);
 
     /* Return true if we need to allocate space for floating point registers on stack. */
     return (MRI_DEVICE_HAS_FPU && fpuRegCount == 0);
@@ -1527,7 +1492,7 @@ static void allocateFakeFloatRegAndCallMriDebugException(void)
     g_contextEntries[6].pValues = fakeFloats;
     g_contextEntries[6].count = sizeof(fakeFloats)/sizeof(fakeFloats[0]);
 
-    mriDebugException();
+    mriDebugException(&mriCortexMState.context);
 }
 
 #endif /* !MRI_THREAD_MRI */

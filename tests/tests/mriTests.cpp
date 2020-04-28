@@ -20,8 +20,6 @@ extern "C"
 #include <core/core.h>
 #include <core/token.h>
 #include <core/platforms.h>
-
-void mriDebugException(void);
 }
 #include <platformMock.h>
 
@@ -95,7 +93,7 @@ TEST(Mri, mriDebugExceptionShouldEnterAndLeaveIfHandlingSemihostRequest_NoWaitFo
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_SetIsDebuggeeMakingSemihostCall(1);
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     CHECK_EQUAL( 1, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
     CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
@@ -107,7 +105,7 @@ TEST(Mri, mriDebugExceptionOnFirstExceptionShouldSendTResponseAndParseCommands_S
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
     CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
@@ -120,7 +118,7 @@ TEST(Mri, mriDebugExceptionOnSecondExceptionShouldDumpExceptionAndSendTResponseA
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     CHECK_EQUAL( 0, platformMock_GetHandleSemihostRequestCalls() );
     CHECK_EQUAL( 1, platformMock_GetEnteringDebuggerCalls() );
     CHECK_EQUAL( 0, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
@@ -128,12 +126,12 @@ TEST(Mri, mriDebugExceptionOnSecondExceptionShouldDumpExceptionAndSendTResponseA
     CHECK_EQUAL( 1, platformMock_GetLeavingDebuggerCalls() );
     CHECK_FALSE( IsFirstException() );
 
-    // Clear mock state between mriDebugException() calls.
+    // Clear mock state between mriDebugException(platformMock_GetContext()) calls.
     teardown();
     setup();
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     CHECK_EQUAL( 1, platformMock_DisplayFaultCauseToGdbConsoleCalls() );
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 }
@@ -142,7 +140,7 @@ TEST(Mri, mriDebugException_SentStatusAndContinueCommands)
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$T05responseT#" "+"),
                    platformMock_CommGetTransmittedData() );
 }
@@ -151,7 +149,7 @@ TEST(Mri, mriDebugException_WhenSentInvalidCommand_ReturnsEmptyPacketResponse)
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$*#", "+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$#" "+"), platformMock_CommGetTransmittedData() );
 }
 
@@ -161,7 +159,7 @@ TEST(Mri, mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunError
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
     platformMock_SetPacketBufferSize(11);
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$" MRI_ERROR_BUFFER_OVERRUN "#"
                                                  "+$" MRI_ERROR_BUFFER_OVERRUN "#" "+"),
                                                  platformMock_CommGetTransmittedData() );
@@ -213,7 +211,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_DontHitBreakpoint_Breakp
 
     mriPlatform_SetProgramCounter(0xBAADF00B);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
@@ -228,7 +226,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_Breakpoint
 
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
@@ -243,7 +241,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_ClearBreak
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_ClearHardwareBreakpointException(memFaultException);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
@@ -264,7 +262,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning0_S
     g_callbackReturnValue = 0;
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
@@ -281,7 +279,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning1_S
     g_callbackReturnValue = 1;
     mriPlatform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
 
     CHECK_EQUAL( 1, platformMock_ClearHardwareBreakpointCalls() );
@@ -319,7 +317,7 @@ TEST(Mri, mriSetDebuggerHooks_HookBothFunctions)
     mriSetDebuggerHooks(enteringHook, leavingHook, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     LONGS_EQUAL(1, counts.enteringCount);
@@ -335,7 +333,7 @@ TEST(Mri, mriSetDebuggerHooks_HookEnteringFunctionOnly)
     mriSetDebuggerHooks(enteringHook, NULL, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     LONGS_EQUAL(1, counts.enteringCount);
@@ -351,7 +349,7 @@ TEST(Mri, mriSetDebuggerHooks_HookLeavingFunctionOnly)
     mriSetDebuggerHooks(NULL, leavingHook, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
-        mriDebugException();
+        mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 
     LONGS_EQUAL(0, counts.enteringCount);

@@ -465,40 +465,28 @@ TEST(platformMock, Platform_WasMemoryFaultEncountered_FailSecondCallOnly)
     CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );
 }
 
-TEST(platformMock, Platform_CopyContextFromBuffer)
+TEST(platformMock, Platform_GetContext)
 {
-    const char data[] = "11111111222222223333333344444444";
-    Buffer     buffer;
-    uint32_t*  pContext;
+    uint32_t* pContextEntries = platformMock_GetContextEntries();
+    MriContext* pContext = platformMock_GetContext();
 
-    Buffer_Init(&buffer, (char*)data, sizeof(data)-1);
-        Platform_CopyContextFromBuffer(&buffer);
-    pContext = platformMock_GetContext();
-    CHECK_EQUAL ( 0x11111111, pContext[0] );
-    CHECK_EQUAL ( 0x22222222, pContext[1] );
-    CHECK_EQUAL ( 0x33333333, pContext[2] );
-    CHECK_EQUAL ( 0x44444444, pContext[3] );
-}
+    pContextEntries[0] = 0x11111111;
+    pContextEntries[1] = 0x22222222;
+    pContextEntries[2] = 0x33333333;
+    pContextEntries[3] = 0x44444444;
+    LONGS_EQUAL ( 0x11111111, Context_Get(pContext, 0) );
+    LONGS_EQUAL ( 0x22222222, Context_Get(pContext, 1) );
+    LONGS_EQUAL ( 0x33333333, Context_Get(pContext, 2) );
+    LONGS_EQUAL ( 0x44444444, Context_Get(pContext, 3) );
 
-TEST(platformMock, Platform_CopyContextToBuffer)
-{
-    char       data[128];
-    Buffer     buffer;
-    uint32_t*  pContext;
-
-    pContext = platformMock_GetContext();
-    pContext[0] = 0x11111111;
-    pContext[1] = 0x22222222;
-    pContext[2] = 0x33333333;
-    pContext[3] = 0x44444444;
-    Buffer_Init(&buffer, data, sizeof(data));
-        Platform_CopyContextToBuffer(&buffer);
-    Buffer_SetEndOfBuffer(&buffer);
-    Buffer_Reset(&buffer);
-    CHECK_TRUE ( Buffer_MatchesString(&buffer, "11111111"
-                                               "22222222"
-                                               "33333333"
-                                               "44444444", 32) );
+    Context_Set(pContext, 0, 0xAAAAAAAA);
+    Context_Set(pContext, 1, 0xBBBBBBBB);
+    Context_Set(pContext, 2, 0xCCCCCCCC);
+    Context_Set(pContext, 3, 0xDDDDDDDD);
+    LONGS_EQUAL ( 0xAAAAAAAA, pContextEntries[0] );
+    LONGS_EQUAL ( 0xBBBBBBBB, pContextEntries[1] );
+    LONGS_EQUAL ( 0xCCCCCCCC, pContextEntries[2] );
+    LONGS_EQUAL ( 0xDDDDDDDD, pContextEntries[3] );
 }
 
 TEST(platformMock, Platform_SetHardwareBreakpointOfGdbKind_CountCallsAndLastArgs)

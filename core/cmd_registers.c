@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -104,8 +104,7 @@ static void writeTrapReasonToBuffer(Buffer* pBuffer)
 */
 uint32_t HandleRegisterReadCommand(void)
 {
-    Platform_CopyContextToBuffer(GetInitializedBuffer());
-
+    Context_CopyToBuffer(GetContext(), GetInitializedBuffer());
     return 0;
 }
 
@@ -123,7 +122,7 @@ uint32_t HandleRegisterWriteCommand(void)
 {
     Buffer*     pBuffer = GetBuffer();
 
-    Platform_CopyContextFromBuffer(pBuffer);
+    Context_CopyFromBuffer(GetContext(), pBuffer);
 
     if (Buffer_OverrunDetected(pBuffer))
         PrepareStringResponse(MRI_ERROR_BUFFER_OVERRUN);

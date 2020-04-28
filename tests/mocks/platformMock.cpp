@@ -480,24 +480,21 @@ int mriPlatform_WasMemoryFaultEncountered(void)
 
 
 // Context Related Instrumentation.
-static uint32_t g_context[4];
+static uint32_t         g_contextEntries[4];
+static ContextSection   g_contextSection = { .pValues = g_contextEntries, .count = 4 };
+static MriContext       g_context;
 
-uint32_t* platformMock_GetContext(void)
+uint32_t* platformMock_GetContextEntries(void)
 {
-    return g_context;
+    return g_contextEntries;
+}
+
+MriContext* platformMock_GetContext(void)
+{
+    return &g_context;
 }
 
 // Stubs called from MRI core.
-void mriPlatform_CopyContextToBuffer(Buffer* pBuffer)
-{
-    ReadMemoryIntoHexBuffer(pBuffer, &g_context, sizeof(g_context));
-}
-
-void mriPlatform_CopyContextFromBuffer(Buffer* pBuffer)
-{
-    WriteHexBufferToMemory(pBuffer, &g_context, sizeof(g_context));
-}
-
 void mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
     Buffer_WriteString(pBuffer, "responseT");
@@ -818,7 +815,8 @@ void platformMock_Init(void)
     g_programCounter = INITIAL_PC;
     g_singleStepping = FALSE;
     g_callToFail = 0;
-    memset(&g_context, 0xff, sizeof(g_context));
+    memset(g_contextEntries, 0xff, sizeof(g_contextEntries));
+    Context_Init(&g_context, &g_contextSection, 1);
     g_setHardwareBreakpointCalls = 0;
     g_setHardwareBreakpointAddressArg = 0;
     g_setHardwareBreakpointKindArg = 0;

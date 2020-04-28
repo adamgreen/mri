@@ -15,8 +15,12 @@
 #ifndef PLATFORM_MOCK_H_
 #define PLATFORM_MOCK_H_
 
-#include <core/token.h>
-#include <core/platforms.h>
+extern "C"
+{
+    #include <core/context.h>
+    #include <core/token.h>
+    #include <core/platforms.h>
+}
 
 #define INITIAL_PC 0x10000000
 
@@ -57,7 +61,8 @@ uint32_t    platformMock_GetProgramCounterValue(void);
 
 void        platformMock_FaultOnSpecificMemoryCall(int callToFail);
 
-uint32_t*   platformMock_GetContext(void);
+uint32_t*   platformMock_GetContextEntries(void);
+MriContext* platformMock_GetContext(void);
 
 int         platformMock_SetHardwareBreakpointCalls(void);
 uint32_t    platformMock_SetHardwareBreakpointAddressArg(void);
