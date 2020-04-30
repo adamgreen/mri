@@ -12,29 +12,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-#include <core/platforms.h>
+/* Command handler for gdb commands related to threads. */
+#ifndef CMD_THREAD_H_
+#define CMD_THREAD_H_
 
+#include <stdint.h>
 
-__attribute__((weak)) uint32_t Platform_RtosGetThreadId(void)
-{
-    return 0;
-}
-__attribute__((weak)) uint32_t Platform_RtosGetThreadCount(void)
-{
-    return 0;
-}
+/* Real name of functions are in mri namespace. */
+uint32_t mriCmd_HandleThreadContextCommand(void);
 
-__attribute__((weak)) const uint32_t* Platform_RtosGetThreadArray(void)
-{
-    return NULL;
-}
+/* Macroes which allow code to drop the mri namespace prefix. */
+#define HandleThreadContextCommand          mriCmd_HandleThreadContextCommand
 
-__attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
-{
-    return NULL;
-}
-
-__attribute__((weak)) MriContext* Platform_RtosGetThreadContext(uint32_t threadId)
-{
-    return NULL;
-}
+#endif /* CMD_THREAD_H_ */

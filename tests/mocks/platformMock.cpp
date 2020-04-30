@@ -742,6 +742,8 @@ static uint32_t g_rtosThreadCount;
 static const uint32_t* g_pRtosThreads;
 static uint32_t    g_rtosExtraThreadInfoThreadId;
 static const char* g_pRtosExtraThreadInfo;
+static uint32_t    g_rtosContextThreadId;
+static MriContext* g_pRtosContext;
 
 void platformMock_RtosSetThreadId(uint32_t threadId)
 {
@@ -764,6 +766,12 @@ void platformMock_RtosSetExtraThreadInfo(uint32_t threadId, const char* pExtraTh
     g_pRtosExtraThreadInfo = pExtraThreadInfo;
 }
 
+void platformMock_RtosSetThreadContext(uint32_t threadId, MriContext* pContext)
+{
+    g_rtosContextThreadId = threadId;
+    g_pRtosContext = pContext;
+}
+
 
 // Stubs called by MRI core.
 uint32_t Platform_RtosGetThreadId(void)
@@ -776,12 +784,12 @@ uint32_t Platform_RtosGetThreadCount(void)
     return g_rtosThreadCount;
 }
 
-const uint32_t* mriPlatform_RtosGetThreadArray(void)
+const uint32_t* Platform_RtosGetThreadArray(void)
 {
     return g_pRtosThreads;
 }
 
-const char* mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID)
+const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
 {
     if (threadID == g_rtosExtraThreadInfoThreadId)
         return g_pRtosExtraThreadInfo;
@@ -789,6 +797,12 @@ const char* mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID)
         return NULL;
 }
 
+MriContext* Platform_RtosGetThreadContext(uint32_t threadId)
+{
+    if (g_rtosContextThreadId == threadId)
+        return g_pRtosContext;
+    return NULL;
+}
 
 
 // Mock Setup and Cleanup APIs.
@@ -842,6 +856,8 @@ void platformMock_Init(void)
     g_pRtosThreads = NULL;
     g_rtosExtraThreadInfoThreadId = 0;
     g_pRtosExtraThreadInfo = NULL;
+    g_rtosContextThreadId = 0;
+    g_pRtosContext = NULL;
 }
 
 void platformMock_Uninit(void)

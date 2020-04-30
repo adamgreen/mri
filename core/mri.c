@@ -35,6 +35,7 @@
 #include <core/cmd_query.h>
 #include <core/cmd_break_watch.h>
 #include <core/cmd_step.h>
+#include <core/cmd_thread.h>
 #include <core/cmd_vcont.h>
 #include <core/memory.h>
 
@@ -351,6 +352,7 @@ static int handleGDBCommand(void)
         {HandleFileIOCommand,                       'F'},
         {HandleRegisterReadCommand,                 'g'},
         {HandleRegisterWriteCommand,                'G'},
+        {HandleThreadContextCommand,                'H'},
         {HandleMemoryReadCommand,                   'm'},
         {HandleMemoryWriteCommand,                  'M'},
         {HandleVContCommands,                       'v'},

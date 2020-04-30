@@ -18,6 +18,7 @@
 #define PLATFORMS_H_
 
 #include <stdint.h>
+#include <core/context.h>
 #include <core/token.h>
 #include <core/buffer.h>
 #include <core/try_catch.h>
@@ -121,6 +122,7 @@ uint32_t        mriPlatform_RtosGetThreadId(void);
 uint32_t        mriPlatform_RtosGetThreadCount(void);
 const uint32_t* mriPlatform_RtosGetThreadArray(void);
 const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID);
+MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadID);
 
 
 /* Macroes which allow code to drop the mri namespace prefix. */
@@ -171,5 +173,6 @@ const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID);
 #define Platform_RtosGetThreadCount                         mriPlatform_RtosGetThreadCount
 #define Platform_RtosGetThreadArray                         mriPlatform_RtosGetThreadArray
 #define Platform_RtosGetExtraThreadInfo                     mriPlatform_RtosGetExtraThreadInfo
+#define Platform_RtosGetThreadContext                       mriPlatform_RtosGetThreadContext
 
 #endif /* PLATFORMS_H_ */

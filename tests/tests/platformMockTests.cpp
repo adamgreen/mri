@@ -737,3 +737,17 @@ TEST(platformMock, Platform_RtosGetExtraThreadInfo_ReturnsSetStringWhenThreadIdM
     CHECK_EQUAL( pTestString, Platform_RtosGetExtraThreadInfo(0xbaadbeef) );
     CHECK_EQUAL( NULL, Platform_RtosGetExtraThreadInfo(0xbaadf00d) );
 }
+
+TEST(platformMock, Platform_RtosGetThreadContext_MockDefaultsToNULL)
+{
+    CHECK_EQUAL( NULL, Platform_RtosGetThreadContext(0xbaadbeef) );
+}
+
+TEST(platformMock, Platform_RtosGetThreadContext_ReturnsSetContextWhenThreadIdMatches_AndNullWhenItDoesNot)
+{
+    MriContext context = { NULL, 0 };
+
+    platformMock_RtosSetThreadContext(0xbaadbeef, &context);
+    CHECK_EQUAL( &context, Platform_RtosGetThreadContext(0xbaadbeef) );
+    CHECK_EQUAL( NULL, Platform_RtosGetThreadContext(0xbaadf00d) );
+}
