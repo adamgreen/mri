@@ -61,3 +61,38 @@ uint32_t mriCmd_HandleThreadContextCommand(void)
 
     return 0;
 }
+
+
+/* Handle the 'T' command which is sent to see if a thread ID is still active.
+
+    Command Format:     Txxxxxxxx
+    Response Format:    OK if thread is still active.
+                        E01 is thread isn't active.
+
+    Where xxxxxxxx is the hexadecimal representation of the thread ID.
+*/
+uint32_t HandleIsThreadActiveCommand(void)
+{
+    Buffer*     pBuffer = GetBuffer();
+
+    __try
+    {
+        uint32_t    threadId = 0;
+        int         isActive = 0;
+
+        __throwing_func( threadId = Buffer_ReadUIntegerAsHex(pBuffer) );
+        isActive = Platform_RtosIsThreadActive(threadId);
+        if (!isActive)
+        {
+            setExceptionCode(invalidArgumentException);
+            break;
+        }
+        PrepareStringResponse("OK");
+    }
+    __catch
+    {
+        PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
+    }
+
+    return 0;
+}

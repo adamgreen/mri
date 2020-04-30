@@ -744,6 +744,7 @@ static uint32_t    g_rtosExtraThreadInfoThreadId;
 static const char* g_pRtosExtraThreadInfo;
 static uint32_t    g_rtosContextThreadId;
 static MriContext* g_pRtosContext;
+static uint32_t    g_rtosActiveThread;
 
 void platformMock_RtosSetThreadId(uint32_t threadId)
 {
@@ -771,6 +772,12 @@ void platformMock_RtosSetThreadContext(uint32_t threadId, MriContext* pContext)
     g_rtosContextThreadId = threadId;
     g_pRtosContext = pContext;
 }
+
+void platformMock_RtosSetActiveThread(uint32_t threadId)
+{
+    g_rtosActiveThread = threadId;
+}
+
 
 
 // Stubs called by MRI core.
@@ -802,6 +809,11 @@ MriContext* Platform_RtosGetThreadContext(uint32_t threadId)
     if (g_rtosContextThreadId == threadId)
         return g_pRtosContext;
     return NULL;
+}
+
+int Platform_RtosIsThreadActive(uint32_t threadId)
+{
+    return threadId == g_rtosActiveThread;
 }
 
 
@@ -858,6 +870,7 @@ void platformMock_Init(void)
     g_pRtosExtraThreadInfo = NULL;
     g_rtosContextThreadId = 0;
     g_pRtosContext = NULL;
+    g_rtosActiveThread = 0;
 }
 
 void platformMock_Uninit(void)

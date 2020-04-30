@@ -29,7 +29,7 @@ __attribute__((weak)) const uint32_t* Platform_RtosGetThreadArray(void)
     return NULL;
 }
 
-__attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
+__attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threadId)
 {
     return NULL;
 }
@@ -37,4 +37,9 @@ __attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threa
 __attribute__((weak)) MriContext* Platform_RtosGetThreadContext(uint32_t threadId)
 {
     return NULL;
+}
+
+__attribute__((weak)) int Platform_RtosIsThreadActive(uint32_t threadId)
+{
+    return 0;
 }

@@ -355,10 +355,11 @@ static int handleGDBCommand(void)
         {HandleThreadContextCommand,                'H'},
         {HandleMemoryReadCommand,                   'm'},
         {HandleMemoryWriteCommand,                  'M'},
-        {HandleVContCommands,                       'v'},
         {HandleQueryCommand,                        'q'},
         {HandleSingleStepCommand,                   's'},
         {HandleSingleStepWithSignalCommand,         'S'},
+        {HandleIsThreadActiveCommand,               'T'},
+        {HandleVContCommands,                       'v'},
         {HandleBinaryMemoryWriteCommand,            'X'},
         {HandleBreakpointWatchpointRemoveCommand,   'z'},
         {HandleBreakpointWatchpointSetCommand,      'Z'}

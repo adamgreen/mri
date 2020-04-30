@@ -121,8 +121,9 @@ void           mriPlatform_ResetDevice(void);
 uint32_t        mriPlatform_RtosGetThreadId(void);
 uint32_t        mriPlatform_RtosGetThreadCount(void);
 const uint32_t* mriPlatform_RtosGetThreadArray(void);
-const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadID);
-MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadID);
+const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadId);
+MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadId);
+int             mriPlatform_RtosIsThreadActive(uint32_t threadId);
 
 
 /* Macroes which allow code to drop the mri namespace prefix. */
@@ -174,5 +175,6 @@ MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadID);
 #define Platform_RtosGetThreadArray                         mriPlatform_RtosGetThreadArray
 #define Platform_RtosGetExtraThreadInfo                     mriPlatform_RtosGetExtraThreadInfo
 #define Platform_RtosGetThreadContext                       mriPlatform_RtosGetThreadContext
+#define Platform_RtosIsThreadActive                         mriPlatform_RtosIsThreadActive
 
 #endif /* PLATFORMS_H_ */

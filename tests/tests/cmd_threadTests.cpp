@@ -128,3 +128,30 @@ TEST(cmdThread, HCommand_UseValidContext_VerifyRegisterWrite)
     LONGS_EQUAL ( 0xCCCCCCCC, contextEntries[2] );
     LONGS_EQUAL ( 0xDDDDDDDD, contextEntries[3] );
 }
+
+
+
+TEST(cmdThread, TCommand_InactiveThreadSpecified_ShouldReturnError)
+{
+    platformMock_CommInitReceiveChecksummedData("+$Tbaadbeef#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$" MRI_ERROR_INVALID_ARGUMENT "#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdThread, TCommand_InvalidHexDigitsInThreadId_ShouldReturnError)
+{
+    platformMock_CommInitReceiveChecksummedData("+$Tbaadxxxx#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$" MRI_ERROR_INVALID_ARGUMENT "#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdThread, TCommand_ActiveThreadSpecified_ShouldReturnOK)
+{
+    platformMock_RtosSetActiveThread(0xBAADBEEF);
+    platformMock_CommInitReceiveChecksummedData("+$Tbaadbeef#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$OK#" "+"),
+                   platformMock_CommGetTransmittedData() );
+}

@@ -751,3 +751,15 @@ TEST(platformMock, Platform_RtosGetThreadContext_ReturnsSetContextWhenThreadIdMa
     CHECK_EQUAL( &context, Platform_RtosGetThreadContext(0xbaadbeef) );
     CHECK_EQUAL( NULL, Platform_RtosGetThreadContext(0xbaadf00d) );
 }
+
+TEST(platformMock, Platform_RtosIsThreadAcive_MockDefaultsToFalse)
+{
+    CHECK_FALSE( Platform_RtosIsThreadActive(0xbaadbeef) );
+}
+
+TEST(platformMock, Platform_RtosIsThreadActive_ReturnsTrueWhenThreadIdMatches_AndFalseWhenItDoesNot)
+{
+    platformMock_RtosSetActiveThread(0xbaadbeef);
+    CHECK_TRUE( Platform_RtosIsThreadActive(0xbaadbeef) );
+    CHECK_FALSE( Platform_RtosIsThreadActive(0xbaadf00d) );
+}
