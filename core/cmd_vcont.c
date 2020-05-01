@@ -289,9 +289,9 @@ static uint32_t handleAction(const Action* pAction)
     const   int       noSetPC = 0;
     const   uint32_t  newPC = 0;
 
-    // UNDONE: Handle specific threads later.
-    if (pAction->threadId.type == THREAD_ID_SPECIFIC)
+    if (pAction->threadId.type == THREAD_ID_SPECIFIC && pAction->threadId.id != Platform_RtosGetHaltedThreadId())
     {
+        /* The only specific thread ID that can be handled is the halting thread's ID. */
         PrepareStringResponse(MRI_ERROR_INVALID_ARGUMENT);
         return 0;
     }

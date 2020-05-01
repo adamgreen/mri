@@ -180,6 +180,18 @@ TEST(cmdVCont, vCont_SingleStepAllThreadsAndDefaultOfContinue)
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
 
+TEST(cmdVCont, vCont_SingleStepHaltedThreadAndDefaultOfContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadf00d;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
 TEST(cmdVCont, vCont_SingleStepWithSignalValueActionOnly)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
@@ -228,6 +240,18 @@ TEST(cmdVCont, vCont_RangedSingleStepAllThreadsAndContinueAsDefault)
         mriDebugException(platformMock_GetContext());
     CHECK_TRUE ( Platform_IsSingleStepping() );
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdVCont, vCont_RangedSingleStepHaltedThreadAndContinueAsDefault)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadf00d;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
@@ -365,11 +389,11 @@ TEST(cmdVCont, vCont_RangedSingleStepWithMissingEndValue_ShouldReturnError)
                    platformMock_CommGetTransmittedData() );
 }
 
-// UNDONE: Testing that specific thread-ids are treated as errors for now.
-TEST(cmdVCont, vCont_SingleStepWithSpecificThreadId_ShouldReturnError)
+TEST(cmdVCont, vCont_SingleStepWithNonHaltedThreadId_ShouldReturnError)
 {
-    platformMock_CommInitReceiveChecksummedData("+$vCont;s:deadbeef#", "+$c#");
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed#", "+$c#");
         mriDebugException(platformMock_GetContext());
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
                    platformMock_CommGetTransmittedData() );
 }
