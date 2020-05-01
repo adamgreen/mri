@@ -522,11 +522,15 @@ uint32_t Platform_GetPacketBufferSize(void)
 }
 
 
+static PlatformTrapReason cacheTrapReason(void);
+static PlatformTrapReason findMatchedWatchpoint(void);
+static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator);
 static uint32_t hasControlCBeenDetected();
 static uint8_t  determineCauseOfDebugEvent(void);
 uint8_t Platform_DetermineCauseOfException(void)
 {
     uint32_t exceptionNumber = mriCortexMState.exceptionNumber;
+    mriCortexMState.reason = cacheTrapReason();
 
     if (hasControlCBeenDetected())
     {
@@ -557,6 +561,65 @@ uint8_t Platform_DetermineCauseOfException(void)
         /* NOTE: Catch all signal will be SIGINT. */
         return SIGINT;
     }
+}
+
+PlatformTrapReason cacheTrapReason(void)
+{
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
+
+    uint32_t debugFaultStatus = mriCortexMState.dfsr;
+    if (debugFaultStatus & SCB_DFSR_BKPT)
+    {
+        /* Was caused by hardware or software breakpoint. If PC points to BKPT then report as software breakpoint. */
+        if (Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT)
+            reason.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
+        else
+            reason.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
+    }
+    else if (debugFaultStatus & SCB_DFSR_DWTTRAP)
+    {
+        reason = findMatchedWatchpoint();
+    }
+    return reason;
+}
+
+static PlatformTrapReason findMatchedWatchpoint(void)
+{
+    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
+    DWT_COMP_Type*     pCurrentComparator = DWT_COMP_ARRAY;
+    uint32_t           comparatorCount;
+    uint32_t           i;
+
+    comparatorCount = getDWTComparatorCount();
+    for (i = 0 ; i < comparatorCount ; i++)
+    {
+        if (pCurrentComparator->FUNCTION & DWT_COMP_FUNCTION_MATCHED)
+            reason = getReasonFromMatchComparator(pCurrentComparator);
+        pCurrentComparator++;
+    }
+    return reason;
+}
+
+static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator)
+{
+    PlatformTrapReason reason;
+    switch (pComparator->FUNCTION & DWT_COMP_FUNCTION_FUNCTION_MASK)
+    {
+    case DWT_COMP_FUNCTION_FUNCTION_DATA_READ:
+        reason.type = MRI_PLATFORM_TRAP_TYPE_RWATCH;
+        break;
+    case DWT_COMP_FUNCTION_FUNCTION_DATA_WRITE:
+        reason.type = MRI_PLATFORM_TRAP_TYPE_WATCH;
+        break;
+    case DWT_COMP_FUNCTION_FUNCTION_DATA_READWRITE:
+        reason.type = MRI_PLATFORM_TRAP_TYPE_AWATCH;
+        break;
+    default:
+        reason.type = MRI_PLATFORM_TRAP_TYPE_UNKNOWN;
+        break;
+    }
+    reason.address = pComparator->COMP;
+    return reason;
 }
 
 static uint32_t hasControlCBeenDetected()
@@ -593,68 +656,11 @@ static uint8_t determineCauseOfDebugEvent(void)
 }
 
 
-static PlatformTrapReason findMatchedWatchpoint(void);
-static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator);
 PlatformTrapReason Platform_GetTrapReason(void)
 {
-    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
-
-    uint32_t debugFaultStatus = mriCortexMState.dfsr;
-    if (debugFaultStatus & SCB_DFSR_BKPT)
-    {
-        /* Was caused by hardware or software breakpoint. If PC points to BKPT then report as software breakpoint. */
-        if (Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT)
-            reason.type = MRI_PLATFORM_TRAP_TYPE_SWBREAK;
-        else
-            reason.type = MRI_PLATFORM_TRAP_TYPE_HWBREAK;
-    }
-    else if (debugFaultStatus & SCB_DFSR_DWTTRAP)
-    {
-        reason = findMatchedWatchpoint();
-    }
-    return reason;
-}
-
-static PlatformTrapReason findMatchedWatchpoint(void)
-{
-    PlatformTrapReason reason = { MRI_PLATFORM_TRAP_TYPE_UNKNOWN, 0x00000000 };
-    DWT_COMP_Type*     pCurrentComparator = DWT_COMP_ARRAY;
-    uint32_t           comparatorCount;
-    uint32_t           i;
-
-    comparatorCount = getDWTComparatorCount();
-    for (i = 0 ; i < comparatorCount ; i++)
-    {
-        if (pCurrentComparator->FUNCTION & DWT_COMP_FUNCTION_MATCHED)
-        {
-            reason = getReasonFromMatchComparator(pCurrentComparator);
-            break;
-        }
-        pCurrentComparator++;
-    }
-    return reason;
-}
-
-static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator)
-{
-    PlatformTrapReason reason;
-    switch (pComparator->FUNCTION & DWT_COMP_FUNCTION_FUNCTION_MASK)
-    {
-    case DWT_COMP_FUNCTION_FUNCTION_DATA_READ:
-        reason.type = MRI_PLATFORM_TRAP_TYPE_RWATCH;
-        break;
-    case DWT_COMP_FUNCTION_FUNCTION_DATA_WRITE:
-        reason.type = MRI_PLATFORM_TRAP_TYPE_WATCH;
-        break;
-    case DWT_COMP_FUNCTION_FUNCTION_DATA_READWRITE:
-        reason.type = MRI_PLATFORM_TRAP_TYPE_AWATCH;
-        break;
-    default:
-        reason.type = MRI_PLATFORM_TRAP_TYPE_UNKNOWN;
-        break;
-    }
-    reason.address = pComparator->COMP;
-    return reason;
+    /* Return reason cached earlier by call to Platform_DetermineCauseOfException() so that findMatchedWatchpoint()
+       doesn't get called multiple times as it has the side effect of clearing the watchpoint MATCH bits. */
+    return mriCortexMState.reason;
 }
 
 
