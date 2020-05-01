@@ -19,14 +19,15 @@ __attribute__((weak)) uint32_t Platform_RtosGetHaltedThreadId(void)
 {
     return 0;
 }
-__attribute__((weak)) uint32_t Platform_RtosGetThreadCount(void)
+
+__attribute__((weak)) uint32_t Platform_RtosGetFirstThreadId(void)
 {
     return 0;
 }
 
-__attribute__((weak)) const uint32_t* Platform_RtosGetThreadArray(void)
+__attribute__((weak)) uint32_t Platform_RtosGetNextThreadId(void)
 {
-    return NULL;
+    return 0;
 }
 
 __attribute__((weak)) const char* Platform_RtosGetExtraThreadInfo(uint32_t threadId)

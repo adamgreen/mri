@@ -23,12 +23,6 @@
 #include <core/gdb_console.h>
 
 
-/* Pointers used to track thread IDs as they are dumped by qfThreadInfo/qsThreadInfo. */
-static const uint32_t* g_pRtosThreadsStart;
-static const uint32_t* g_pRtosThreadsEnd;
-static const uint32_t* g_pRtosThreadsCurr;
-
-
 typedef struct
 {
     const char* pAnnex;
@@ -49,7 +43,7 @@ static uint32_t    handleQueryTransferFeaturesCommand(void);
 static void        validateAnnexIs(const char* pAnnex, const char* pExpected);
 static uint32_t    handleQueryFirstThreadInfoCommand(void);
 static uint32_t    handleQuerySubsequentThreadInfoCommand(void);
-static uint32_t    outputThreadIds(Buffer* pBuffer);
+static uint32_t    outputThreadIds(uint32_t threadId);
 static uint32_t    handleQueryThreadExtraInfoCommand(void);
 static uint32_t    handleMonitorCommand(void);
 static uint32_t    handleMonitorResetCommand(void);
@@ -316,19 +310,15 @@ static void validateAnnexIs(const char* pAnnex, const char* pExpected)
 */
 static uint32_t handleQueryFirstThreadInfoCommand(void)
 {
-    uint32_t          threadCount = Platform_RtosGetThreadCount();
-    Buffer*           pBuffer = GetInitializedBuffer();
+    uint32_t threadId = Platform_RtosGetFirstThreadId();
 
-    if (threadCount == 0)
+    if (threadId == 0)
     {
         PrepareEmptyResponseForUnknownCommand();
         return 0;
     }
 
-    g_pRtosThreadsStart = Platform_RtosGetThreadArray();
-    g_pRtosThreadsCurr = g_pRtosThreadsStart;
-    g_pRtosThreadsEnd = g_pRtosThreadsStart + threadCount;
-    return outputThreadIds(pBuffer);
+    return outputThreadIds(threadId);
 }
 
 /* Handle the "qsThreadInfo" command used by gdb subsequent calls to retrieve list of RTOS thread IDs.
@@ -343,33 +333,25 @@ static uint32_t handleQueryFirstThreadInfoCommand(void)
 */
 static uint32_t handleQuerySubsequentThreadInfoCommand(void)
 {
-    return outputThreadIds(GetInitializedBuffer());
+    return outputThreadIds(Platform_RtosGetNextThreadId());
 }
 
-static uint32_t outputThreadIds(Buffer* pBuffer)
+static uint32_t outputThreadIds(uint32_t threadId)
 {
-    int firstElement = 1;
+    Buffer* pBuffer = GetInitializedBuffer();
 
-    if (g_pRtosThreadsCurr >= g_pRtosThreadsEnd)
+    if (threadId == 0)
     {
         Buffer_WriteChar(pBuffer, 'l');
         return 0;
     }
-
     Buffer_WriteChar(pBuffer, 'm');
-    while (Buffer_BytesLeft(pBuffer) >= 9 && g_pRtosThreadsCurr < g_pRtosThreadsEnd)
-    {
-        if (*g_pRtosThreadsCurr == 0)
-        {
-            /* Skip over NULL thread ids. */
-            g_pRtosThreadsCurr++;
-            continue;
-        }
+    Buffer_WriteUIntegerAsHex(pBuffer, threadId);
 
-        if (!firstElement)
-            Buffer_WriteChar(pBuffer, ',');
-        Buffer_WriteUIntegerAsHex(pBuffer, *g_pRtosThreadsCurr++);
-        firstElement = 0;
+    while (Buffer_BytesLeft(pBuffer) >= 9 && (threadId = Platform_RtosGetNextThreadId()) != 0)
+    {
+        Buffer_WriteChar(pBuffer, ',');
+        Buffer_WriteUIntegerAsHex(pBuffer, threadId);
     }
     return 0;
 }

@@ -40,6 +40,7 @@ static void     copyChecksummedData(char* pDest, const char* pSrc);
 static void     commUninitTransmitDataBuffer();
 static uint32_t isReceiveBufferEmpty();
 static void     waitForReceiveData();
+static void     skipNullThreadIds();
 
 
 
@@ -738,6 +739,7 @@ void Platform_ResetDevice(void)
 
 // RTOS Thread related instrumentation.
 static uint32_t g_rtosThreadId;
+static uint32_t g_rtosThreadIndex;
 static uint32_t g_rtosThreadCount;
 static const uint32_t* g_pRtosThreads;
 static uint32_t    g_rtosExtraThreadInfoThreadId;
@@ -751,13 +753,9 @@ void platformMock_RtosSetHaltedThreadId(uint32_t threadId)
     g_rtosThreadId = threadId;
 }
 
-void platformMock_RtosSetThreadCount(uint32_t threadCount)
+void platformMock_RtosSetThreads(const uint32_t* pThreadArray, uint32_t threadCount)
 {
     g_rtosThreadCount = threadCount;
-}
-
-void platformMock_RtosSetThreadArrayPointer(const uint32_t* pThreadArray)
-{
     g_pRtosThreads = pThreadArray;
 }
 
@@ -786,14 +784,24 @@ uint32_t Platform_RtosGetHaltedThreadId(void)
     return g_rtosThreadId;
 }
 
-uint32_t Platform_RtosGetThreadCount(void)
+uint32_t Platform_RtosGetFirstThreadId(void)
 {
-    return g_rtosThreadCount;
+    g_rtosThreadIndex = 0;
+    return Platform_RtosGetNextThreadId();
 }
 
-const uint32_t* Platform_RtosGetThreadArray(void)
+uint32_t Platform_RtosGetNextThreadId(void)
 {
-    return g_pRtosThreads;
+    skipNullThreadIds();
+    if (g_rtosThreadIndex >= g_rtosThreadCount)
+        return 0;
+    return g_pRtosThreads[g_rtosThreadIndex++];
+}
+
+static void skipNullThreadIds()
+{
+    while (g_rtosThreadIndex < g_rtosThreadCount && g_pRtosThreads[g_rtosThreadIndex] == 0)
+        g_rtosThreadIndex++;
 }
 
 const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)

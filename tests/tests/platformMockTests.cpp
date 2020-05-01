@@ -700,28 +700,46 @@ TEST(platformMock, Platform_RtosGetHaltedThreadId_MakeSureMockCanReturnNonZeroVa
     CHECK_EQUAL( 0xBAADF00D, Platform_RtosGetHaltedThreadId() );
 }
 
-TEST(platformMock, Platform_RtosGetThreadCount_MockDefaultsToZero)
+TEST(platformMock, Platform_RtosGetFirstThreadId_MockDefaultsToNull)
 {
-    CHECK_EQUAL( 0, Platform_RtosGetThreadCount() );
+    CHECK_EQUAL( 0, Platform_RtosGetFirstThreadId() )
 }
 
-TEST(platformMock, Platform_RtosGetThreadCount_HaveItReturnNonZeroValue)
-{
-    platformMock_RtosSetThreadCount(0xFFFFFFFF);
-    CHECK_EQUAL( 0xFFFFFFFF, Platform_RtosGetThreadCount() );
-}
-
-TEST(platformMock, Platform_RtosGetThreadArray_MockDefaultsToNULL)
-{
-    CHECK_EQUAL( NULL, Platform_RtosGetThreadArray() );
-}
-
-TEST(platformMock, Platform_RtosGetThreadArray_HaveItReturnRealArray)
+TEST(platformMock, Platform_RtosGetFirstThreadId_ReturnFirstThread)
 {
     uint32_t testArray[] = { 0x12345678 };
 
-    platformMock_RtosSetThreadArrayPointer(testArray);
-    CHECK_EQUAL( testArray, Platform_RtosGetThreadArray() );
+    platformMock_RtosSetThreads(testArray, sizeof(testArray)/sizeof(testArray[0]));
+    CHECK_EQUAL( 0x12345678, Platform_RtosGetFirstThreadId() )
+}
+
+TEST(platformMock, Platform_RtosGetNextThreadIdWhenOnlyOneThread_ShouldReturn0)
+{
+    uint32_t testArray[] = { 0x12345678 };
+
+    platformMock_RtosSetThreads(testArray, sizeof(testArray)/sizeof(testArray[0]));
+    CHECK_EQUAL( 0x12345678, Platform_RtosGetFirstThreadId() )
+    CHECK_EQUAL( 0, Platform_RtosGetNextThreadId() )
+}
+
+TEST(platformMock, Platform_RtosGetNextThreadIdWhenTwoThreads)
+{
+    uint32_t testArray[] = { 0x12345678, 0xbaadf00d };
+
+    platformMock_RtosSetThreads(testArray, sizeof(testArray)/sizeof(testArray[0]));
+    CHECK_EQUAL( 0x12345678, Platform_RtosGetFirstThreadId() )
+    CHECK_EQUAL( 0xbaadf00d, Platform_RtosGetNextThreadId() )
+    CHECK_EQUAL( 0, Platform_RtosGetNextThreadId() )
+}
+
+TEST(platformMock, Platform_RtosGetNextThreadId_SkipNullThread)
+{
+    uint32_t testArray[] = { 0x12345678, 0x00000000, 0xbaadf00d };
+
+    platformMock_RtosSetThreads(testArray, sizeof(testArray)/sizeof(testArray[0]));
+    CHECK_EQUAL( 0x12345678, Platform_RtosGetFirstThreadId() )
+    CHECK_EQUAL( 0xbaadf00d, Platform_RtosGetNextThreadId() )
+    CHECK_EQUAL( 0, Platform_RtosGetNextThreadId() )
 }
 
 TEST(platformMock, Platform_RtosGetExtraThreadInfo_MockDefaultsToNULL)

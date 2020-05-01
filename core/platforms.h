@@ -119,8 +119,8 @@ uint32_t       mriPlatform_GetUidSize(void);
 void           mriPlatform_ResetDevice(void);
 
 uint32_t        mriPlatform_RtosGetHaltedThreadId(void);
-uint32_t        mriPlatform_RtosGetThreadCount(void);
-const uint32_t* mriPlatform_RtosGetThreadArray(void);
+uint32_t        mriPlatform_RtosGetFirstThreadId(void);
+uint32_t        mriPlatform_RtosGetNextThreadId(void);
 const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadId);
 MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadId);
 int             mriPlatform_RtosIsThreadActive(uint32_t threadId);
@@ -170,9 +170,9 @@ int             mriPlatform_RtosIsThreadActive(uint32_t threadId);
 #define Platform_GetUid                                     mriPlatform_GetUid
 #define Platform_GetUidSize                                 mriPlatform_GetUidSize
 #define Platform_ResetDevice                                mriPlatform_ResetDevice
-#define Platform_RtosGetHaltedThreadId                            mriPlatform_RtosGetHaltedThreadId
-#define Platform_RtosGetThreadCount                         mriPlatform_RtosGetThreadCount
-#define Platform_RtosGetThreadArray                         mriPlatform_RtosGetThreadArray
+#define Platform_RtosGetHaltedThreadId                      mriPlatform_RtosGetHaltedThreadId
+#define Platform_RtosGetFirstThreadId                       mriPlatform_RtosGetFirstThreadId
+#define Platform_RtosGetNextThreadId                        mriPlatform_RtosGetNextThreadId
 #define Platform_RtosGetExtraThreadInfo                     mriPlatform_RtosGetExtraThreadInfo
 #define Platform_RtosGetThreadContext                       mriPlatform_RtosGetThreadContext
 #define Platform_RtosIsThreadActive                         mriPlatform_RtosIsThreadActive
