@@ -746,7 +746,7 @@ static uint32_t    g_rtosContextThreadId;
 static MriContext* g_pRtosContext;
 static uint32_t    g_rtosActiveThread;
 
-void platformMock_RtosSetThreadId(uint32_t threadId)
+void platformMock_RtosSetHaltedThreadId(uint32_t threadId)
 {
     g_rtosThreadId = threadId;
 }
@@ -781,7 +781,7 @@ void platformMock_RtosSetActiveThread(uint32_t threadId)
 
 
 // Stubs called by MRI core.
-uint32_t Platform_RtosGetThreadId(void)
+uint32_t Platform_RtosGetHaltedThreadId(void)
 {
     return g_rtosThreadId;
 }

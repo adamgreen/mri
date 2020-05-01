@@ -15,7 +15,7 @@
 #include <core/platforms.h>
 
 
-__attribute__((weak)) uint32_t Platform_RtosGetThreadId(void)
+__attribute__((weak)) uint32_t Platform_RtosGetHaltedThreadId(void)
 {
     return 0;
 }

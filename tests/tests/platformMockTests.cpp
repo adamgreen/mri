@@ -689,15 +689,15 @@ TEST(platformMock, Platform_GetTrapResponse_MakeSureMockCanReturnOtherTypesAndNo
 
 
 
-TEST(platformMock, Platform_RtosGetThreadId_MockDefaultsToZero)
+TEST(platformMock, Platform_RtosGetHaltedThreadId_MockDefaultsToZero)
 {
-    CHECK_EQUAL( 0, Platform_RtosGetThreadId() );
+    CHECK_EQUAL( 0, Platform_RtosGetHaltedThreadId() );
 }
 
-TEST(platformMock, Platform_RtosGetThreadId_MakeSureMockCanReturnNonZeroValue)
+TEST(platformMock, Platform_RtosGetHaltedThreadId_MakeSureMockCanReturnNonZeroValue)
 {
-    platformMock_RtosSetThreadId(0xBAADF00D);
-    CHECK_EQUAL( 0xBAADF00D, Platform_RtosGetThreadId() );
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    CHECK_EQUAL( 0xBAADF00D, Platform_RtosGetHaltedThreadId() );
 }
 
 TEST(platformMock, Platform_RtosGetThreadCount_MockDefaultsToZero)

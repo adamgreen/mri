@@ -38,7 +38,7 @@ uint32_t Send_T_StopResponse(void)
 {
     uint8_t signalValue = GetSignalValue();
     Buffer* pBuffer = GetInitializedBuffer();
-    uint32_t threadId = Platform_RtosGetThreadId();
+    uint32_t threadId = Platform_RtosGetHaltedThreadId();
 
     Buffer_WriteChar(pBuffer, 'T');
     Buffer_WriteByteAsHex(pBuffer, signalValue);

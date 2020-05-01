@@ -99,7 +99,7 @@ TEST(cmdRegisters, TResponse_ThreadIdOfZero_ShouldReturnNoThreadId)
 
 TEST(cmdRegisters, TResponse_NonZeroThreadId_ShouldReturnThreadId)
 {
-    platformMock_RtosSetThreadId(0xBAADF00D);
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );

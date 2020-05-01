@@ -91,7 +91,7 @@ int platformMock_GetSemihostCallErrno(void);
 
 int platformMock_GetResetDeviceCalls(void);
 
-void platformMock_RtosSetThreadId(uint32_t threadId);
+void platformMock_RtosSetHaltedThreadId(uint32_t threadId);
 void platformMock_RtosSetThreadCount(uint32_t threadCount);
 void platformMock_RtosSetThreadArrayPointer(const uint32_t* pThreadArray);
 void platformMock_RtosSetExtraThreadInfo(uint32_t threadId, const char* pExtraThreadInfo);
