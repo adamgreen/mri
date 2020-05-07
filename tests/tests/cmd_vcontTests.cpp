@@ -49,6 +49,12 @@ TEST_GROUP(cmdVCont)
         m_expectedException = expectedExceptionCode;
         LONGS_EQUAL ( expectedExceptionCode, getExceptionCode() );
     }
+
+    void clearThreadStates()
+    {
+        Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, (PlatformThreadState)128);
+        Platform_RtosSetThreadState(0xBAADFEED, (PlatformThreadState)128);
+    }
 };
 
 
@@ -353,16 +359,16 @@ TEST(cmdVCont, vCont_RangedSingleStep_StepOverOneHardcodedBreakpoint_NeedToConti
     CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
 }
 
-TEST(cmdVCont, vCont_RangedSingleStep_StepOverTwoHardcodedBreakpoints_NeedToContinueOverAnotherBreakpointToExit)
+TEST(cmdVCont, vCont_RangedSingleStep_StepOverOneOfTwoHardcodedBreakpointsInRange_NeedToContinueOverAnotherBreakpointToExit)
 {
     platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
     platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000008#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$T05responseT#+"), platformMock_CommGetTransmittedData() );
-    // Called twice for single stepping and another time for the continue used to return from mriDebugException.
-    CHECK_EQUAL( 3, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    // Called once for single stepping and another time for the continue used to return from mriDebugException.
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     // Each instruction advance is hardcoded to 4 bytes in the mock.
-    CHECK_EQUAL( 0x1000000C, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
 }
 
 TEST(cmdVCont, vCont_RangedSingleStepWithMissingRange_ShouldReturnError)
@@ -389,11 +395,501 @@ TEST(cmdVCont, vCont_RangedSingleStepWithMissingEndValue_ShouldReturnError)
                    platformMock_CommGetTransmittedData() );
 }
 
-TEST(cmdVCont, vCont_SingleStepWithNonHaltedThreadId_ShouldReturnError)
+TEST(cmdVCont, vCont_SingleStepWithNonHaltedThreadId_ShouldBeTreatedLikeItWasHaltedThreadId)
 {
     platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdVCont, vCont_RangedSingleStepWithNonHaltedThreadId_ShouldBeTreatedLikeItWasHaltedThreadId)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADF00D);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadfeed;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdVCont, vCont_MultipleSingleStepActions_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed;c;s:baadfeed#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_MultipleContinueActions_ShouldReturnError)
+{
+    platformMock_CommInitReceiveChecksummedData("+$vCont;c;s;c#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_ContinueWithSpecificThread_ShouldReturnError)
+{
+    platformMock_CommInitReceiveChecksummedData("+$vCont;c:baadfeed#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadAndContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed;c#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThread)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed#", "+$c#");
         mriDebugException(platformMock_GetContext());
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadf00d;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepNotHaltedThreadAndContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadf00d;c#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepNotHaltedThread)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadf00d#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepAllThreads_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:-1#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
                    platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepWithNoThreadId_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_NoStepOrContinue_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$vCont#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadAndContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadfeed;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is out of the single step range so it should send T stop response. SetThreadState calls should not be
+    // replayed.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000004);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadWithNoContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadfeed#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+
+    // This stop is out of the single step range so it should send T stop response. SetThreadState calls should not be
+    // replayed.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000004);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepNotHaltedThreadAndContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadf00d;c#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is out of the single step range so it should send T stop response. SetThreadState calls should not be
+    // replayed.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000004);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepNotHaltedThreadWithNoContinue)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadf00d#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is still in single step range so should just return after replaying SetThreadState calls.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+
+    // This stop is out of the single step range so it should send T stop response. SetThreadState calls should not be
+    // replayed.
+    clearThreadStates();
+    Platform_SetProgramCounter(0x10000004);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Make sure that correct threads were thawed/frozen/single stepped.
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepAllThreads_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:-1#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepWithNoThreadId_ShouldReturnError)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$" MRI_ERROR_INVALID_ARGUMENT "#+"),
+                   platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadIdWithNoContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadfeed#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#"
+                                                 "+$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Called once for single stepping and another time for the continue used to return from mriDebugException.
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    // Each instruction advance is hardcoded to 4 bytes in the mock.
+    CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadfeed;c#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#"
+                                                 "+$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Called once for single stepping and another time for the continue used to return from mriDebugException.
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    // Each instruction advance is hardcoded to 4 bytes in the mock.
+    CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepNotHaltedThreadId_NoSkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadf00d#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Shouldn't look at hardcoded breakpoints when single stepping, non-halted thread.
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepNotHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004:baadf00d;c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Continue will skip the hardcoded breakpoint on the halted thread.
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC+4, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadIdWithNoContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#"
+                                                 "+$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Called once for single stepping and another time for the continue used to return from mriDebugException.
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    // Each instruction advance is hardcoded to 4 bytes in the mock.
+    CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadfeed;c#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#"
+                                                 "+$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Called once for single stepping and another time for the continue used to return from mriDebugException.
+    CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    // Each instruction advance is hardcoded to 4 bytes in the mock.
+    CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepNotHaltedThreadId_NoSkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadf00d#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Shouldn't look at hardcoded breakpoints when single stepping, non-halted thread.
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepNotHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
+{
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$vCont;s:baadf00d;c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    // Continue will skip the hardcoded breakpoint on the halted thread.
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC+4, platformMock_GetProgramCounterValue() );
+
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(-1) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
 }

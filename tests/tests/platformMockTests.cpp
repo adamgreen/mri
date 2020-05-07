@@ -781,3 +781,48 @@ TEST(platformMock, Platform_RtosIsThreadActive_ReturnsTrueWhenThreadIdMatches_An
     CHECK_TRUE( Platform_RtosIsThreadActive(0xbaadbeef) );
     CHECK_FALSE( Platform_RtosIsThreadActive(0xbaadf00d) );
 }
+
+TEST(platformMock, Platform_RtosIsSetThreadStateSupported_MockDefaultsToFalse)
+{
+    CHECK_FALSE( Platform_RtosIsSetThreadStateSupported() );
+}
+
+TEST(platformMock, Platform_RtosIsSetThreadStateSupported_ReturnsTrueAfterSetting)
+{
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_TRUE( Platform_RtosIsSetThreadStateSupported() );
+}
+
+TEST(platformMock, Platform_RtosSetThreadState_SetSpecificThreadToAllStates_VerifyStateSet)
+{
+    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_FROZEN);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(0xBAADF00D) );
+    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_THAWED);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(0xBAADF00D) );
+    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_SINGLE_STEPPING);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+}
+
+TEST(platformMock, Platform_RtosSetThreadState_GetOnDifferentThreadIdShouldReturnInvalidStateOf128)
+{
+    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_FROZEN);
+    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
+}
+
+TEST(platformMock, Platform_RtosSetThreadState_SetAllThreadsToAllStates_VerifyStateSet)
+{
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_FROZEN);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_THAWED);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_SINGLE_STEPPING);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+}
+
+TEST(platformMock, Platform_RtosSetThreadState_VerifyMockCanRememberSpecificAndAllStateSettings)
+{
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_FROZEN);
+    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_THAWED);
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(0xBAADF00D) );
+}

@@ -747,6 +747,10 @@ static const char* g_pRtosExtraThreadInfo;
 static uint32_t    g_rtosContextThreadId;
 static MriContext* g_pRtosContext;
 static uint32_t    g_rtosActiveThread;
+static int         g_isSetThreadStateSupported;
+static uint32_t    g_specificThreadId;
+static PlatformThreadState g_specificThreadState;
+static PlatformThreadState g_allThreadState;
 
 void platformMock_RtosSetHaltedThreadId(uint32_t threadId)
 {
@@ -775,6 +779,25 @@ void platformMock_RtosSetActiveThread(uint32_t threadId)
 {
     g_rtosActiveThread = threadId;
 }
+
+void platformMock_RtosSetIsSetThreadStateSupported(int isSupported)
+{
+    g_isSetThreadStateSupported = isSupported;
+}
+
+PlatformThreadState platformMock_RtosGetThreadState(uint32_t threadId)
+{
+    if (threadId == MRI_PLATFORM_ALL_THREADS)
+    {
+        return g_allThreadState;
+    }
+    if (g_specificThreadId == threadId)
+    {
+        return g_specificThreadState;
+    }
+    return (PlatformThreadState)128;
+}
+
 
 
 
@@ -823,6 +846,24 @@ int Platform_RtosIsThreadActive(uint32_t threadId)
 {
     return threadId == g_rtosActiveThread;
 }
+
+int Platform_RtosIsSetThreadStateSupported(void)
+{
+    return g_isSetThreadStateSupported;
+}
+
+void Platform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state)
+{
+    if (threadId == MRI_PLATFORM_ALL_THREADS)
+    {
+        g_allThreadState = state;
+        return;
+    }
+    g_specificThreadId = threadId;
+    g_specificThreadState = state;
+}
+
+
 
 
 // Mock Setup and Cleanup APIs.
@@ -879,6 +920,10 @@ void platformMock_Init(void)
     g_rtosContextThreadId = 0;
     g_pRtosContext = NULL;
     g_rtosActiveThread = 0;
+    g_isSetThreadStateSupported = 0;
+    g_specificThreadId = 0;
+    g_specificThreadState = (PlatformThreadState)128;
+    g_allThreadState = (PlatformThreadState)128;
 }
 
 void platformMock_Uninit(void)

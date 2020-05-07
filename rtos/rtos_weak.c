@@ -44,3 +44,12 @@ __attribute__((weak)) int Platform_RtosIsThreadActive(uint32_t threadId)
 {
     return 0;
 }
+
+__attribute__((weak)) int Platform_RtosIsSetThreadStateSupported(void)
+{
+    return 0;
+}
+
+__attribute__((weak)) void Platform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state)
+{
+}

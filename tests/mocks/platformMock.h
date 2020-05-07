@@ -96,5 +96,7 @@ void platformMock_RtosSetThreads(const uint32_t* pThreadArray, uint32_t threadCo
 void platformMock_RtosSetExtraThreadInfo(uint32_t threadId, const char* pExtraThreadInfo);
 void platformMock_RtosSetThreadContext(uint32_t threadId, MriContext* pContext);
 void platformMock_RtosSetActiveThread(uint32_t threadId);
+void platformMock_RtosSetIsSetThreadStateSupported(int isSupported);
+PlatformThreadState platformMock_RtosGetThreadState(uint32_t threadId);
 
 #endif /* PLATFORM_MOCK_H_ */
