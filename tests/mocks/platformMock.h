@@ -91,12 +91,20 @@ int platformMock_GetSemihostCallErrno(void);
 
 int platformMock_GetResetDeviceCalls(void);
 
+struct PlatformMockThread
+{
+    uint32_t            threadId;
+    PlatformThreadState state;
+};
+
 void platformMock_RtosSetHaltedThreadId(uint32_t threadId);
 void platformMock_RtosSetThreads(const uint32_t* pThreadArray, uint32_t threadCount);
 void platformMock_RtosSetExtraThreadInfo(uint32_t threadId, const char* pExtraThreadInfo);
 void platformMock_RtosSetThreadContext(uint32_t threadId, MriContext* pContext);
 void platformMock_RtosSetActiveThread(uint32_t threadId);
 void platformMock_RtosSetIsSetThreadStateSupported(int isSupported);
-PlatformThreadState platformMock_RtosGetThreadState(uint32_t threadId);
+void     platformMock_RtosSetThreadList(PlatformMockThread* pThreads, size_t threadCount);
+uint32_t platformMock_RtosGetThreadStateInvalidAttempts(void);
+uint32_t platformMock_RtosGetRestorePrevThreadStateCallCount(void);
 
 #endif /* PLATFORM_MOCK_H_ */

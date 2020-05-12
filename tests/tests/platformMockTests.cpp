@@ -26,18 +26,33 @@ extern "C"
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 
+#define UNTOUCHED_STATE ((PlatformThreadState)-1)
+
+
 TEST_GROUP(platformMock)
 {
-    Token   m_token;
+    enum { THREAD_COUNT = 3 };
+
+    Token              m_token;
+    PlatformMockThread m_threads[THREAD_COUNT];
+    uint32_t           m_expectedInvalidAttempts;
 
     void setup()
     {
         platformMock_Init();
         Token_Init(&m_token);
+        m_threads[0].threadId = 0x5A5A5A5A;
+        m_threads[0].state = UNTOUCHED_STATE;
+        m_threads[1].threadId = 0xBAADF00D;
+        m_threads[1].state = UNTOUCHED_STATE;
+        m_threads[2].threadId = 0xBAADFEED;
+        m_threads[2].state = UNTOUCHED_STATE;
+        m_expectedInvalidAttempts = 0;
     }
 
     void teardown()
     {
+        LONGS_EQUAL( m_expectedInvalidAttempts, platformMock_RtosGetThreadStateInvalidAttempts() );
         LONGS_EQUAL( noException , getExceptionCode() );
         platformMock_Uninit();
         clearExceptionCode();
@@ -793,36 +808,73 @@ TEST(platformMock, Platform_RtosIsSetThreadStateSupported_ReturnsTrueAfterSettin
     CHECK_TRUE( Platform_RtosIsSetThreadStateSupported() );
 }
 
-TEST(platformMock, Platform_RtosSetThreadState_SetSpecificThreadToAllStates_VerifyStateSet)
+TEST(platformMock, Platform_RtosSetThreadState_SetSpecificThreadToAllStates_VerifyCorrectStateSetInArray)
 {
+    platformMock_RtosSetThreadList(m_threads, THREAD_COUNT);
     Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_FROZEN);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(0xBAADF00D) );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
     Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_THAWED);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(0xBAADF00D) );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
     Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_SINGLE_STEPPING);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(0xBAADF00D) );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, m_threads[1].state );
+
+    // Other threads shouldn't be modified.
+    LONGS_EQUAL( UNTOUCHED_STATE, m_threads[0].state );
+    LONGS_EQUAL( UNTOUCHED_STATE, m_threads[2].state );
 }
 
-TEST(platformMock, Platform_RtosSetThreadState_GetOnDifferentThreadIdShouldReturnInvalidStateOf128)
+TEST(platformMock, Platform_RtosSetThreadState_SetAllThreadsToAllStates_VerifyCorrectStateSetInArray)
 {
-    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_FROZEN);
-    CHECK_EQUAL( (PlatformThreadState)128, platformMock_RtosGetThreadState(0xBAADFEED) );
-}
+    platformMock_RtosSetThreadList(m_threads, THREAD_COUNT);
 
-TEST(platformMock, Platform_RtosSetThreadState_SetAllThreadsToAllStates_VerifyStateSet)
-{
-    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_FROZEN);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
     Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_THAWED);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
+
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_FROZEN);
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[0].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[2].state );
+
     Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_SINGLE_STEPPING);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, m_threads[0].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, m_threads[1].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, m_threads[2].state );
 }
 
-TEST(platformMock, Platform_RtosSetThreadState_VerifyMockCanRememberSpecificAndAllStateSettings)
+TEST(platformMock, Platform_RtosSetThreadState_SetAllFrozenThreadsToThawed_VerifyCorrectStateSetInArray)
 {
-    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_THREADS, MRI_PLATFORM_THREAD_FROZEN);
-    Platform_RtosSetThreadState(0xBAADF00D, MRI_PLATFORM_THREAD_THAWED);
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, platformMock_RtosGetThreadState(MRI_PLATFORM_ALL_THREADS) );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, platformMock_RtosGetThreadState(0xBAADF00D) );
+    m_threads[0].state = MRI_PLATFORM_THREAD_FROZEN;
+    m_threads[1].state = MRI_PLATFORM_THREAD_SINGLE_STEPPING;
+    m_threads[2].state = MRI_PLATFORM_THREAD_FROZEN;
+    platformMock_RtosSetThreadList(m_threads, THREAD_COUNT);
+
+    Platform_RtosSetThreadState(MRI_PLATFORM_ALL_FROZEN_THREADS, MRI_PLATFORM_THREAD_THAWED);
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, m_threads[1].state );
+    LONGS_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
+}
+
+TEST(platformMock, Platform_RtosSetThreadState_SetOnInvalidThread_VerifyInvalidAttemptCountIs1)
+{
+    platformMock_RtosSetThreadList(m_threads, THREAD_COUNT);
+    Platform_RtosSetThreadState(0x11223344, MRI_PLATFORM_THREAD_FROZEN);
+    m_expectedInvalidAttempts = 1;
+    LONGS_EQUAL( 1, platformMock_RtosGetThreadStateInvalidAttempts() );
+
+    // None of the threads should be modified.
+    LONGS_EQUAL( UNTOUCHED_STATE, m_threads[0].state );
+    LONGS_EQUAL( UNTOUCHED_STATE, m_threads[1].state );
+    LONGS_EQUAL( UNTOUCHED_STATE, m_threads[2].state );
+}
+
+
+TEST(platformMock, Platform_RtosRestorePrevThreadState_VerifyCallCount)
+{
+    LONGS_EQUAL( 0, platformMock_RtosGetRestorePrevThreadStateCallCount() );
+    Platform_RtosRestorePrevThreadState();
+    LONGS_EQUAL( 1, platformMock_RtosGetRestorePrevThreadStateCallCount() );
+    Platform_RtosRestorePrevThreadState();
+    LONGS_EQUAL( 2, platformMock_RtosGetRestorePrevThreadStateCallCount() );
 }

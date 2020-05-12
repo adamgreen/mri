@@ -747,10 +747,11 @@ static const char* g_pRtosExtraThreadInfo;
 static uint32_t    g_rtosContextThreadId;
 static MriContext* g_pRtosContext;
 static uint32_t    g_rtosActiveThread;
-static int         g_isSetThreadStateSupported;
-static uint32_t    g_specificThreadId;
-static PlatformThreadState g_specificThreadState;
-static PlatformThreadState g_allThreadState;
+static int         g_isRtosSetThreadStateSupported;
+static PlatformMockThread* g_pRtosThreadStates;
+static size_t      g_rtosThreadStateCount;
+static uint32_t    g_rtosInvalidThreadAttempts;
+static uint32_t    g_rtosRestorePrevThreadStateCallCount;
 
 void platformMock_RtosSetHaltedThreadId(uint32_t threadId)
 {
@@ -782,20 +783,23 @@ void platformMock_RtosSetActiveThread(uint32_t threadId)
 
 void platformMock_RtosSetIsSetThreadStateSupported(int isSupported)
 {
-    g_isSetThreadStateSupported = isSupported;
+    g_isRtosSetThreadStateSupported = isSupported;
 }
 
-PlatformThreadState platformMock_RtosGetThreadState(uint32_t threadId)
+void platformMock_RtosSetThreadList(PlatformMockThread* pThreads, size_t threadCount)
 {
-    if (threadId == MRI_PLATFORM_ALL_THREADS)
-    {
-        return g_allThreadState;
-    }
-    if (g_specificThreadId == threadId)
-    {
-        return g_specificThreadState;
-    }
-    return (PlatformThreadState)128;
+    g_pRtosThreadStates = pThreads;
+    g_rtosThreadStateCount = threadCount;
+}
+
+uint32_t platformMock_RtosGetThreadStateInvalidAttempts(void)
+{
+    return g_rtosInvalidThreadAttempts;
+}
+
+uint32_t platformMock_RtosGetRestorePrevThreadStateCallCount(void)
+{
+    return g_rtosRestorePrevThreadStateCallCount;
 }
 
 
@@ -849,19 +853,32 @@ int Platform_RtosIsThreadActive(uint32_t threadId)
 
 int Platform_RtosIsSetThreadStateSupported(void)
 {
-    return g_isSetThreadStateSupported;
+    return g_isRtosSetThreadStateSupported;
 }
 
 void Platform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state)
 {
-    if (threadId == MRI_PLATFORM_ALL_THREADS)
+    bool foundThread = false;
+
+    for (size_t i = 0 ; i < g_rtosThreadStateCount ; i++)
     {
-        g_allThreadState = state;
-        return;
+        if (g_pRtosThreadStates[i].threadId == threadId ||
+            threadId == MRI_PLATFORM_ALL_THREADS ||
+            (threadId == MRI_PLATFORM_ALL_FROZEN_THREADS && g_pRtosThreadStates[i].state == MRI_PLATFORM_THREAD_FROZEN))
+        {
+            foundThread = true;
+            g_pRtosThreadStates[i].state = state;
+        }
     }
-    g_specificThreadId = threadId;
-    g_specificThreadState = state;
+    if (!foundThread)
+        g_rtosInvalidThreadAttempts++;
 }
+
+void Platform_RtosRestorePrevThreadState(void)
+{
+    g_rtosRestorePrevThreadStateCallCount++;
+}
+
 
 
 
@@ -920,10 +937,11 @@ void platformMock_Init(void)
     g_rtosContextThreadId = 0;
     g_pRtosContext = NULL;
     g_rtosActiveThread = 0;
-    g_isSetThreadStateSupported = 0;
-    g_specificThreadId = 0;
-    g_specificThreadState = (PlatformThreadState)128;
-    g_allThreadState = (PlatformThreadState)128;
+    g_isRtosSetThreadStateSupported = 0;
+    g_pRtosThreadStates = NULL;
+    g_rtosThreadStateCount = 0;
+    g_rtosInvalidThreadAttempts = 0;
+    g_rtosRestorePrevThreadStateCallCount = 0;
 }
 
 void platformMock_Uninit(void)

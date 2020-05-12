@@ -53,3 +53,7 @@ __attribute__((weak)) int Platform_RtosIsSetThreadStateSupported(void)
 __attribute__((weak)) void Platform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state)
 {
 }
+
+__attribute__((weak)) void Platform_RtosRestorePrevThreadState(void)
+{
+}
