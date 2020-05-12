@@ -131,3 +131,51 @@ TEST(cmdStep, SetSignalCommandWithMissingAddressAfterSemicolon)
     CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
+
+TEST(cmdStep, RtosSetThreadStateEnabled_BasicSingleStep_VerifyThreadStatesAreSet)
+{
+    PlatformMockThread threads[3];
+    threads[0].threadId = 0x5A5A5A5A;
+    threads[0].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[1].threadId = 0xBAADF00D;
+    threads[1].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[2].threadId = 0xBAADFEED;
+    threads[2].state = MRI_PLATFORM_THREAD_FROZEN;
+    platformMock_RtosSetThreadList(threads, sizeof(threads)/sizeof(threads[0]));
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$s#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, threads[2].state );
+}
+
+TEST(cmdStep, RtosSetThreadStateEnabled_SetSignalOnly_VerifyThreadStatesAreSet)
+{
+    PlatformMockThread threads[3];
+    threads[0].threadId = 0x5A5A5A5A;
+    threads[0].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[1].threadId = 0xBAADF00D;
+    threads[1].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[2].threadId = 0xBAADFEED;
+    threads[2].state = MRI_PLATFORM_THREAD_FROZEN;
+    platformMock_RtosSetThreadList(threads, sizeof(threads)/sizeof(threads[0]));
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$S0b#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_SINGLE_STEPPING, threads[2].state );
+}

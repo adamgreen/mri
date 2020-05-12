@@ -117,6 +117,29 @@ TEST(cmdContinue, SetSignalCommandWithMissingAddressAfterSemicolon)
     CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
 }
 
+TEST(cmdContinue, RtosSetThreadStateEnabled_SkipOverHardcodedBreakpoints_VerifyThreadStatesAreSet)
+{
+    PlatformMockThread threads[3];
+    threads[0].threadId = 0x5A5A5A5A;
+    threads[0].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[1].threadId = 0xBAADF00D;
+    threads[1].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[2].threadId = 0xBAADFEED;
+    threads[2].state = MRI_PLATFORM_THREAD_FROZEN;
+    platformMock_RtosSetThreadList(threads, sizeof(threads)/sizeof(threads[0]));
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_SetTypeOfCurrentInstruction(MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[2].state );
+}
+
 TEST(cmdContinue, DetachCommand_ShouldWorkSimilarToContinueCommand_ButReturnOk)
 {
     platformMock_CommInitReceiveChecksummedData("+$D#");
@@ -134,4 +157,26 @@ TEST(cmdContinue, DetachCommand_ShouldWorkSimilarToContinueCommand_SkipOverHardc
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#"), platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 1, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdContinue, RtosSetThreadStateEnabled_DetachCommand_VerifyThreadStatesAreSet)
+{
+    PlatformMockThread threads[3];
+    threads[0].threadId = 0x5A5A5A5A;
+    threads[0].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[1].threadId = 0xBAADF00D;
+    threads[1].state = MRI_PLATFORM_THREAD_FROZEN;
+    threads[2].threadId = 0xBAADFEED;
+    threads[2].state = MRI_PLATFORM_THREAD_FROZEN;
+    platformMock_RtosSetThreadList(threads, sizeof(threads)/sizeof(threads[0]));
+    platformMock_RtosSetHaltedThreadId(0xBAADFEED);
+    platformMock_RtosSetIsSetThreadStateSupported(1);
+    platformMock_CommInitReceiveChecksummedData("+$D#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05thread:baadfeed;responseT#+$OK#"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, threads[2].state );
 }

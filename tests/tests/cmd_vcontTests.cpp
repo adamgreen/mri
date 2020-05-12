@@ -807,10 +807,10 @@ TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadIdWit
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     // Each instruction advance is hardcoded to 4 bytes in the mock.
     CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
-    // If single step over hardcoded breakpoint then Platform_RtosSetThreadState() should be called.
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[0].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[2].state );
+    // Second continue command to get mriDebugException() to return will thaw all threads.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
 }
 
 TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
@@ -826,10 +826,10 @@ TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepHaltedThreadIdWit
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     // Each instruction advance is hardcoded to 4 bytes in the mock.
     CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
-    // If single step over hardcoded breakpoint then Platform_RtosSetThreadState() should be called.
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[0].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[2].state );
+    // Second continue command to get mriDebugException() to return will thaw all threads.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
 }
 
 TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_RangedSingleStepNotHaltedThreadId_NoSkipHardcodedBreakpoint)
@@ -879,10 +879,10 @@ TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadIdWithNoCon
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     // Each instruction advance is hardcoded to 4 bytes in the mock.
     CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
-    // If single step over hardcoded breakpoint then Platform_RtosSetThreadState() should be called.
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[0].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[2].state );
+    // Second continue command to get mriDebugException() to return will thaw all threads.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
 }
 
 TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadIdWithContinue_SkipHardcodedBreakpoint)
@@ -898,10 +898,10 @@ TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepHaltedThreadIdWithConti
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     // Each instruction advance is hardcoded to 4 bytes in the mock.
     CHECK_EQUAL( 0x10000008, platformMock_GetProgramCounterValue() );
-    // If single step over hardcoded breakpoint then Platform_RtosSetThreadState() should be called.
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[0].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[1].state );
-    CHECK_EQUAL( MRI_PLATFORM_THREAD_FROZEN, m_threads[2].state );
+    // Second continue command to get mriDebugException() to return will thaw all threads.
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[0].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[1].state );
+    CHECK_EQUAL( MRI_PLATFORM_THREAD_THAWED, m_threads[2].state );
 }
 
 TEST(cmdVCont, vCont_RtosSetThreadStateEnabled_SingleStepNotHaltedThreadId_NoSkipHardcodedBreakpoint)

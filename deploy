@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-GCC4MBED=../gcc4mbed/mri
+GCC4MBED=../gcc4mbed.back/mri
 
 set -x
 
