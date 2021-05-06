@@ -573,7 +573,7 @@ static void checkTheseFractionalDivisors(CalculateDivisors* pThis)
     fixedScale = fixedOne + ((pThis->divAdd << 15) / pThis->mul);
     testDivisor = pThis->desiredRatio / fixedScale;
     fixedRatio = testDivisor * fixedScale;
-    fixedDelta = abs(fixedRatio - pThis->desiredRatio);
+    fixedDelta = abs((int32_t)fixedRatio - (int32_t)pThis->desiredRatio);
 
     if (fixedDelta < pThis->closestDelta)
     {
