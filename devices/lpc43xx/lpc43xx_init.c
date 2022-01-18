@@ -58,10 +58,9 @@ void mriLpc43xx_Init(Token* pParameterTokens)
     __catch
         __rethrow;
 
-    /* mriCortexInit() sets all interrupts to lower priority. UART interrupt
-     * must be at same level as DebugMon_Handler, so initialize it after
-     * calling mriCortexInit();
-     */
+    /* mriCortexInit() sets all interrupts to lower priority than debug monitor. Interrupt for UART used by GDB must be
+       elevated to the same level as DebugMon_Handler, so initialize it after calling mriCortexInit().
+    */
     mriLpc43xxUart_Init(pParameterTokens);
 }
 

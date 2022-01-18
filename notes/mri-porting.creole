@@ -133,10 +133,9 @@ void mriLpc176x_Init(Token* pParameterTokens)
     __catch
         __rethrow;
 
-    /* mriCortexInit() sets all interrupts to lower priority. UART interrupt
-     * must be at same level as DebugMon_Handler, so initialize it after
-     * calling mriCortexInit();
-     */
+    /* mriCortexInit() sets all interrupts to lower priority than debug monitor. Interrupt for UART used by GDB must be
+       elevated to the same level as DebugMon_Handler, so initialize it after calling mriCortexInit().
+    */
     mriLpc176xUart_Init(pParameterTokens);
 }
 }}}
@@ -148,7 +147,7 @@ Notes about this example:
   the weak implementations found in the CMSIS startup code.
 * Calls {{{mriCortexMInit()}}} to initialize the ARMv7-M architecture level portion of MRI.  If this should fail then
   it will return immediately rather than attempting to initialize device specific features. The second parameter of
-  CANActivity_IRQn is the highest external device IRQn on the LPC176x. It is used to initialize all of the LPC176x 
+  CANActivity_IRQn is the highest external device IRQn on the LPC176x. It is used to initialize all of the LPC176x
   external interrupts to priority 1, reserving priority 0 for debugger related interrupts/exceptions.
 * Finally it calls {{{mriLpc176xUart_Init()}}} to initialize the UART to be used for communicating to GDB.
 
