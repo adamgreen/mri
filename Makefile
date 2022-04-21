@@ -1,4 +1,4 @@
-# Copyright 2020 Adam Green (https://github.com/adamgreen)
+# Copyright 2022 Adam Green (https://github.com/adamgreen)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,12 +69,12 @@ else
 endif
 
 # Flags to use when cross-compiling ARMv7-M binaries.
-ARMV7M_GCCFLAGS := -Os -g3 -mcpu=cortex-m3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
+ARMV7M_GCCFLAGS := -Os -g3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
 ARMV7M_GCCFLAGS += -DMRI_THREAD_MRI=0
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
-ARMV7M_ASFLAGS  := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb -g3 -x assembler-with-cpp -MMD -MP
+ARMV7M_ASFLAGS  := -mthumb -g3 -x assembler-with-cpp -MMD -MP
 
 # Flags to use when compiling binaries to run on this host system.
 HOST_GCCFLAGS := -O2 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
@@ -114,16 +114,20 @@ DEPS :=
 ARM_BOARD_LIBS :=
 
 # Useful macros.
-objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
-armv7m_objs = $(call objs,$1,$(ARMV7M_OBJDIR))
+objs = $(addprefix $2/,$(addsuffix .o,$(basename $(foreach i,$1,$(wildcard $i/*.c $i/*.cpp $i/*.S)))))
+armv7m_objs = $(call objs,$1,$(ARMV7M_OBJDIR)/$2)
 host_objs = $(call objs,$1,$(HOST_OBJDIR))
 gcov_host_objs = $(call objs,$1,$(GCOV_HOST_OBJDIR))
 add_deps = $(patsubst %.o,%.d,$(ARMV7M_$1_OBJ) $(HOST_$1_OBJ) $(GCOV_HOST_$1_OBJ))
 obj_to_gcda = $(patsubst %.o,%.gcda,$1)
 includes = $(patsubst %,-I%,$1)
 define armv7m_module
-    ARMV7M_$1_OBJ := $(call armv7m_objs,$2)
+    ARMV7M_$1_OBJ := $(call armv7m_objs,$2,nofpu)
     DEPS += $$(call add_deps,$1)
+    ARMV7M_$1_FPU_OBJ := $(call armv7m_objs,$2,fpu)
+    DEPS += $$(call add_deps,$1_FPU)
+    ARMV7M_$1_FPU_HARD_OBJ := $(call armv7m_objs,$2,fpu_hard)
+    DEPS += $$(call add_deps,$1_FPU_HARD)
 endef
 define build_lib
 	@echo Building $@
@@ -185,13 +189,11 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
 		$Q $(REMOVE) $(call obj_to_gcda,$(GCOV_HOST_$1_OBJ)) $(QUIET)
 		$Q ./$$^
 endef
-define make_board_library #,BOARD,sourcedir,libfilename,OBJS,includes
-    ARMV7M_$1_OBJ := $(call armv7m_objs,$2)
-    ARMV7M_$1_LIB = $(ARMV7M_LIBDIR)/$3
-    DEPS += $$(call add_deps,$1)
+define make_board_library #,BOARD,libfilename,OBJS,includes
+    ARMV7M_$1_LIB = $(ARMV7M_LIBDIR)/$2
     ARM_BOARD_LIBS += $$(ARMV7M_$1_LIB)
-    $$(ARMV7M_$1_LIB) : INCLUDES := $(INCLUDES) $5
-    $$(ARMV7M_$1_LIB) : $$(ARMV7M_$1_OBJ) $(foreach i,$4,$$(ARMV7M_$i_OBJ))
+    $$(ARMV7M_$1_LIB) : INCLUDES := $(INCLUDES) $4
+    $$(ARMV7M_$1_LIB) : $$(ARMV7M_$1_OBJ) $(foreach i,$3,$$(ARMV7M_$i_OBJ))
 		$$(call build_lib,ARMV7M)
 endef
 
@@ -201,53 +203,61 @@ $(eval $(call make_library,CPPUTEST,CppUTest/src/CppUTest CppUTest/src/Platforms
 $(eval $(call make_tests,CPPUTEST,CppUTest/tests,,))
 
 # MRI Core sources to build and test.
-ARMV7M_CORE_OBJ    := $(call armv7m_objs,core)
-ARMV7M_CORE_OBJ    += $(call armv7m_objs,rtos)
+$(eval $(call armv7m_module,CORE,core rtos))
 $(eval $(call make_library,CORE,core memory/native,libmricore.a,.))
 $(eval $(call make_tests,CORE,tests/tests tests/mocks,. tests/mocks,))
 $(eval $(call run_gcov,CORE))
 
 # Sources for newlib and mbed's LocalFileSystem semihosting support.
-ARMV7M_SEMIHOST_OBJ := $(call armv7m_objs,semihost)
-ARMV7M_SEMIHOST_OBJ += $(call armv7m_objs,semihost/newlib)
-ARMV7M_SEMIHOST_OBJ += $(call armv7m_objs,semihost/mbed)
-DEPS += $(call add_deps,SEMIHOST)
+$(eval $(call armv7m_module,SEMIHOST,semihost semihost/newlib semihost/mbed))
 
-# ARMv7-M architecture sources with and without FPU support.
-ARMV7M_ARMV7M_OBJ := $(call objs,architectures/armv7-m,$(ARMV7M_OBJDIR)/nofpu)
-DEPS += $(call add_deps,ARMV7M)
-ARMV7M_ARMV7M_FPU_OBJ := $(call objs,architectures/armv7-m,$(ARMV7M_OBJDIR)/fpu)
-DEPS += $(call add_deps,ARMV7M_FPU)
+# ARMv7-M architecture sources.
+$(eval $(call armv7m_module,ARMV7M,architectures/armv7-m))
 
 # Native memory access sources.
 $(eval $(call armv7m_module,NATIVE_MEM,memory/native))
 
 
 # ** DEVICES **
-
-$(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
-
 # LPC176x device sources.
 $(eval $(call armv7m_module,LPC176X,devices/lpc176x))
 
 # LPC43xx device sources.
 $(eval $(call armv7m_module,LPC43XX,devices/lpc43xx))
 
+# NRF52xxx device sources.
+$(eval $(call armv7m_module,NRF52,devices/nrf52))
+
+# STM32F429XX device sources.
+$(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
+
 
 # ** BOARDS **
 # mbed 1768 board
-$(eval $(call make_board_library,MBED1768,boards/mbed1768,libmri_mbed1768.a,\
-                                 CORE SEMIHOST ARMV7M NATIVE_MEM LPC176X,\
+$(eval $(call armv7m_module,MBED1768,boards/mbed1768))
+$(eval $(call make_board_library,MBED1768_1,libmri_mbed1768.a,\
+                                 CORE SEMIHOST ARMV7M NATIVE_MEM LPC176X MBED1768,\
                                  cmsis/LPC17xx))
 
 # Bambino 210 LPC4330 board
-$(eval $(call make_board_library,BAMBINO210,boards/bambino210,libmri_bambino210.a,\
-                                 CORE SEMIHOST ARMV7M_FPU NATIVE_MEM LPC43XX,\
+$(eval $(call armv7m_module,BAMBINO210,boards/bambino210))
+$(eval $(call make_board_library,BAMBINO210_1,libmri_bambino210.a,\
+                                 CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU LPC43XX_FPU BAMBINO210_FPU,\
                                  cmsis/LPC43xx))
 
+# nRF52-DK board with nRF52832 microcontroller
+$(eval $(call armv7m_module,NRF52DK,boards/nrf52dk))
+$(eval $(call make_board_library,NRF52_DK_1,libmri_nrf52dk_fpu_soft.a,\
+                                  CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU NRF52_FPU NRF52DK_FPU,\
+                                  cmsis/nrf52))
+$(eval $(call make_board_library,NRF52_DK_2,libmri_nrf52dk_fpu_hard.a,\
+                                  CORE_FPU_HARD SEMIHOST_FPU_HARD ARMV7M_FPU_HARD NATIVE_MEM_FPU_HARD NRF52_FPU_HARD NRF52DK_FPU_HARD,\
+                                  cmsis/nrf52))
+
 # STM32F429i-Discovery STM32F429xx board
-$(eval $(call make_board_library,STM32F429_DISCO,boards/stm32f429-disco,libmri_stm32f429-disco.a,\
-                                  CORE SEMIHOST ARMV7M_FPU NATIVE_MEM STM32F429XX,\
+$(eval $(call armv7m_module,STM32F429_DISCO,boards/stm32f429-disco))
+$(eval $(call make_board_library,STM32F429_DISCO1,libmri_stm32f429-disco.a,\
+                                  CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU STM32F429XX_FPU STM32F429_DISCO_FPU,\
                                   cmsis/STM32F429xx))
 
 # All boards to be built for ARM target.
@@ -255,35 +265,35 @@ ARM_BOARDS : $(ARM_BOARD_LIBS)
 
 
 # *** Pattern Rules ***
-$(ARMV7M_OBJDIR)/%.o : %.c
-	@echo Compiling $<
-	$Q $(MAKEDIR)
-	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
-
-$(ARMV7M_OBJDIR)/%.o : %.S
-	@echo Assembling $<
-	$Q $(MAKEDIR)
-	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
-
 $(ARMV7M_OBJDIR)/nofpu/%.o : %.c
 	@echo Compiling $< for no FPU
 	$Q $(MAKEDIR)
-	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
+	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -mcpu=cortex-m3 -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(ARMV7M_OBJDIR)/nofpu/%.o : %.S
 	@echo Assembling $< for no FPU
 	$Q $(MAKEDIR)
-	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
+	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -mcpu=cortex-m3 -DMRI_DEVICE_HAS_FPU=0 $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(ARMV7M_OBJDIR)/fpu/%.o : %.c
 	@echo Compiling $< for FPU
 	$Q $(MAKEDIR)
-	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
+	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(ARMV7M_OBJDIR)/fpu/%.o : %.S
 	@echo Assembling $< for FPU
 	$Q $(MAKEDIR)
-	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
+	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/fpu_hard/%.o : %.c
+	@echo Compiling $< for FPU_HARD
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_GCC) $(ARMV7M_GCCFLAGS) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(ARMV7M_OBJDIR)/fpu_hard/%.o : %.S
+	@echo Assembling $< for FPU_HARD
+	$Q $(MAKEDIR)
+	$Q $(ARMV7M_AS) $(ARMV7M_ASFLAGS) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -DMRI_DEVICE_HAS_FPU=1 $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(HOST_OBJDIR)/%.o : %.c
 	@echo Compiling $<

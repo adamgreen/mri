@@ -191,7 +191,7 @@ static void determineSubPriorityBitCount(void)
     uint32_t subPriorityBitCount;
 
     /* Setting DebugMon priority to 0xFF to see how many lsbits read back as zero. */
-    /* DebugMon priority will be later set correctly by mriCortexMInit(). */
+    /* DebugMon priority will later be set correctly by mriCortexMInit(). */
     SCB->SHP[debugMonExceptionNumber-4] = 0xFF;
     zeroBitCount = 32 - (uint32_t)__CLZ(~(SCB->SHP[debugMonExceptionNumber-4] | 0xFFFFFF00));
     subPriorityBitCount = NVIC_GetPriorityGrouping() + 1;
