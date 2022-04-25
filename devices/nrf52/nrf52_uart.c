@@ -189,3 +189,13 @@ static uint32_t hasTransmitCompleted(void)
 {
     return NRF_UART0->EVENTS_TXDRDY;
 }
+
+
+/* Implementation of nRF52xxx UART0 ISR to be intercepted and sent to mri instead. */
+void __attribute__((naked)) UARTE0_UART0_IRQHandler(void)
+{
+    __asm volatile (
+    "   .syntax unified                 \n"
+    "   b.w       mriExceptionHandler   \n"
+    );
+}
