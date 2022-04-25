@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -137,10 +137,16 @@ static void determineSubPriorityBitCount(void);
 static void configureDWTandFPB(void);
 static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority);
 static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq);
+static void disableDebuggerStack(void);
 static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority);
 void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type highestExternalIrq)
 {
-    if (!MRI_THREAD_MRI)
+    if (MRI_THREAD_MRI)
+    {
+        /* Always set DebugMon interrupt priority to lowest level, 255, when using threaded MRI. */
+        debugMonPriority = 255;
+    }
+    else
     {
         /* Reference routine in ASM module to make sure that is gets linked in. */
         void (* volatile dummyReference)(void) = mriExceptionHandler;
@@ -152,17 +158,23 @@ void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type
     clearState();
     determineSubPriorityBitCount();
     configureDWTandFPB();
-    if (!MRI_THREAD_MRI)
+    if (debugMonPriority == 0)
     {
         defaultSvcAndSysTickInterruptsToLowerPriority(debugMonPriority+1);
         defaultExternalInterruptsToLowerPriority(debugMonPriority+1, highestExternalIrq);
     }
+    else
+    {
+        /* When not running MRI at highest priority, the user is responsible for the priority level of all the */
+        /* other interrupts in the system. Only the user knows what they want to be able to debug and what should */
+        /* run in the background while the debugger is active. */
+        /* Don't want to change MSP to point to special debugger stack during debug exceptions if higher priority */
+        /* interrupts exist that can run while stopped in debugger. */
+        disableDebuggerStack();
+    }
     Platform_DisableSingleStep();
     clearMonitorPending();
-    if (MRI_THREAD_MRI)
-        enableDebugMonitorAtSpecifiedPriority(255);
-    else
-        enableDebugMonitorAtSpecifiedPriority(debugMonPriority);
+    enableDebugMonitorAtSpecifiedPriority(debugMonPriority);
 }
 
 static void fillDebuggerStack(void)
@@ -220,6 +232,11 @@ static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type
 
     for (irq = 0 ; irq <= highestExternalIrq ; irq++)
         mriCortexMSetPriority((IRQn_Type)irq, priority, 0);
+}
+
+static void disableDebuggerStack(void)
+{
+    mriCortexMFlags |= CORTEXM_FLAGS_NO_DEBUG_STACK;
 }
 
 static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority)

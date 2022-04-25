@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -95,9 +95,9 @@
     */
 mriExceptionHandler:
     /* Check to see if we should just return because a MRI initiated memory read/write failed. */
-    ldr     r0, =mriCortexMFlags
-    ldr     r0, [r0]
-    tst     r0, #CORTEXM_FLAGS_ACTIVE_DEBUG
+    ldr     r2, =mriCortexMFlags
+    ldr     r2, [r2]
+    tst     r2, #CORTEXM_FLAGS_ACTIVE_DEBUG
     beq     1$
     /* MRI has initiated a memory read/write that has failed. Unless MRI has a critical bug, it is safe to use MSP
        for calling C code at this point to take care of setting the flag to indicate that the read/write has failed
@@ -116,14 +116,16 @@ mriExceptionHandler:
 
     /* Save away copy of MSP value at the time of the fault into R0. */
 3$: mrs     r1, msp
-    /* Set MSP to top of debugger stack. */
-    msr     msp, r0
+    /* Set MSP to top of debugger stack if it hasn't been disabled. */
+    tst     r2, #CORTEXM_FLAGS_NO_DEBUG_STACK
+    it      eq
+    msreq   msp, r0
 
     /* Saving integer registers to debugger stack. */
     /* R4 - R11, EXC_RETURN */
     push    {r4-r11, lr}
     /* MSP, PSP, PRIMASK, BASEPRI, FAULTMASK, CONTROL */
-    mov     r4, r1      /* MSP was saved away in R0 previously. */
+    mov     r4, r1      /* MSP was saved away in R1 previously. */
     mrs     r5, psp
     mrs     r6, primask
     mrs     r7, basepri

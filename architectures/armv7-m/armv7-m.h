@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@
 #define CORTEXM_FLAGS_RESTORE_BASEPRI       (1 << 3)
 #define CORTEXM_FLAGS_SVC_STEP              (1 << 4)
 #define CORTEXM_FLAGS_CTRL_C                (1 << 5)
+#define CORTEXM_FLAGS_NO_DEBUG_STACK        (1 << 6)
 
 /* Special memory area used by the debugger for its stack so that it doesn't interfere with the task's
    stack contents.
