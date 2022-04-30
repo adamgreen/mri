@@ -915,11 +915,13 @@ static void setActiveDebugFlag(void)
 static void checkStack(void);
 static void clearControlCFlag(void);
 static void clearActiveDebugFlag(void);
+static void clearPendedFromFaultFlag(void);
 void Platform_LeavingDebugger(void)
 {
     checkStack();
     clearControlCFlag();
     clearActiveDebugFlag();
+    clearPendedFromFaultFlag();
     clearMonitorPending();
 }
 
@@ -931,6 +933,11 @@ static void clearControlCFlag(void)
 static void clearActiveDebugFlag(void)
 {
     mriCortexMFlags &= ~CORTEXM_FLAGS_ACTIVE_DEBUG;
+}
+
+static void clearPendedFromFaultFlag(void)
+{
+    mriCortexMFlags &= ~CORTEXM_FLAGS_PEND_FROM_FAULT;
 }
 
 static void checkStack(void)
@@ -1396,6 +1403,7 @@ static void clearFaultStatusBits(void)
 
 static ExceptionStack* getExceptionStack(uint32_t excReturn, uint32_t psp, uint32_t msp);
 static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
+static int wasPendedFromFault(void);
 static uint32_t encounteredStackingException(void);
 static int prepareThreadContext(ExceptionStack* pExceptionStack, IntegerRegisters* pIntegerRegs, uint32_t* pFloatingRegs);
 static void allocateFakeFloatRegAndCallMriDebugException(void);
@@ -1404,17 +1412,23 @@ void mriCortexMExceptionHandler(IntegerRegisters* pIntegerRegs, uint32_t* pFloat
     uint32_t excReturn = pIntegerRegs->excReturn;
     uint32_t msp = pIntegerRegs->msp;
     uint32_t psp = pIntegerRegs->psp;
-    uint32_t exceptionNumber = getCurrentlyExecutingExceptionNumber();
     ExceptionStack* pExceptionStack = getExceptionStack(excReturn, psp, msp);
     int needToFakeFloatRegs = 0;
 
-    if (isExternalInterrupt(exceptionNumber) && !Platform_CommHasReceiveData())
+    /* If we know that DebugMon was pended from a fault handler then it wasn't a comm channel interrupt and there */
+    /* is no need to record/clear the fault status bits as this was done before pending DebugMon. */
+    if (!wasPendedFromFault())
     {
-        /* Just return if communication channel had a pending interrupt when last debug session completed. */
-        return;
+        uint32_t exceptionNumber = getCurrentlyExecutingExceptionNumber();
+        if (isExternalInterrupt(exceptionNumber) && !Platform_CommHasReceiveData())
+        {
+            /* Just return if communication channel had a pending interrupt when last debug session completed. */
+            return;
+        }
+
+        recordAndClearFaultStatusBits(exceptionNumber);
     }
 
-    recordAndClearFaultStatusBits(exceptionNumber);
     mriCortexMState.taskSP = (uint32_t)pExceptionStack;
     if (encounteredStackingException())
         pExceptionStack = (ExceptionStack*)g_fakeStack;
@@ -1425,6 +1439,11 @@ void mriCortexMExceptionHandler(IntegerRegisters* pIntegerRegs, uint32_t* pFloat
         allocateFakeFloatRegAndCallMriDebugException();
     else
         mriDebugException(&mriCortexMState.context);
+}
+
+static int wasPendedFromFault(void)
+{
+    return mriCortexMFlags & CORTEXM_FLAGS_PEND_FROM_FAULT;
 }
 
 static void recordAndClearFaultStatusBits(uint32_t exceptionNumber)

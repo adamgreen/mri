@@ -38,6 +38,7 @@
 #define CORTEXM_FLAGS_SVC_STEP              (1 << 4)
 #define CORTEXM_FLAGS_CTRL_C                (1 << 5)
 #define CORTEXM_FLAGS_NO_DEBUG_STACK        (1 << 6)
+#define CORTEXM_FLAGS_PEND_FROM_FAULT       (1 << 7)
 
 /* Special memory area used by the debugger for its stack so that it doesn't interfere with the task's
    stack contents.
