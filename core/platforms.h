@@ -41,7 +41,7 @@ uint32_t  mriPlatform_CommHasTransmitCompleted(void);
 int       mriPlatform_CommReceiveChar(void);
 void      mriPlatform_CommSendChar(int character);
 
-uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer);
+uint32_t  mriPlatform_HandleGDBCommand(Buffer* pBuffer);
 
 typedef enum
 {

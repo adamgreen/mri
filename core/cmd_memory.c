@@ -129,7 +129,7 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
     else
     {
         if (Buffer_OverrunDetected(pBuffer))
-            PrepareStringResponse( MRI_ERROR_BUFFER_OVERRUN);
+            PrepareStringResponse(MRI_ERROR_BUFFER_OVERRUN);
         else
             PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
     }

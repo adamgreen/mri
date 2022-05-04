@@ -337,7 +337,7 @@ void GdbCommandHandlingLoop(void)
     } while (!startDebuggeeUpAgain);
 }
 
-__attribute__((weak)) uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer);
+__attribute__((weak)) uint32_t  mriPlatform_HandleGDBCommand(Buffer* pBuffer);
 static int handleGDBCommand(void)
 {
     Buffer*         pBuffer = GetBuffer();
@@ -372,8 +372,8 @@ static int handleGDBCommand(void)
 
     getPacketFromGDB();
 
-    if (mriPlatform_HandleGDBComand)
-        handlerResult = mriPlatform_HandleGDBComand(pBuffer);
+    if (mriPlatform_HandleGDBCommand)
+        handlerResult = mriPlatform_HandleGDBCommand(pBuffer);
     if (handlerResult == 0)
     {
         Buffer_Reset(pBuffer);

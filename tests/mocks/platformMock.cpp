@@ -960,7 +960,7 @@ void platformMock_Uninit(void)
 
 
 // Stubs for Platform APIs that act as NOPs when called from mriCore during testing.
-extern "C" uint32_t  mriPlatform_HandleGDBComand(Buffer* pBuffer)
+extern "C" uint32_t  mriPlatform_HandleGDBCommand(Buffer* pBuffer)
 {
     return 0;
 }
