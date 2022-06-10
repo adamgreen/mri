@@ -222,25 +222,6 @@ static int handleMbedSemihostFileLengthRequest(PlatformSemihostParameters* pSemi
     {
         uint32_t        fileDescriptor;
     } FileLengthParameters;
-    typedef struct
-    {
-        uint32_t    device;
-        uint32_t    inode;
-        uint32_t    node;
-        uint32_t    numberOfLinks;
-        uint32_t    userId;
-        uint32_t    groupId;
-        uint32_t    deviceType;
-        uint32_t    totalSizeUpperWord;
-        uint32_t    totalSizeLowerWord;
-        uint32_t    blockSizeUpperWord;
-        uint32_t    blockSizeLowerWord;
-        uint32_t    blockCountUpperWord;
-        uint32_t    blockCountLowerWord;
-        uint32_t    lastAccessTime;
-        uint32_t    lastModifiedTime;
-        uint32_t    lastChangeTime;
-    } GdbStats;
     const FileLengthParameters*  pParameters = (const FileLengthParameters*)pSemihostParameters->parameter2;
     GdbStats                     gdbFileStats;
     int                          returnValue;

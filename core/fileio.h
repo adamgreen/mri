@@ -16,6 +16,8 @@
 #ifndef FILEIO_H_
 #define FILEIO_H_
 
+#include <stdint.h>
+
 #define O_RDONLY    0x0
 #define O_WRONLY    0x1
 #define O_RDWR      0x2
@@ -33,5 +35,25 @@
 #define SEEK_SET    0
 #define SEEK_CUR    1
 #define SEEK_END    2
+
+typedef struct
+{
+    uint32_t device;
+    uint32_t inode;
+    uint32_t mode;
+    uint32_t numberOfLinks;
+    uint32_t userId;
+    uint32_t groupId;
+    uint32_t deviceType;
+    uint32_t totalSizeUpperWord;
+    uint32_t totalSizeLowerWord;
+    uint32_t blockSizeUpperWord;
+    uint32_t blockSizeLowerWord;
+    uint32_t blockCountUpperWord;
+    uint32_t blockCountLowerWord;
+    uint32_t lastAccessTime;
+    uint32_t lastModifiedTime;
+    uint32_t lastChangeTime;
+} GdbStats;
 
 #endif /* FILEIO_H_ */
