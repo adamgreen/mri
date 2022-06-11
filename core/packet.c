@@ -25,6 +25,8 @@ static void getMostRecentPacket(Packet* pPacket);
 static void getPacketDataAndExpectedChecksum(Packet* pPacket);
 static void waitForStartOfNextPacket(Packet* pPacket);
 static char getNextCharFromGdb(Packet* pPacket);
+static int  isEscapePrefixChar(char charToCheck);
+static char unescapeChar(char charToUnescape);
 static int  getPacketData(Packet* pPacket);
 static void clearChecksum(Packet* pPacket);
 static void updateChecksum(Packet* pPacket, char nextChar);
@@ -95,6 +97,16 @@ static char getNextCharFromGdb(Packet* pPacket)
     return nextChar;
 }
 
+static int isEscapePrefixChar(char charToCheck)
+{
+    return charToCheck == '}';
+}
+
+static char unescapeChar(char charToUnescape)
+{
+    return charToUnescape ^ 0x20;
+}
+
 static int getPacketData(Packet* pPacket)
 {
     char nextChar;
@@ -105,6 +117,12 @@ static int getPacketData(Packet* pPacket)
     while (Buffer_BytesLeft(pPacket->pBuffer) > 0 && nextChar != '$' && nextChar != '#')
     {
         updateChecksum(pPacket, nextChar);
+        if (isEscapePrefixChar(nextChar))
+        {
+            nextChar = getNextCharFromGdb(pPacket);
+            updateChecksum(pPacket, nextChar);
+            nextChar = unescapeChar(nextChar);
+        }
         Buffer_WriteChar(pPacket->pBuffer, nextChar);
         nextChar = getNextCharFromGdb(pPacket);
     }
@@ -167,6 +185,7 @@ static void resetBufferToEnableFutureReadingOfValidPacketData(Packet* pPacket)
 
 static void sendPacket(Packet* pPacket);
 static void sendPacketHeaderByte(void);
+static char sendEscapePrefixIfNecessary(Packet* pPacket, char charToCheck);
 static void sendPacketData(Packet* pPacket);
 static void sendPacketChecksum(Packet* pPacket);
 static void sendByteAsHex(unsigned char byte);
@@ -201,11 +220,26 @@ static void sendPacketHeaderByte(void)
     Platform_CommSendChar('$');
 }
 
+static char sendEscapePrefixIfNecessary(Packet* pPacket, char charToCheck)
+{
+    if (charToCheck != '#' && charToCheck != '$' &&
+        charToCheck != '*' && charToCheck != '}')
+    {
+        return charToCheck;
+    }
+
+    Platform_CommSendChar('}');
+    updateChecksum(pPacket, '}');
+
+    return charToCheck ^ 0x20;
+}
+
 static void sendPacketData(Packet* pPacket)
 {
     while (Buffer_BytesLeft(pPacket->pBuffer) > 0)
     {
         char currChar = Buffer_ReadChar(pPacket->pBuffer);
+        currChar = sendEscapePrefixIfNecessary(pPacket, currChar);
         Platform_CommSendChar(currChar);
         updateChecksum(pPacket, currChar);
     }
