@@ -478,12 +478,12 @@ static __INLINE void clearFPBComparator(uint32_t* pComparator)
 
 static __INLINE int isAddressAboveLowestHalfGig(uint32_t address)
 {
-    return (int)(address & 0xE0000000);
+    return !!(address & 0xE0000000);
 }
 
 static __INLINE int isAddressOdd(uint32_t address)
 {
-    return (int)(address & 0x1);
+    return !!(address & 0x1);
 }
 
 static __INLINE int isBreakpointAddressInvalid(uint32_t breakpointAddress)
@@ -503,7 +503,7 @@ static __INLINE int isBreakpointAddressInvalid(uint32_t breakpointAddress)
 
 static __INLINE int isAddressInUpperHalfword(uint32_t address)
 {
-    return (int)(address & 0x2);
+    return !!(address & 0x2);
 }
 
 static __INLINE uint32_t calculateFPBComparatorReplaceValue(uint32_t breakpointAddress, int32_t is32BitInstruction)
@@ -552,12 +552,12 @@ static __INLINE uint32_t maskOffFPBComparatorReservedBits(uint32_t comparatorVal
 
 static __INLINE int isFPBComparatorEnabledRevision1(uint32_t comparator)
 {
-    return (int)(comparator & FP_COMP_ENABLE);
+    return !!(comparator & FP_COMP_ENABLE);
 }
 
 static __INLINE int isFPBComparatorEnabledRevision2(uint32_t comparator)
 {
-    return (int)((comparator & FP_COMP_BE) || (comparator & FP_COMP_FE));
+    return !!(comparator & FP_COMP_BE) || !!(comparator & FP_COMP_FE);
 }
 
 static __INLINE int isFPBComparatorEnabled(uint32_t comparator)

@@ -104,5 +104,5 @@ uint32_t mriPlatform_GetUidSize(void)
 
 int mriMbed1768_IsMbedDevice(void)
 {
-    return (int)(g_state.flags & FLAGS_MBED_DETECTED);
+    return !!(g_state.flags & FLAGS_MBED_DETECTED);
 }

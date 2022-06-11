@@ -305,7 +305,7 @@ static void prepareForDebuggerExit(void)
 
 static int hasResetBeenRequested(void)
 {
-    return (int)(g_mri.flags & MRI_FLAGS_RESET_ON_CONTINUE);
+    return !!(g_mri.flags & MRI_FLAGS_RESET_ON_CONTINUE);
 }
 
 static void waitForAckToBeTransmitted(void)
@@ -392,7 +392,7 @@ static int handleGDBCommand(void)
 
     if ((handlerResult & HANDLER_RETURN_RETURN_IMMEDIATELY) == 0)
         SendPacketToGdb();
-    return handlerResult & HANDLER_RETURN_RESUME_PROGRAM;
+    return !!(handlerResult & HANDLER_RETURN_RESUME_PROGRAM);
 }
 
 static void getPacketFromGDB(void)
@@ -417,13 +417,13 @@ void PrepareStringResponse(const char* pErrorString)
 
 int WasSuccessfullyInit(void)
 {
-    return (int)(g_mri.flags & MRI_FLAGS_SUCCESSFUL_INIT);
+    return !!(g_mri.flags & MRI_FLAGS_SUCCESSFUL_INIT);
 }
 
 
 int WasControlCFlagSentFromGdb(void)
 {
-    return (int)(g_mri.flags & MRI_FLAGS_SEMIHOST_CTRL_C);
+    return !!(g_mri.flags & MRI_FLAGS_SEMIHOST_CTRL_C);
 }
 
 void RequestResetOnNextContinue(void)
@@ -473,7 +473,7 @@ void FlagSemihostCallAsHandled(void)
 
 int IsFirstException(void)
 {
-    return (int)(g_mri.flags & MRI_FLAGS_FIRST_EXCEPTION);
+    return !!(g_mri.flags & MRI_FLAGS_FIRST_EXCEPTION);
 }
 
 
