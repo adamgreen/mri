@@ -184,9 +184,6 @@ static void convertBytesTransferredToBytesNotTransferred(int bytesThatWereToBeTr
     /* The mbed version of the read/write function need bytes not transferred instead of bytes transferred. */
     if (bytesTransferred >= 0)
         Platform_SetSemihostCallReturnAndErrnoValues(bytesThatWereToBeTransferred - bytesTransferred, 0);
-    else
-        /* Maintain error code. */
-        Platform_SetSemihostCallReturnAndErrnoValues(bytesTransferred, 0);
 }
 
 static int handleMbedSemihostCloseRequest(PlatformSemihostParameters* pSemihostParameters)
