@@ -463,8 +463,11 @@ int WasSemihostCallCancelledByGdb(void)
 
 void FlagSemihostCallAsHandled(void)
 {
-    Platform_AdvanceProgramCounterToNextInstruction();
-    Platform_SetSemihostCallReturnAndErrnoValues(g_mri.semihostReturnCode, g_mri.semihostErrno);
+    if (Semihost_IsDebuggeeMakingSemihostCall())
+    {
+        Platform_AdvanceProgramCounterToNextInstruction();
+        Platform_SetSemihostCallReturnAndErrnoValues(g_mri.semihostReturnCode, g_mri.semihostErrno);
+    }
 }
 
 
