@@ -54,8 +54,7 @@ uint32_t Send_T_StopResponse(void)
 
 static void writeThreadIdToBuffer(Buffer* pBuffer, uint32_t threadId)
 {
-    Buffer_WriteString(pBuffer, "thread");
-    Buffer_WriteChar(pBuffer, ':');
+    Buffer_WriteString(pBuffer, "thread:");
     Buffer_WriteUIntegerAsHex(pBuffer, threadId);
     Buffer_WriteChar(pBuffer, ';');
 }
@@ -63,21 +62,27 @@ static void writeThreadIdToBuffer(Buffer* pBuffer, uint32_t threadId)
 static void writeTrapReasonToBuffer(Buffer* pBuffer)
 {
     const char* pReason;
-    int         outputAddress;
+    int         outputAddress = 0;
 
     PlatformTrapReason reason = Platform_GetTrapReason();
     switch (reason.type)
     {
+    case MRI_PLATFORM_TRAP_TYPE_HWBREAK:
+        pReason = "hwbreak";
+        break;
+    case MRI_PLATFORM_TRAP_TYPE_SWBREAK:
+        pReason = "swbreak";
+        break;
     case MRI_PLATFORM_TRAP_TYPE_WATCH:
-        pReason = "watch";
+        pReason = "watch:";
         outputAddress = 1;
         break;
     case MRI_PLATFORM_TRAP_TYPE_RWATCH:
-        pReason = "rwatch";
+        pReason = "rwatch:";
         outputAddress = 1;
         break;
     case MRI_PLATFORM_TRAP_TYPE_AWATCH:
-        pReason = "awatch";
+        pReason = "awatch:";
         outputAddress = 1;
         break;
     default:
@@ -86,7 +91,6 @@ static void writeTrapReasonToBuffer(Buffer* pBuffer)
     }
 
     Buffer_WriteString(pBuffer, pReason);
-    Buffer_WriteChar(pBuffer, ':');
     if (outputAddress)
         Buffer_WriteUIntegerAsHex(pBuffer, reason.address);
     Buffer_WriteChar(pBuffer, ';');
