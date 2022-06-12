@@ -126,6 +126,7 @@ static int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihost
 
     parameters.filenameAddress = pSemihostParameters->parameter1;
     parameters.filenameLength = strlen((const char*) parameters.filenameAddress) + 1;
+    parameters.fileStatBuffer = pSemihostParameters->parameter2;
     return IssueGdbFileStatRequest(&parameters);
 }
 
