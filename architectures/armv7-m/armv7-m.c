@@ -15,7 +15,7 @@
 /* Routines to expose the Cortex-M functionality to the mri debugger. */
 #include <errno.h>
 #include <string.h>
-#include <signal.h>
+#include <core/signal.h>
 #include <core/core.h>
 #include <core/platforms.h>
 #include <core/gdb_console.h>

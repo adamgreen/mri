@@ -13,13 +13,12 @@
    limitations under the License.
 */
 #include <assert.h>
-#include <signal.h>
 #include <string.h>
 
 extern "C"
 {
 #include <core/platforms.h>
-#include <core/posix4win.h>
+#include <core/signal.h>
 #include <core/semihost.h>
 #include <core/buffer.h>
 #include <core/try_catch.h>
