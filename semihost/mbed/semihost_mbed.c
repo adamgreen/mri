@@ -100,7 +100,7 @@ static int handleMbedSemihostOpenRequest(PlatformSemihostParameters* pSemihostPa
 
     parameters.filenameAddress = pParameters->filenameAddress;
     parameters.flags = convertRealViewOpenModeToPosixOpenFlags(pParameters->openMode);
-    parameters.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    parameters.mode = GDB_S_IRUSR | GDB_S_IWUSR | GDB_S_IRGRP | GDB_S_IWGRP | GDB_S_IROTH | GDB_S_IWOTH;
     parameters.filenameLength = pParameters->filenameLength + 1;
 
     return IssueGdbFileOpenRequest(&parameters);
@@ -113,22 +113,22 @@ static uint32_t convertRealViewOpenModeToPosixOpenFlags(uint32_t openMode)
 
     if (openMode & OPENMODE_W)
     {
-        posixOpenMode = O_WRONLY;
-        posixOpenDisposition = O_CREAT | O_TRUNC;
+        posixOpenMode = GDB_O_WRONLY;
+        posixOpenDisposition = GDB_O_CREAT | GDB_O_TRUNC;
     }
     else if (openMode & OPENMODE_A)
     {
-        posixOpenMode = O_WRONLY ;
-        posixOpenDisposition = O_CREAT | O_APPEND;
+        posixOpenMode = GDB_O_WRONLY ;
+        posixOpenDisposition = GDB_O_CREAT | GDB_O_APPEND;
     }
     else
     {
-        posixOpenMode = O_RDONLY;
+        posixOpenMode = GDB_O_RDONLY;
         posixOpenDisposition = 0;
     }
     if (openMode & OPENMODE_PLUS)
     {
-        posixOpenMode = O_RDWR;
+        posixOpenMode = GDB_O_RDWR;
     }
 
     return posixOpenMode | posixOpenDisposition;
@@ -212,7 +212,7 @@ static int handleMbedSemihostSeekRequest(PlatformSemihostParameters* pSemihostPa
 
     parameters.fileDescriptor = pParameters->fileDescriptor;
     parameters.offset = pParameters->offsetFromStart;
-    parameters.whence = SEEK_SET;
+    parameters.whence = GDB_SEEK_SET;
     return IssueGdbFileSeekRequest(&parameters);
 }
 

@@ -16,22 +16,28 @@
 #ifndef FILEIO_H_
 #define FILEIO_H_
 
-#define O_RDONLY    0x0
-#define O_WRONLY    0x1
-#define O_RDWR      0x2
-#define O_APPEND    0x8
-#define O_CREAT     0x200
-#define O_TRUNC     0x400
+#define GDB_O_RDONLY    0x0
+#define GDB_O_WRONLY    0x1
+#define GDB_O_RDWR      0x2
+#define GDB_O_APPEND    0x8
+#define GDB_O_CREAT     0x200
+#define GDB_O_TRUNC     0x400
+#define GDB_O_EXCL      0x800
 
-#define S_IRUSR     0400
-#define S_IWUSR     0200
-#define S_IRGRP     040
-#define S_IWGRP     020
-#define S_IROTH     04
-#define S_IWOTH     02
+#define GDB_S_IFREG     0100000
+#define GDB_S_IFDIR     040000
+#define GDB_S_IRUSR     0400
+#define GDB_S_IWUSR     0200
+#define GDB_S_IXUSR     0100
+#define GDB_S_IRGRP     040
+#define GDB_S_IWGRP     020
+#define GDB_S_IXGRP     010
+#define GDB_S_IROTH     04
+#define GDB_S_IWOTH     02
+#define GDB_S_IXOTH     01
 
-#define SEEK_SET    0
-#define SEEK_CUR    1
-#define SEEK_END    2
+#define GDB_SEEK_SET    0
+#define GDB_SEEK_CUR    1
+#define GDB_SEEK_END    2
 
 #endif /* FILEIO_H_ */
