@@ -15,7 +15,6 @@
 /* Monitor for Remote Inspection - Provides core mri routines to initialize the debug monitor, query its state, and
    invoke it into action when a debug event occurs on the target hardware. */
 #include <string.h>
-#include <signal.h>
 #include <errno.h>
 #include <core/mri.h>
 #include <core/buffer.h>
@@ -25,7 +24,7 @@
 #include <core/token.h>
 #include <core/core.h>
 #include <core/platforms.h>
-#include <core/posix4win.h>
+#include <core/signal.h>
 #include <core/semihost.h>
 #include <core/cmd_common.h>
 #include <core/cmd_file.h>
