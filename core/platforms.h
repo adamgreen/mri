@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -140,6 +140,7 @@ int             mriPlatform_RtosIsSetThreadStateSupported(void);
 void            mriPlatform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state);
 void            mriPlatform_RtosRestorePrevThreadState(void);
 
+void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define Platform_Init                                       mriPlatform_Init
@@ -194,5 +195,6 @@ void            mriPlatform_RtosRestorePrevThreadState(void);
 #define Platform_RtosIsSetThreadStateSupported              mriPlatform_RtosIsSetThreadStateSupported
 #define Platform_RtosSetThreadState                         mriPlatform_RtosSetThreadState
 #define Platform_RtosRestorePrevThreadState                 mriPlatform_RtosRestorePrevThreadState
+#define Platform_HandleFaultFromHighPriorityCode                  mriPlatform_HandleFaultFromHighPriorityCode
 
 #endif /* PLATFORMS_H_ */

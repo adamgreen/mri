@@ -1338,26 +1338,70 @@ typedef struct ExceptionStack
 
 
 
+static ExceptionStack* getExceptionStack(uint32_t excReturn, uint32_t psp, uint32_t msp);
+static int isDebuggerAlreadyActive(void);
 static void setFaultDetectedFlag(void);
 static uint32_t isImpreciseBusFaultRaw(void);
-static ExceptionStack* getExceptionStack(uint32_t excReturn, uint32_t psp, uint32_t msp);
 static void advancePCToNextInstruction(ExceptionStack* pExceptionStack);
 static void clearFaultStatusBits(void);
-void mriCortexHandleDebuggerFault(uint32_t excReturn, uint32_t psp, uint32_t msp)
+static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber);
+static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
+static void setPendedFromFaultBit(void);
+int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
 {
-    /* Encountered memory fault when GDB attempted to access an invalid address.
-        Set flag to let debugger thread know that its access failed and advance past the faulting instruction
-        if it was a precise bus fault so that it doesn't just occur again on return.
+    /* This handler will be called from the fault handlers (Hard Fault, etc.)
+       What needs to be done depends on CPU state when the fault occurs.
     */
-    setFaultDetectedFlag();
-    if (!isImpreciseBusFaultRaw())
-        advancePCToNextInstruction(getExceptionStack(excReturn, psp, msp));
-    clearFaultStatusBits();
+    const uint32_t debugMonExceptionNumber = (uint32_t)(DebugMonitor_IRQn + 16);
+    ExceptionStack* pExceptionStack = getExceptionStack(excReturn, psp, msp);
+    uint32_t exceptionNumber = pExceptionStack->xpsr & 0xFF;
+    if (isDebuggerAlreadyActive() && exceptionNumber == debugMonExceptionNumber)
+    {
+        /* Encountered memory fault when GDB attempted to access an invalid address.
+           Set flag to let MRI know that its access failed and advance past the faulting instruction
+           if it was a precise bus fault so that it doesn't just occur again on return.
+
+           Returns 0 to let asm routine know that it should just return and let debuggee continue executing.
+        */
+        setFaultDetectedFlag();
+        if (!isImpreciseBusFaultRaw())
+        {
+            advancePCToNextInstruction(pExceptionStack);
+        }
+        clearFaultStatusBits();
+        return 0;
+    }
+
+    if (isExceptionPriorityLowEnoughToDebug(exceptionNumber))
+    {
+        /* Pend DebugMon interrupt to debug the fault.
+
+           Returns 0 to let asm routine know that it can now just return to let the pended DebugMon run.
+        */
+        recordAndClearFaultStatusBits(getCurrentlyExecutingExceptionNumber());
+        setPendedFromFaultBit();
+        setMonitorPending();
+        return 0;
+    }
+    else
+    {
+        /* Exception occurred in code too high priority to debug so start a crash dump.
+
+           Returns -1 to let asm routine know that it should call mriPlatform_HandleFaultFromHighPriorityCode() to handle
+           this special case by doing something like dumping a crash dump since MRI can't debug it.
+        */
+        return -1;
+    }
 }
 
 static void setFaultDetectedFlag(void)
 {
     mriCortexMFlags |= CORTEXM_FLAGS_FAULT_DURING_DEBUG;
+}
+
+static int isDebuggerAlreadyActive(void)
+{
+    return mriCortexMFlags & CORTEXM_FLAGS_ACTIVE_DEBUG;
 }
 
 static uint32_t isImpreciseBusFaultRaw(void)
@@ -1395,10 +1439,57 @@ static void clearFaultStatusBits(void)
     SCB->CFSR = SCB->CFSR;
 }
 
+static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber)
+{
+    if (exceptionNumber == 0)
+    {
+        /* Can always debug main thread as it has lowest priority. */
+        return 1;
+    }
+    else if (exceptionNumber >= 1 && exceptionNumber <= 3)
+    {
+        /* NMI & HardFault are always higher priority than DebugMon. */
+        return 0;
+    }
+    else
+    {
+        return mriCortexMGetPriority(-16+exceptionNumber) > mriCortexMGetPriority(DebugMonitor_IRQn);
+    }
+}
+
+static void recordAndClearFaultStatusBits(uint32_t exceptionNumber)
+{
+    mriCortexMState.exceptionNumber = exceptionNumber;
+    mriCortexMState.dfsr = SCB->DFSR;
+    mriCortexMState.hfsr = SCB->HFSR;
+    mriCortexMState.cfsr = SCB->CFSR;
+    mriCortexMState.mmfar = SCB->MMFAR;
+    mriCortexMState.bfar = SCB->BFAR;
+
+    /* Clear fault status bits by writing 1s to bits that are already set. */
+    SCB->DFSR = mriCortexMState.dfsr;
+    SCB->HFSR = mriCortexMState.hfsr;
+    SCB->CFSR = mriCortexMState.cfsr;
+}
+
+
+static void setPendedFromFaultBit(void)
+{
+    mriCortexMFlags |= CORTEXM_FLAGS_PEND_FROM_FAULT;
+}
+
+
+__attribute__((weak)) void Platform_HandleFaultFromHighPriorityCode(void)
+{
+    /* This weak implemention does nothing and just returns to allow a jump directly to mriExceptionHandler to occur.
+       A platform may want to provide a strong implementation to generate a crash dump in this scenario if MRI can't
+       safely communicate with GDB from the HardFault priority level.
+    */
+}
+
 
 
 static ExceptionStack* getExceptionStack(uint32_t excReturn, uint32_t psp, uint32_t msp);
-static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
 static int wasPendedFromFault(void);
 static uint32_t encounteredStackingException(void);
 static int prepareThreadContext(ExceptionStack* pExceptionStack, IntegerRegisters* pIntegerRegs, uint32_t* pFloatingRegs);
@@ -1440,21 +1531,6 @@ void mriCortexMExceptionHandler(IntegerRegisters* pIntegerRegs, uint32_t* pFloat
 static int wasPendedFromFault(void)
 {
     return mriCortexMFlags & CORTEXM_FLAGS_PEND_FROM_FAULT;
-}
-
-static void recordAndClearFaultStatusBits(uint32_t exceptionNumber)
-{
-    mriCortexMState.exceptionNumber = exceptionNumber;
-    mriCortexMState.dfsr = SCB->DFSR;
-    mriCortexMState.hfsr = SCB->HFSR;
-    mriCortexMState.cfsr = SCB->CFSR;
-    mriCortexMState.mmfar = SCB->MMFAR;
-    mriCortexMState.bfar = SCB->BFAR;
-
-    /* Clear fault status bits by writing 1s to bits that are already set. */
-    SCB->DFSR = mriCortexMState.dfsr;
-    SCB->HFSR = mriCortexMState.hfsr;
-    SCB->CFSR = mriCortexMState.cfsr;
 }
 
 static uint32_t encounteredStackingException(void)

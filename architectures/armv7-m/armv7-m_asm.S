@@ -94,21 +94,6 @@
        maintain their original value.
     */
 mriExceptionHandler:
-    /* Check to see if we should just return because a MRI initiated memory read/write failed. */
-    ldr     r2, =mriCortexMFlags
-    ldr     r2, [r2]
-    tst     r2, #CORTEXM_FLAGS_ACTIVE_DEBUG
-    beq     1$
-    /* MRI has initiated a memory read/write that has failed. Unless MRI has a critical bug, it is safe to use MSP
-       for calling C code at this point to take care of setting the flag to indicate that the read/write has failed
-       and advanced the PC past precise read faulting instructions. */
-    mov     r0, lr
-    mrs     r1, psp
-    mrs     r2, msp
-    push    {r1, lr}
-    bl      mriCortexHandleDebuggerFault
-    pop     {r1, pc}
-
     /* Point R0 to the top of the debugger stack, where MSP should be pointed. */
 1$: ldr     r0, =mriCortexMDebuggerStack
     ldr     r1, =CORTEXM_DEBUGGER_STACK_SIZE * 8
@@ -117,6 +102,8 @@ mriExceptionHandler:
     /* Save away copy of MSP value at the time of the fault into R0. */
 3$: mrs     r1, msp
     /* Set MSP to top of debugger stack if it hasn't been disabled. */
+    ldr     r2, =mriCortexMFlags
+    ldr     r2, [r2]
     tst     r2, #CORTEXM_FLAGS_NO_DEBUG_STACK
     it      eq
     msreq   msp, r0
@@ -216,9 +203,22 @@ mriExceptionHandler:
     .type HardFault_Handler, function
     .thumb_func
     /* extern "C" void HardFault_Handler(void);
-       Override Hard Faults and send to MriExceptionHandler.
+       Call mriFaultHandler(), implemented in C, to determine how this particular fault should be handled. If it returns
+       a negative return value, then continue onto mriExceptionHandler which will enter MRI. Otherwise mriFaultHandler()
+       has done everything needed to handle this fault and can just return to let code continue executing.
+       All of the other fault handlers will just jump to this one as they are all handled the same way.
     */
 HardFault_Handler:
+    mrs     r0, psp
+    mrs     r1, msp
+    mov     r2, lr
+    push    {r12, lr}
+    bl      mriFaultHandler
+    movs    r0, r0
+    bmi     1$
+    pop     {r12, pc}
+1$: bl      mriPlatform_HandleFaultFromHighPriorityCode /* Give platform opportunity to save crash dump. */
+    pop     {r12, lr}
     b       mriExceptionHandler
     .pool
     .size   HardFault_Handler, .-HardFault_Handler
@@ -227,11 +227,9 @@ HardFault_Handler:
     .global MemManage_Handler
     .type MemManage_Handler, function
     .thumb_func
-    /* extern "C" void MemManage_Handler(void);
-       Override MPU Memory Faults and send to MriExceptionHandler.
-    */
+    /* extern "C" void MemManage_Handler(void); */
 MemManage_Handler:
-    b       mriExceptionHandler
+    b       HardFault_Handler
     .pool
     .size   MemManage_Handler, .-MemManage_Handler
 
@@ -239,11 +237,9 @@ MemManage_Handler:
     .global BusFault_Handler
     .type BusFault_Handler, function
     .thumb_func
-    /* extern "C" void BusFault_Handler(void);
-       Override Bus Faults and send to MriExceptionHandler.
-    */
+    /* extern "C" void BusFault_Handler(void); */
 BusFault_Handler:
-    b       mriExceptionHandler
+    b       HardFault_Handler
     .pool
     .size   BusFault_Handler, .-BusFault_Handler
 
@@ -251,11 +247,9 @@ BusFault_Handler:
     .global UsageFault_Handler
     .type UsageFault_Handler, function
     .thumb_func
-    /* extern "C" void UsageFault_Handler(void);
-       Override Instruction Usage Faults and send to MriExceptionHandler.
-    */
+    /* extern "C" void UsageFault_Handler(void); */
 UsageFault_Handler:
-    b       mriExceptionHandler
+    b       HardFault_Handler
     .pool
     .size   UsageFault_Handler, .-UsageFault_Handler
 
