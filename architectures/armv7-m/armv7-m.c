@@ -1345,6 +1345,7 @@ static uint32_t isImpreciseBusFaultRaw(void);
 static void advancePCToNextInstruction(ExceptionStack* pExceptionStack);
 static void clearFaultStatusBits(void);
 static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber);
+static int hasDebugMonInterruptBeenDisabled();
 static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
 static void setPendedFromFaultBit(void);
 int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
@@ -1441,7 +1442,12 @@ static void clearFaultStatusBits(void)
 
 static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber)
 {
-    if (exceptionNumber == 0)
+    if (hasDebugMonInterruptBeenDisabled())
+    {
+        /* User code has entered critical section using PRIMASK or BASEPRI which disables debug monitor. */
+        return 0;
+    }
+    else if (exceptionNumber == 0)
     {
         /* Can always debug main thread as it has lowest priority. */
         return 1;
@@ -1454,6 +1460,27 @@ static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber)
     else
     {
         return mriCortexMGetPriority(-16+exceptionNumber) > mriCortexMGetPriority(DebugMonitor_IRQn);
+    }
+}
+
+static int hasDebugMonInterruptBeenDisabled()
+{
+    /* Was user code in a critical section that disabled DebugMon interrupt when debug event occurred? */
+    uint32_t primask = __get_PRIMASK();
+    uint32_t basepri = __get_BASEPRI();
+    uint32_t debugMonPriority = mriCortexMGetPriority(DebugMonitor_IRQn);
+
+    if (primask != 0)
+    {
+        return 1;
+    }
+    else if (basepri != 0x00 && (basepri >> mriCortexMState.subPriorityBitCount) <= debugMonPriority)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
     }
 }
 
