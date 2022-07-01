@@ -17,8 +17,12 @@
 #include <core/mri.h>
 #include <core/semihost.h>
 #include <core/cmd_file.h>
+#include <core/core.h>
+#include "newlib_stubs.h"
 
 
+static uint16_t getFirstHalfWordOfCurrentInstruction(void);
+static uint16_t throwingMemRead16(uint32_t address);
 static int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostReadRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostOpenRequest(PlatformSemihostParameters* pSemihostParameters);
@@ -28,31 +32,49 @@ static int handleNewlibSemihostCloseRequest(PlatformSemihostParameters* pSemihos
 static int handleNewlibSemihostFStatRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters);
+static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemihostParameters);
 int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    uint32_t semihostOperation;
+    uint16_t semihostOperation = getFirstHalfWordOfCurrentInstruction() & 0x00FF;
 
-    semihostOperation = Platform_GetProgramCounter() | 1;
-    if (semihostOperation == (uint32_t)mriNewlib_SemihostWrite)
-        return handleNewlibSemihostWriteRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewlib_SemihostRead)
-        return handleNewlibSemihostReadRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewLib_SemihostOpen)
-        return handleNewlibSemihostOpenRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewLib_SemihostUnlink)
-        return handleNewlibSemihostUnlinkRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewlib_SemihostLSeek)
-        return handleNewlibSemihostLSeekRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewlib_SemihostClose)
-        return handleNewlibSemihostCloseRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewlib_SemihostFStat)
-        return handleNewlibSemihostFStatRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewLib_SemihostStat)
-        return handleNewlibSemihostStatRequest(pSemihostParameters);
-    else if (semihostOperation == (uint32_t)mriNewLib_SemihostRename)
-        return handleNewlibSemihostRenameRequest(pSemihostParameters);
-    else
-        return 0;
+    switch (semihostOperation)
+    {
+        case MRI_NEWLIB_SEMIHOST_WRITE:
+            return handleNewlibSemihostWriteRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_READ:
+            return handleNewlibSemihostReadRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_OPEN:
+            return handleNewlibSemihostOpenRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_UNLINK:
+            return handleNewlibSemihostUnlinkRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_LSEEK:
+            return handleNewlibSemihostLSeekRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_CLOSE:
+            return handleNewlibSemihostCloseRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_FSTAT:
+            return handleNewlibSemihostFStatRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_STAT:
+            return handleNewlibSemihostStatRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_RENAME:
+            return handleNewlibSemihostRenameRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_SET_HOOKS:
+            return handleNewlibSemihostSetHooksRequest(pSemihostParameters);
+        default:
+            return 0;
+    }
+}
+
+static uint16_t getFirstHalfWordOfCurrentInstruction(void)
+{
+    return throwingMemRead16(Platform_GetProgramCounter());
+}
+
+static uint16_t throwingMemRead16(uint32_t address)
+{
+    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)address);
+    if (Platform_WasMemoryFaultEncountered())
+        __throw_and_return(memFaultException, 0);
+    return instructionWord;
 }
 
 static int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters)
@@ -139,4 +161,17 @@ static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemiho
     parameters.newFilenameAddress = pSemihostParameters->parameter2;
     parameters.newFilenameLength = strlen((const char*)parameters.newFilenameAddress) + 1;
     return IssueGdbFileRenameRequest(&parameters);
+}
+
+static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemihostParameters)
+{
+    MriDebuggerHookPtr pEnteringHook = (MriDebuggerHookPtr)pSemihostParameters->parameter1;
+    MriDebuggerHookPtr pLeavingHook = (MriDebuggerHookPtr)pSemihostParameters->parameter2;
+    void* pvContext = (void*)pSemihostParameters->parameter3;
+
+    mriCoreSetDebuggerHooks(pEnteringHook, pLeavingHook, pvContext);
+
+    mriCore_SetSemihostReturnValues(0, 0);
+    mriCore_FlagSemihostCallAsHandled();
+    return 1;
 }

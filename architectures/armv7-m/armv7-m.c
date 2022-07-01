@@ -19,6 +19,7 @@
 #include <core/core.h>
 #include <core/platforms.h>
 #include <core/gdb_console.h>
+#include <semihost/newlib/newlib_stubs.h>
 #include "debug_cm3.h"
 #include "armv7-m.h"
 
@@ -1046,9 +1047,11 @@ static int isInstructionMbedSemihostBreakpoint(uint16_t instruction)
 
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
 {
-    static const uint16_t newlibSemihostBreakpointMachineCode = 0xbeff;
+    static const uint16_t newlibSemihostBreakpointMinMachineCode = 0xbe00 | MRI_NEWLIB_SEMIHOST_MIN;
+    static const uint16_t newlibSemihostBreakpointMaxMachineCode = 0xbe00 | MRI_NEWLIB_SEMIHOST_MAX;
 
-    return (newlibSemihostBreakpointMachineCode == instruction);
+    return (instruction >= newlibSemihostBreakpointMinMachineCode &&
+            instruction <=  newlibSemihostBreakpointMaxMachineCode);
 }
 
 static int isInstructionHardcodedBreakpoint(uint16_t instruction)

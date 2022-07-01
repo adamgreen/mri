@@ -156,7 +156,7 @@ static void setTempBreakpointFlag(void)
 }
 
 
-void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext)
+void mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext)
 {
     g_mri.pEnteringHook = pEnteringHook;
     g_mri.pLeavingHook = pLeavingHook;

@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 */
 /* Implementation of semihost assembly language routines to be used to redirect standard I/O (stdin/stdout/stderr)
    from the newlib library to the MRI debug monitor. */
+#include "newlib_stubs.h"
+
     .text
     .code 16
     .syntax unified
@@ -24,7 +26,7 @@
        Issues semihost write call to PC via gdb.
     */
 mriNewlib_SemihostWrite:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_WRITE
     bx      lr
 
 
@@ -34,7 +36,7 @@ mriNewlib_SemihostWrite:
        Issues semihost read call to PC via gdb.
     */
 mriNewlib_SemihostRead:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_READ
     bx      lr
 
 
@@ -44,7 +46,7 @@ mriNewlib_SemihostRead:
        Issues semihost open file call to PC via gdb.
     */
 mriNewLib_SemihostOpen:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_OPEN
     bx      lr
 
 
@@ -54,7 +56,7 @@ mriNewLib_SemihostOpen:
        Issues file rename call to PC via GDB.
     */
 mriNewLib_SemihostRename:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_RENAME
     bx      lr
 
     .global mriNewLib_SemihostUnlink
@@ -63,7 +65,7 @@ mriNewLib_SemihostRename:
        Issues file delete (unlink) call to PC via GDB.
     */
 mriNewLib_SemihostUnlink:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_UNLINK
     bx      lr
 
 
@@ -73,7 +75,7 @@ mriNewLib_SemihostUnlink:
        Issues stat call to PC via GDB.
     */
 mriNewLib_SemihostStat:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_STAT
     bx      lr
 
 
@@ -83,7 +85,7 @@ mriNewLib_SemihostStat:
        Issues seek call to PC via GDB.
     */
 mriNewlib_SemihostLSeek:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_LSEEK
     bx      lr
 
 
@@ -93,7 +95,7 @@ mriNewlib_SemihostLSeek:
        Issues file close call to PC via GDB.
     */
 mriNewlib_SemihostClose:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_CLOSE
     bx      lr
 
 
@@ -103,5 +105,15 @@ mriNewlib_SemihostClose:
        Issues stat call to PC via GDB.
     */
 mriNewlib_SemihostFStat:
-    bkpt    0xff
+    bkpt    MRI_NEWLIB_SEMIHOST_FSTAT
+    bx      lr
+
+
+    .global mriSetDebuggerHooks
+    .type mriSetDebuggerHooks, function
+    /* extern "C" void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext);
+       Tells MRI which hook functions to call when entering and leaving the debugger.
+    */
+mriSetDebuggerHooks:
+    bkpt    MRI_NEWLIB_SEMIHOST_SET_HOOKS
     bx      lr

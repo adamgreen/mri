@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -308,13 +308,13 @@ static void leavingHook(void* pvContext)
     pCounts->leavingCount++;
 }
 
-TEST(Mri, mriSetDebuggerHooks_HookBothFunctions)
+TEST(Mri, mriCoreSetDebuggerHooks_HookBothFunctions)
 {
     HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
 
     mriInit("MRI_UART_MBED_USB");
 
-    mriSetDebuggerHooks(enteringHook, leavingHook, &counts);
+    mriCoreSetDebuggerHooks(enteringHook, leavingHook, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
@@ -324,13 +324,13 @@ TEST(Mri, mriSetDebuggerHooks_HookBothFunctions)
     LONGS_EQUAL(1, counts.leavingCount);
 }
 
-TEST(Mri, mriSetDebuggerHooks_HookEnteringFunctionOnly)
+TEST(Mri, mriCoreSetDebuggerHooks_HookEnteringFunctionOnly)
 {
     HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
 
     mriInit("MRI_UART_MBED_USB");
 
-    mriSetDebuggerHooks(enteringHook, NULL, &counts);
+    mriCoreSetDebuggerHooks(enteringHook, NULL, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
@@ -340,13 +340,13 @@ TEST(Mri, mriSetDebuggerHooks_HookEnteringFunctionOnly)
     LONGS_EQUAL(0, counts.leavingCount);
 }
 
-TEST(Mri, mriSetDebuggerHooks_HookLeavingFunctionOnly)
+TEST(Mri, mriCoreSetDebuggerHooks_HookLeavingFunctionOnly)
 {
     HookCounts counts = { .enteringCount = 0, .leavingCount = 0 };
 
     mriInit("MRI_UART_MBED_USB");
 
-    mriSetDebuggerHooks(NULL, leavingHook, &counts);
+    mriCoreSetDebuggerHooks(NULL, leavingHook, &counts);
 
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());

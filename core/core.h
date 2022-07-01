@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <core/buffer.h>
 #include <core/context.h>
+#include <core/mri.h>
 
 
 typedef struct
@@ -62,6 +63,8 @@ void    mriCore_GdbCommandHandlingLoop(void);
 typedef int (*TempBreakpointCallbackPtr)(void*);
 int     mriCore_SetTempBreakpoint(uint32_t breakpointAddress, TempBreakpointCallbackPtr pCallback, void* pvContext);
 
+void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext);
+
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define InitBuffer                      mriCore_InitBuffer
@@ -86,6 +89,7 @@ int     mriCore_SetTempBreakpoint(uint32_t breakpointAddress, TempBreakpointCall
 #define SendPacketToGdb                 mriCore_SendPacketToGdb
 #define GdbCommandHandlingLoop          mriCore_GdbCommandHandlingLoop
 #define SetTempBreakpoint               mriCore_SetTempBreakpoint
+#define SetDebuggerHooks                mriCoreSetDebuggerHooks
 
 /* Macro to convert 32-bit addresses sent from GDB to pointer. */
 #if _LP64
