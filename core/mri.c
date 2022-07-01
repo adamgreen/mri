@@ -48,7 +48,6 @@ typedef struct
     void*                       pvEnteringLeavingContext;
     MriContext*                 pContext;
     Packet                      packet;
-    Buffer                      buffer;
     uint32_t                    tempBreakpointAddress;
     uint32_t                    flags;
     AddressRange                rangeForSingleStepping;
@@ -396,21 +395,21 @@ static int handleGDBCommand(void)
 
 static void getPacketFromGDB(void)
 {
-    InitBuffer();
-    Packet_GetFromGDB(&g_mri.packet, &g_mri.buffer);
+    InitPacketBuffers();
+    Packet_GetFromGDB(&g_mri.packet);
 }
 
 
-void InitBuffer(void)
+void InitPacketBuffers(void)
 {
-    Buffer_Init(&g_mri.buffer, Platform_GetPacketBuffer(), Platform_GetPacketBufferSize());
+    Packet_Init(&g_mri.packet, Platform_GetPacketBuffer(), Platform_GetPacketBufferSize());
 }
 
 
 void PrepareStringResponse(const char* pErrorString)
 {
-    InitBuffer();
-    Buffer_WriteString(&g_mri.buffer, pErrorString);
+    InitPacketBuffers();
+    Buffer_WriteString(GetBuffer(), pErrorString);
 }
 
 
@@ -509,25 +508,25 @@ int GetSemihostErrno(void)
 
 Buffer* GetBuffer(void)
 {
-    return &g_mri.buffer;
+    return &g_mri.packet.dataBuffer;
 }
 
 
 Buffer* GetInitializedBuffer(void)
 {
-    InitBuffer();
-    return &g_mri.buffer;
+    InitPacketBuffers();
+    return GetBuffer();
 }
 
 
 void SendPacketToGdb(void)
 {
-    if (Buffer_OverrunDetected(&g_mri.buffer))
+    if (Buffer_OverrunDetected(GetBuffer()))
     {
-        InitBuffer();
-        Buffer_WriteString(&g_mri.buffer, MRI_ERROR_BUFFER_OVERRUN);
+        InitPacketBuffers();
+        Buffer_WriteString(GetBuffer(), MRI_ERROR_BUFFER_OVERRUN);
     }
 
-    Buffer_SetEndOfBuffer(&g_mri.buffer);
-    Packet_SendToGDB(&g_mri.packet, &g_mri.buffer);
+    Buffer_SetEndOfBuffer(GetBuffer());
+    Packet_SendToGDB(&g_mri.packet);
 }

@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ typedef struct
 void     mriBuffer_Init(Buffer* pBuffer, char* pBufferStart, size_t bufferSize);
 void     mriBuffer_Reset(Buffer* pBuffer);
 void     mriBuffer_SetEndOfBuffer(Buffer* pBuffer);
+void     mriBuffer_Advance(Buffer* pBuffer, size_t amount);
 size_t   mriBuffer_BytesLeft(Buffer* pBuffer);
 int      mriBuffer_OverrunDetected(Buffer* pBuffer);
 size_t   mriBuffer_GetLength(Buffer* pBuffer);
@@ -54,6 +55,7 @@ int      mriBuffer_MatchesHexString(Buffer* pBuffer, const char* pString, size_t
 #define Buffer_Init                 mriBuffer_Init
 #define Buffer_Reset                mriBuffer_Reset
 #define Buffer_SetEndOfBuffer       mriBuffer_SetEndOfBuffer
+#define Buffer_Advance              mriBuffer_Advance
 #define Buffer_BytesLeft            mriBuffer_BytesLeft
 #define Buffer_OverrunDetected      mriBuffer_OverrunDetected
 #define Buffer_GetLength            mriBuffer_GetLength

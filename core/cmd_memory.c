@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ uint32_t HandleMemoryReadCommand(void)
         return 0;
     }
 
-    InitBuffer();
+    InitPacketBuffers();
     result = ReadMemoryIntoHexBuffer(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length);
     if (result == 0)
         PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);

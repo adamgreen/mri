@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -405,7 +405,7 @@ TEST(platformMock, Platform_GetPacketBuffer_DefaultNoReturnNull)
 
 TEST(platformMock, Platform_GetPacketBufferSize_DefaultFitsARMContext)
 {
-    static const uint32_t expectedSize = 1 + 17 * sizeof(uint32_t) * 2;
+    static const uint32_t expectedSize = 1 + 17 * sizeof(uint32_t) * 2 + 4;
     CHECK_EQUAL (expectedSize, Platform_GetPacketBufferSize() );
 }
 

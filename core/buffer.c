@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -38,6 +38,15 @@ void Buffer_SetEndOfBuffer(Buffer* pBuffer)
 {
     if (pBuffer->pCurrent < pBuffer->pEnd)
         pBuffer->pEnd = pBuffer->pCurrent;
+}
+
+
+void Buffer_Advance(Buffer* pBuffer, size_t amount)
+{
+    size_t bytesLeft = Buffer_BytesLeft(pBuffer);
+    if (amount > bytesLeft)
+        amount = bytesLeft;
+    pBuffer->pCurrent += amount;
 }
 
 

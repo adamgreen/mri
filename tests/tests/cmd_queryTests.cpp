@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -334,7 +334,7 @@ TEST(cmdQuery, qfThreadInfo_ReturnTwoThreads_WithPacketBufferJustLargeEnoughForB
 {
     uint32_t threadIds[] = { 0x11111111, 0x22222222 };
     platformMock_RtosSetThreads(threadIds, sizeof(threadIds)/sizeof(threadIds[0]));
-    platformMock_SetPacketBufferSize(18);
+    platformMock_SetPacketBufferSize(18+4);
     platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111,22222222#+"),
@@ -345,7 +345,7 @@ TEST(cmdQuery, qfThreadInfo_UseBufferTooSmallForTwoThreadIds_ShouldTruncateToOne
 {
     uint32_t threadIds[] = { 0x11111111, 0x22222222 };
     platformMock_RtosSetThreads(threadIds, sizeof(threadIds)/sizeof(threadIds[0]));
-    platformMock_SetPacketBufferSize(17);
+    platformMock_SetPacketBufferSize(17+4);
     platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111#+"),
@@ -366,7 +366,7 @@ TEST(cmdQuery, qsThreadInfo_AfterAlreadyReturningFirstThreadOfTwo_ShouldReturnSe
 {
     uint32_t threadIds[] = { 0x11111111, 0x22222222 };
     platformMock_RtosSetThreads(threadIds, sizeof(threadIds)/sizeof(threadIds[0]));
-    platformMock_SetPacketBufferSize(12);
+    platformMock_SetPacketBufferSize(12+4);
     platformMock_CommInitReceiveChecksummedData("+$qfThreadInfo#", "+$qsThreadInfo#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$m11111111#" "+$m22222222#" "+"),

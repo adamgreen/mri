@@ -158,7 +158,7 @@ TEST(Mri, mriDebugException_PacketBufferTooSmallShouldResultInBufferOverrunError
 {
     mriInit("MRI_UART_MBED_USB");
     platformMock_CommInitReceiveChecksummedData("+$?#", "+$c#");
-    platformMock_SetPacketBufferSize(11);
+    platformMock_SetPacketBufferSize(11+4);
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$" MRI_ERROR_BUFFER_OVERRUN "#"
                                                  "+$" MRI_ERROR_BUFFER_OVERRUN "#" "+"),

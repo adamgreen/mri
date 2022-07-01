@@ -39,6 +39,7 @@ void      mriPlatform_MemWrite8(void* pv, uint8_t value);
 uint32_t  mriPlatform_CommHasReceiveData(void);
 uint32_t  mriPlatform_CommHasTransmitCompleted(void);
 int       mriPlatform_CommReceiveChar(void);
+void      mriPlatform_CommSendBuffer(Buffer* pBuffer);
 void      mriPlatform_CommSendChar(int character);
 
 uint32_t  mriPlatform_HandleGDBCommand(Buffer* pBuffer);
@@ -157,6 +158,7 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_CommHasReceiveData                         mriPlatform_CommHasReceiveData
 #define Platform_CommHasTransmitCompleted                   mriPlatform_CommHasTransmitCompleted
 #define Platform_CommReceiveChar                            mriPlatform_CommReceiveChar
+#define Platform_CommSendBuffer                             mriPlatform_CommSendBuffer
 #define Platform_CommSendChar                               mriPlatform_CommSendChar
 #define Platform_DetermineCauseOfException                  mriPlatform_DetermineCauseOfException
 #define Platform_GetTrapReason                              mriPlatform_GetTrapReason

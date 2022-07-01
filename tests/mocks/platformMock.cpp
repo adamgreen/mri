@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -298,8 +298,8 @@ void mriPlatform_LeavingDebugger(void)
 
 // Packet Buffer Instrumentation.
 // NOTE: Packet must be big enough for g/G packets to hold 16 general purpose registers + PSR with 2 hex digits per
-//       byte + 1 more byte for the g/G command character.
-static char     g_packetBuffer[1 + (16 + 1) * (sizeof(uint32_t) * 2)];
+//       byte + 1 more byte for the g/G command character + 4 more bytes for packet header/checksum_trailer.
+static char     g_packetBuffer[1 + (16 + 1) * (sizeof(uint32_t) * 2) + 4];
 static uint32_t g_packetBufferSize;
 
 void platformMock_SetPacketBufferSize(uint32_t setValue)

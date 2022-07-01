@@ -33,7 +33,7 @@ typedef struct
 /* Real name of functions are in mri namespace. */
 void    mriDebugException(MriContext* pContext);
 
-void    mriCore_InitBuffer(void);
+void    mriCore_InitPacketBuffers(void);
 Buffer* mriCore_GetBuffer(void);
 Buffer* mriCore_GetInitializedBuffer(void);
 void    mriCore_PrepareStringResponse(const char* pErrorString);
@@ -67,7 +67,7 @@ void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHoo
 
 
 /* Macroes which allow code to drop the mri namespace prefix. */
-#define InitBuffer                      mriCore_InitBuffer
+#define InitPacketBuffers               mriCore_InitPacketBuffers
 #define GetBuffer                       mriCore_GetBuffer
 #define GetInitializedBuffer            mriCore_GetInitializedBuffer
 #define PrepareStringResponse           mriCore_PrepareStringResponse

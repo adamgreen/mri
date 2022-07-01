@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ TEST(gdbConsole, WriteStringToGdbConsole_SendAsGdbPacket)
 
 TEST(gdbConsole, WriteStringToGdbConsole_FailToSendAsGdbPacketBecauseOfSmallBuffer)
 {
-    platformMock_SetPacketBufferSize(10);
+    platformMock_SetPacketBufferSize(10+4);
     WriteStringToGdbConsole("Test\n");
     STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
     validateExceptionCode(bufferOverrunException);

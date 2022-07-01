@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -103,7 +103,8 @@ uint32_t HandleQueryCommand(void)
 static uint32_t handleQuerySupportedCommand(void)
 {
     static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;PacketSize=";
-    uint32_t          PacketSize = Platform_GetPacketBufferSize();
+    /* Subtract 4 for packet overhead ('$', '#', and 2-byte checksum) as GDB doesn't count those bytes. */
+    uint32_t          PacketSize = Platform_GetPacketBufferSize()-4;
     Buffer*           pBuffer = GetInitializedBuffer();
 
     Buffer_WriteString(pBuffer, querySupportResponse);
@@ -249,7 +250,7 @@ static void handleQueryTransferReadCommand(AnnexOffsetLength* pArguments)
         validMemoryMapBytes = pArguments->annexSize - offset;
     }
 
-    InitBuffer();
+    InitPacketBuffers();
     outputBufferSize = Buffer_BytesLeft(pBuffer);
 
     if (length > outputBufferSize)

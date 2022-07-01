@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -195,6 +195,21 @@ TEST(Buffer, Buffer_SetEndOfBuffer_OnOverflownBuffer)
     Buffer_SetEndOfBuffer(&m_buffer);
     LONGS_EQUAL( 1, Buffer_GetLength(&m_buffer) );
     LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+}
+
+TEST(Buffer, Buffer_Advance_RightToEnd)
+{
+    allocateBuffer(1);
+    Buffer_Advance(&m_buffer, 1);
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+}
+
+TEST(Buffer, Buffer_Advance_AttemptPastEnd_VerifyTruncatedToEnd)
+{
+    allocateBuffer(1);
+    Buffer_Advance(&m_buffer, 2);
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+    LONGS_EQUAL( 1, Buffer_GetLength(&m_buffer) );
 }
 
 TEST(Buffer, Buffer_GetArray)

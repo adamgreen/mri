@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ TEST(cmdMemory, MemoryRead_PacketBufferTooSmall_ShouldReturnOverflowResponse)
     char     packet[64];
     snprintf(packet, sizeof(packet), "+$m%08x,8#", (uint32_t)(size_t)value);
     platformMock_CommInitReceiveChecksummedData(packet, "+$c#");
-    platformMock_SetPacketBufferSize(15);
+    platformMock_SetPacketBufferSize(15+4);
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_BUFFER_OVERRUN "#+"),
                    platformMock_CommGetTransmittedData() );

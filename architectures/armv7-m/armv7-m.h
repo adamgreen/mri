@@ -89,8 +89,9 @@
 #endif
 
 /* NOTE: The largest buffer is required for receiving the 'G' command which receives the contents of the registers from
-   the debugger as two hex digits per byte.  Also need a character for the 'G' command itself. */
-#define CORTEXM_PACKET_BUFFER_SIZE  (1 + 2 * sizeof(uint32_t) * CONTEXT_SIZE)
+   the debugger as two hex digits per byte.  Also need a character for the 'G' command itself and another 4 for the '$',
+   '#', and 2-byte checksum. */
+#define CORTEXM_PACKET_BUFFER_SIZE  (1 + 2 * sizeof(uint32_t) * CONTEXT_SIZE + 4)
 
 typedef struct
 {

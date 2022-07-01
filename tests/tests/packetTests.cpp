@@ -28,7 +28,6 @@ extern "C"
 TEST_GROUP(Packet)
 {
     Packet            m_packet;
-    Buffer            m_buffer;
     char*             m_pCharacterArray;
     int               m_exceptionThrown;
     static const char m_fillChar = 0xFF;
@@ -57,22 +56,23 @@ TEST_GROUP(Packet)
     void allocateBuffer(size_t sizeOfBuffer)
     {
         free(m_pCharacterArray);
+        // Increase size of buffer by 4 to fit '$', '#", and 2-bytes of checksum.
+        sizeOfBuffer += 4;
         m_pCharacterArray = (char*)malloc(sizeOfBuffer);
         memset(m_pCharacterArray, m_fillChar, sizeOfBuffer);
-        Buffer_Init(&m_buffer, m_pCharacterArray, sizeOfBuffer);
+        Packet_Init(&m_packet, m_pCharacterArray, sizeOfBuffer);
     }
 
     void allocateBuffer(const char* pBufferString)
     {
-        free(m_pCharacterArray);
-        m_pCharacterArray = NULL;
-        Buffer_Init(&m_buffer, (char*)pBufferString, strlen(pBufferString));
+        allocateBuffer(strlen(pBufferString));
+        Buffer_WriteString(&m_packet.dataBuffer, pBufferString);
     }
 
     void tryPacketGet()
     {
         __try
-            Packet_GetFromGDB(&m_packet, &m_buffer);
+            Packet_GetFromGDB(&m_packet);
         __catch
             m_exceptionThrown = 1;
     }
@@ -80,19 +80,19 @@ TEST_GROUP(Packet)
     void tryPacketSend()
     {
         __try
-            Packet_SendToGDB(&m_packet, &m_buffer);
+            Packet_SendToGDB(&m_packet);
         __catch
             m_exceptionThrown = 1;
     }
 
     void validateThatEmptyGdbPacketWasRead()
     {
-        LONGS_EQUAL( 0, Buffer_GetLength(&m_buffer) );
+        LONGS_EQUAL( 0, Buffer_GetLength(&m_packet.dataBuffer) );
     }
 
     void validateBufferMatches(const char* pExpectedOutput)
     {
-        CHECK_TRUE( Buffer_MatchesString(&m_buffer, pExpectedOutput, strlen(pExpectedOutput)) );
+        CHECK_TRUE( Buffer_MatchesString(&m_packet.dataBuffer, pExpectedOutput, strlen(pExpectedOutput)) );
     }
 };
 
@@ -199,36 +199,4 @@ TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
     platformMock_CommInitReceiveData("$");
     tryPacketSend();
     STRCMP_EQUAL ( platformMock_CommChecksumData("$OK#"), platformMock_CommGetTransmittedData() );
-}
-
-TEST(Packet, PacketSendToGDB_SendPoundSign_VerifyItEscaped)
-{
-    allocateBuffer("#");
-    platformMock_CommInitReceiveData("$");
-    tryPacketSend();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$}\x03#"), platformMock_CommGetTransmittedData() );
-}
-
-TEST(Packet, PacketSendToGDB_SendDollarSign_VerifyItEscaped)
-{
-    allocateBuffer("$");
-    platformMock_CommInitReceiveData("$");
-    tryPacketSend();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$}\x04#"), platformMock_CommGetTransmittedData() );
-}
-
-TEST(Packet, PacketSendToGDB_SendClosingCurlyBrace_VerifyItEscaped)
-{
-    allocateBuffer("}");
-    platformMock_CommInitReceiveData("$");
-    tryPacketSend();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$}\x5d#"), platformMock_CommGetTransmittedData() );
-}
-
-TEST(Packet, PacketSendToGDB_SendAsterisk_VerifyItEscaped)
-{
-    allocateBuffer("*");
-    platformMock_CommInitReceiveData("$");
-    tryPacketSend();
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$}\x0a#"), platformMock_CommGetTransmittedData() );
 }
