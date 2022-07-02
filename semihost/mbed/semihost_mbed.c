@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 /* Semihost functionality for redirecting mbed LocalFileSystem operations to the GNU host. */
 #include <errno.h>
 #include <stdint.h>
-#include <string.h>
+#include <core/libc.h>
 #include <core/core.h>
 #include <core/semihost.h>
 #include <core/cmd_file.h>
@@ -86,7 +86,7 @@ static int handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters)
     copySize = pUidParameters->bufferSize;
     if (copySize > uidSize)
         copySize = uidSize;
-    memcpy(pUidParameters->pBuffer, Platform_GetUid(), copySize);
+    mri_memcpy(pUidParameters->pBuffer, Platform_GetUid(), copySize);
 
     Platform_AdvanceProgramCounterToNextInstruction();
     Platform_SetSemihostCallReturnAndErrnoValues(0, 0);

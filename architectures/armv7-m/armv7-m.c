@@ -14,7 +14,7 @@
 */
 /* Routines to expose the Cortex-M functionality to the mri debugger. */
 #include <errno.h>
-#include <string.h>
+#include <core/libc.h>
 #include <core/signal.h>
 #include <core/core.h>
 #include <core/platforms.h>
@@ -185,7 +185,7 @@ static void fillDebuggerStack(void)
 
 static void clearState(void)
 {
-    memset(&mriCortexMState, 0, sizeof(mriCortexMState));
+    mri_memset(&mriCortexMState, 0, sizeof(mriCortexMState));
 }
 
 /* Cortex-M7 microcontrollers name the SHP priority registers SHPR unlike other ARMv7-M devices. */
@@ -1643,7 +1643,7 @@ static void allocateFakeFloatRegAndCallMriDebugException(void)
 {
     uint32_t fakeFloats[33];
 
-    memset(&fakeFloats, 0, sizeof(fakeFloats));
+    mri_memset(&fakeFloats, 0, sizeof(fakeFloats));
     g_contextEntries[6].pValues = fakeFloats;
     g_contextEntries[6].count = sizeof(fakeFloats)/sizeof(fakeFloats[0]);
 

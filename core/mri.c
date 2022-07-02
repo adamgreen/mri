@@ -14,8 +14,8 @@
 */
 /* Monitor for Remote Inspection - Provides core mri routines to initialize the debug monitor, query its state, and
    invoke it into action when a debug event occurs on the target hardware. */
-#include <string.h>
 #include <errno.h>
+#include <core/libc.h>
 #include <core/mri.h>
 #include <core/buffer.h>
 #include <core/hex_convert.h>
@@ -88,7 +88,7 @@ void mriInit(const char* pDebuggerParameters)
 
 static void clearCoreStructure(void)
 {
-    memset(&g_mri, 0, sizeof(g_mri));
+    mri_memset(&g_mri, 0, sizeof(g_mri));
 }
 
 static void initializePlatformSpecificModulesWithDebuggerParameters(const char* pDebuggerParameters)

@@ -13,7 +13,7 @@
    limitations under the License.
 */
 /* Handler for gdb query commands. */
-#include <string.h>
+#include <core/libc.h>
 #include <core/buffer.h>
 #include <core/core.h>
 #include <core/platforms.h>
@@ -177,7 +177,7 @@ static void readQueryTransferReadArguments(Buffer* pBuffer, AnnexOffsetLength* p
 {
     static const char   readCommand[] = "read";
 
-    memset(pAnnexOffsetLength, 0, sizeof(*pAnnexOffsetLength));
+    mri_memset(pAnnexOffsetLength, 0, sizeof(*pAnnexOffsetLength));
     if (!Buffer_IsNextCharEqualTo(pBuffer, ':') ||
         !Buffer_MatchesString(pBuffer, readCommand, sizeof(readCommand)-1) ||
         !Buffer_IsNextCharEqualTo(pBuffer, ':') )
@@ -295,7 +295,7 @@ static uint32_t handleQueryTransferFeaturesCommand(void)
 
 static void validateAnnexIs(const char* pAnnex, const char* pExpected)
 {
-    if (pAnnex == NULL || 0 != strcmp(pAnnex, pExpected))
+    if (pAnnex == NULL || 0 != mri_strcmp(pAnnex, pExpected))
         __throw(invalidArgumentException);
 }
 

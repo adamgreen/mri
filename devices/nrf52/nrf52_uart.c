@@ -82,7 +82,7 @@ static void configureUartForUseOfDebugger(UartParameters* pParameters)
     NRF_UART0->PSELRXD = pParameters->rxPin;
 
     /* Use the desired baud rate. Defaults to 230400 value if baud rate not found in table. */
-    struct {
+    static struct {
         uint32_t baudRate;
         uint32_t regValue;
     } const baudRateValues[] = {

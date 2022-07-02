@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green     (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green     (https://github.com/adamgreen/)
    Copyright 2015 Chang,Jia-Rung (https://github.com/JaredCJR)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
    limitations under the License.
 */
 /* Routines used to provide STM32F429xx USART functionality to the mri debugger. */
-#include <string.h>
 #include <stdlib.h>
+#include <core/libc.h>
 #include <core/platforms.h>
 #include <architectures/armv7-m/debug_cm3.h>
 #include "stm32f429xx_init.h"
@@ -116,7 +116,7 @@ static void parseUartParameters(Token* pParameterTokens, UartParameters* pParame
     static const char baudRatePrefix[] = "MRI_UART_BAUD=";
     const char*       pMatchingPrefix = NULL;
 
-    memset(pParameters, 0, sizeof(*pParameters));
+    mri_memset(pParameters, 0, sizeof(*pParameters));
 
     if (Token_MatchingString(pParameterTokens, "MRI_UART_1"))
         pParameters->uartIndex = 1;

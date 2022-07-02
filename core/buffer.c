@@ -15,7 +15,7 @@
 /*  'Class' which represents a text buffer.  Has routines to both extract and inject strings of various types into the
     buffer while verifying that no overflow takes place. */
 #include <limits.h>
-#include <string.h>
+#include <core/libc.h>
 #include <core/buffer.h>
 #include <core/hex_convert.h>
 #include <core/try_catch.h>
@@ -156,7 +156,7 @@ uint8_t Buffer_ReadByteAsHex(Buffer* pBuffer)
 
 void Buffer_WriteString(Buffer* pBuffer, const char* pString)
 {
-    Buffer_WriteSizedString(pBuffer, pString, strlen(pString));
+    Buffer_WriteSizedString(pBuffer, pString, mri_strlen(pString));
 }
 
 
@@ -420,7 +420,7 @@ static int doesBufferContainThisString(Buffer* pBuffer, const char* pDesiredStri
 {
     const char* pBufferString = pBuffer->pCurrent;
 
-    return (strncmp(pBufferString, pDesiredString, stringLength) == 0) &&
+    return (mri_strncmp(pBufferString, pDesiredString, stringLength) == 0) &&
            (Buffer_BytesLeft(pBuffer) == stringLength ||
             pBufferString[stringLength] == ':' ||
             pBufferString[stringLength] == ';' ||

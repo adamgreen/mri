@@ -1,4 +1,4 @@
-/* Copyright 2015 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
    limitations under the License.
 */
 /* Routines which expose mbed1768 specific functionality to the mri debugger. */
-#include <string.h>
+#include <core/libc.h>
 #include <core/platforms.h>
 #include <core/try_catch.h>
 #include <architectures/armv7-m/debug_cm3.h>
@@ -57,7 +57,7 @@ static void initModuleState(void)
     static const uint8_t  defaultMbedUid[MBED1768_UID_SIZE] = "101000000000000000000002F7F00000\0\0\0";
 
     g_state.flags = 0;
-    memcpy(g_state.mbedUid, defaultMbedUid, sizeof(g_state.mbedUid));
+    mri_memcpy(g_state.mbedUid, defaultMbedUid, sizeof(g_state.mbedUid));
 }
 
 static void disableMbedInterface(void)

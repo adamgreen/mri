@@ -201,3 +201,9 @@ When calling the make_board_library makefile macro, you pass in four parameters:
   * You will want to include **CORE SEMIHOST ARMV7M NATIVE_MEM** -or- **CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU** depending on whether the device on your board has a FPU or not. The **_FPU_HARD** suffix can also be used if you want to use the floating point registers for passing float parameters into functions instead.
   * You will want to include your device specific module too. The symbolic name to be used will be the one you used as the first parameter to the armv7m_module macro when you added your device to the makefile.  (ie. **LPC176X**, **LPC43XX_FPU**, etc.) You will need to add the _FPU suffix if this device has a FPU.
 4. The INCLUDE path to be used when building the modules for this library.  This should include the paths to the CMSIS headers for your device.
+
+
+## GLOBALCHK Test Script
+The [tests/globalchk](../tests/globalchk) bash script is used to check that MRI meets the global symbol restrictions that we want to maintain for the library:
+* All of the exported global symbols from the library should begin with the ```mri``` prefix so that they don't collide with the debuggee's globals.
+* The library shouldn't import any global symbols. All of its code should be self contained. We don't want the debug monitor and debuggee executing the same code since breakpoints set in the shared code by the debuggee could end up hitting the breakpoint while the debuggee is running which will lead to unexpected behaviour. Standard C Library functions used by MRI have been re-implemented in [libc.c](../core/libc.c) so that the library adheres to this restriction.
