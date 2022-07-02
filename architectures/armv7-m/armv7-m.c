@@ -130,7 +130,7 @@ void mriExceptionHandler(void);
 
 static void fillDebuggerStack(void);
 static void clearState(void);
-static void determineSubPriorityBitCount(void);
+static void determinePriorityBitShift(void);
 static void configureDWTandFPB(void);
 static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority);
 static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq);
@@ -153,7 +153,7 @@ void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type
 
     fillDebuggerStack();
     clearState();
-    determineSubPriorityBitCount();
+    determinePriorityBitShift();
     configureDWTandFPB();
     if (debugMonPriority == 0)
     {
@@ -193,20 +193,20 @@ static void clearState(void)
 #define SHP SHPR
 #endif
 
-static void determineSubPriorityBitCount(void)
+static void determinePriorityBitShift(void)
 {
     const uint32_t debugMonExceptionNumber = 12;
     uint32_t zeroBitCount;
-    uint32_t subPriorityBitCount;
+    uint32_t priorityBitShift;
 
     /* Setting DebugMon priority to 0xFF to see how many lsbits read back as zero. */
     /* DebugMon priority will later be set correctly by mriCortexMInit(). */
     SCB->SHP[debugMonExceptionNumber-4] = 0xFF;
     zeroBitCount = 32 - (uint32_t)__CLZ(~(SCB->SHP[debugMonExceptionNumber-4] | 0xFFFFFF00));
-    subPriorityBitCount = NVIC_GetPriorityGrouping() + 1;
-    if (zeroBitCount > subPriorityBitCount)
-        subPriorityBitCount = zeroBitCount;
-    mriCortexMState.subPriorityBitCount = subPriorityBitCount;
+    priorityBitShift = NVIC_GetPriorityGrouping() + 1;
+    if (zeroBitCount > priorityBitShift)
+        priorityBitShift = zeroBitCount;
+    mriCortexMState.priorityBitShift = priorityBitShift;
 }
 
 static void configureDWTandFPB(void)
@@ -245,8 +245,8 @@ static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority)
 
 void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority)
 {
-    uint8_t fullPriority = (priority << mriCortexMState.subPriorityBitCount) |
-                           (subPriority & ((1 << mriCortexMState.subPriorityBitCount) -1));
+    uint8_t fullPriority = (priority << mriCortexMState.priorityBitShift) |
+                           (subPriority & ((1 << mriCortexMState.priorityBitShift) -1));
 
     if ((int32_t)irq >= 0)
     {
@@ -509,7 +509,7 @@ static void setRestoreBasePriorityFlag(void)
 static uint8_t calculateBasePriorityForThisCPU(uint8_t basePriority)
 {
     /* Different Cortex-M3 chips support different number of bits in the priority register. */
-    return basePriority << mriCortexMState.subPriorityBitCount;
+    return basePriority << mriCortexMState.priorityBitShift;
 }
 
 
@@ -525,7 +525,7 @@ uint8_t mriCortexMGetPriority(IRQn_Type irq)
     {
         priority = SCB->SHP[((uint32_t)irq & 0xF)-4];
     }
-    return priority >> mriCortexMState.subPriorityBitCount;
+    return priority >> mriCortexMState.priorityBitShift;
 }
 
 
@@ -1477,7 +1477,7 @@ static int hasDebugMonInterruptBeenDisabled()
     {
         return 1;
     }
-    else if (basepri != 0x00 && (basepri >> mriCortexMState.subPriorityBitCount) <= debugMonPriority)
+    else if (basepri != 0x00 && (basepri >> mriCortexMState.priorityBitShift) <= debugMonPriority)
     {
         return 1;
     }

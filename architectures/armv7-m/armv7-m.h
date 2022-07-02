@@ -107,7 +107,7 @@ typedef struct
     uint32_t            bfar;
     uint32_t            originalPC;
     uint32_t            originalBasePriority;
-    uint32_t            subPriorityBitCount;
+    uint32_t            priorityBitShift;
     int                 maxStackUsed;
     char                packetBuffer[CORTEXM_PACKET_BUFFER_SIZE];
 } CortexMState;
