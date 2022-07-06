@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -96,6 +96,9 @@ struct PlatformMockThread
     uint32_t            threadId;
     PlatformThreadState state;
 };
+
+void platformMock_SetSingleStepState(int state);
+void platformMock_SingleStepShouldAdvancePC(bool enable);
 
 void platformMock_RtosSetHaltedThreadId(uint32_t threadId);
 void platformMock_RtosSetThreads(const uint32_t* pThreadArray, uint32_t threadCount);

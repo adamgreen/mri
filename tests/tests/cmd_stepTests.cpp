@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -72,6 +72,16 @@ TEST(cmdStep, SingleStepOverHardcodedBreakpoints_MustContinueAfterToExit)
                    platformMock_CommGetTransmittedData() );
     CHECK_EQUAL( 2, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
     CHECK_EQUAL( INITIAL_PC + 8, platformMock_GetProgramCounterValue() );
+}
+
+TEST(cmdStep, SingleStep_AdvancePCLikeSkippingOverBasePriInstructions_MustContinueAfterToExit)
+{
+    platformMock_SingleStepShouldAdvancePC(true);
+    platformMock_CommInitReceiveChecksummedData("+$s#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$T05responseT#+"),
+                   platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( INITIAL_PC + 4, platformMock_GetProgramCounterValue() );
 }
 
 TEST(cmdStep, SetSignalOnly)

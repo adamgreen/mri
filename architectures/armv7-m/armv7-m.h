@@ -34,7 +34,7 @@
 #define CORTEXM_FLAGS_ACTIVE_DEBUG          (1 << 0)
 #define CORTEXM_FLAGS_FAULT_DURING_DEBUG    (1 << 1)
 #define CORTEXM_FLAGS_SINGLE_STEPPING       (1 << 2)
-#define CORTEXM_FLAGS_RESTORE_BASEPRI       (1 << 3)
+#define CORTEXM_FLAGS_RESTORE_PRI           (1 << 3)
 #define CORTEXM_FLAGS_SVC_STEP              (1 << 4)
 #define CORTEXM_FLAGS_CTRL_C                (1 << 5)
 #define CORTEXM_FLAGS_NO_DEBUG_STACK        (1 << 6)
@@ -74,6 +74,7 @@
 #define LR      14
 #define PC      15
 #define CPSR    16
+#define PRIMASK 19
 #define BASEPRI 20
 
 
@@ -106,7 +107,8 @@ typedef struct
     uint32_t            mmfar;
     uint32_t            bfar;
     uint32_t            originalPC;
-    uint32_t            originalBasePriority;
+    uint32_t            basepri;
+    uint32_t            primask;
     uint32_t            priorityBitShift;
     int                 maxStackUsed;
     char                packetBuffer[CORTEXM_PACKET_BUFFER_SIZE];

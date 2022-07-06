@@ -446,10 +446,32 @@ uint32_t  mriPlatform_GetProgramCounter(void)
 
 // Single Stepping stubs called by MRI core.
 static int g_singleStepping;
+static bool g_singleSteppingForced = false;
+static bool g_singleSteppingShouldAdvancePC = false;
+
+void platformMock_SetSingleStepState(int state)
+{
+    g_singleSteppingForced = true;
+    g_singleStepping = state;
+}
+
+void platformMock_SingleStepShouldAdvancePC(bool enable)
+{
+    g_singleSteppingShouldAdvancePC = enable;
+}
 
 void mriPlatform_EnableSingleStep(void)
 {
-    g_singleStepping = TRUE;
+    if (g_singleSteppingShouldAdvancePC)
+        g_programCounter += 4;
+    if (!g_singleSteppingForced)
+        g_singleStepping = TRUE;
+}
+
+void mriPlatform_DisableSingleStep(void)
+{
+    if (!g_singleSteppingForced)
+        g_singleStepping = FALSE;
 }
 
 int mriPlatform_IsSingleStepping(void)
@@ -904,6 +926,8 @@ void platformMock_Init(void)
     g_advanceProgramCounterToNextInstruction = 0;
     g_setProgramCounterCalls = 0;
     g_programCounter = INITIAL_PC;
+    g_singleSteppingForced = false;
+    g_singleSteppingShouldAdvancePC = false;
     g_singleStepping = FALSE;
     g_callToFail = 0;
     memset(g_contextEntries, 0xff, sizeof(g_contextEntries));
@@ -962,8 +986,4 @@ void platformMock_Uninit(void)
 extern "C" uint32_t  mriPlatform_HandleGDBCommand(Buffer* pBuffer)
 {
     return 0;
-}
-
-extern "C" void mriPlatform_DisableSingleStep(void)
-{
 }

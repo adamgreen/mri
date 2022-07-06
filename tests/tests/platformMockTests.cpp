@@ -460,6 +460,33 @@ TEST(platformMock, Platform_EnableSingleStep)
     CHECK_TRUE ( Platform_IsSingleStepping() );
 }
 
+TEST(platformMock, Platform_DisableSingleStep)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+        Platform_EnableSingleStep();
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+        Platform_DisableSingleStep();
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+}
+
+TEST(platformMock, Platform_IsSingleStepping_ForceToFalse)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+        platformMock_SetSingleStepState(0);
+        Platform_EnableSingleStep();
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+}
+
+TEST(platformMock, Platform_EnableSingleStep_AdvancePCOnRequest)
+{
+    CHECK_EQUAL ( INITIAL_PC, Platform_GetProgramCounter() );
+        Platform_EnableSingleStep();
+    CHECK_EQUAL ( INITIAL_PC, Platform_GetProgramCounter() );
+        platformMock_SingleStepShouldAdvancePC(true);
+        Platform_EnableSingleStep();
+    CHECK_EQUAL ( INITIAL_PC + 4, Platform_GetProgramCounter() );
+}
+
 TEST(platformMock, Platform_WasMemoryFaultEncountered_DefaultToFalse)
 {
     CHECK_FALSE ( Platform_WasMemoryFaultEncountered() );

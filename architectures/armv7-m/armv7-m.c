@@ -260,9 +260,9 @@ void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority)
 
 
 static void     cleanupIfSingleStepping(void);
-static void     restoreBasePriorityIfNeeded(void);
-static uint32_t shouldRestoreBasePriority(void);
-static void     clearRestoreBasePriorityFlag(void);
+static void     restorePriorityRegsIfNeeded(void);
+static uint32_t shouldRestorePriorityRegs(void);
+static void     clearPriorityRestoreFlag();
 static void     removeHardwareBreakpointOnSvcHandlerIfNeeded(void);
 static int      shouldRemoveHardwareBreakpointOnSvcHandler(void);
 static void     clearSvcStepFlag(void);
@@ -278,28 +278,30 @@ void Platform_DisableSingleStep(void)
 
 static void cleanupIfSingleStepping(void)
 {
-    restoreBasePriorityIfNeeded();
+    restorePriorityRegsIfNeeded();
     removeHardwareBreakpointOnSvcHandlerIfNeeded();
 }
 
-static void restoreBasePriorityIfNeeded(void)
+static void restorePriorityRegsIfNeeded(void)
 {
-    if (shouldRestoreBasePriority())
+    if (shouldRestorePriorityRegs())
     {
-        clearRestoreBasePriorityFlag();
-        Context_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.originalBasePriority);
-        mriCortexMState.originalBasePriority = 0;
+        clearPriorityRestoreFlag();
+        Context_Set(&mriCortexMState.context, PRIMASK, mriCortexMState.primask);
+        Context_Set(&mriCortexMState.context, BASEPRI, mriCortexMState.basepri);
+        mriCortexMState.primask = 0;
+        mriCortexMState.basepri = 0;
     }
 }
 
-static uint32_t shouldRestoreBasePriority(void)
+static uint32_t shouldRestorePriorityRegs(void)
 {
-    return mriCortexMFlags & CORTEXM_FLAGS_RESTORE_BASEPRI;
+    return mriCortexMFlags & CORTEXM_FLAGS_RESTORE_PRI;
 }
 
-static void clearRestoreBasePriorityFlag(void)
+static void clearPriorityRestoreFlag()
 {
-    mriCortexMFlags &= ~CORTEXM_FLAGS_RESTORE_BASEPRI;
+    mriCortexMFlags &= ~CORTEXM_FLAGS_RESTORE_PRI;
 }
 
 static void removeHardwareBreakpointOnSvcHandlerIfNeeded(void)
@@ -344,23 +346,34 @@ static void     setHardwareBreakpointOnSvcHandler(void);
 static void     setSvcStepFlag(void);
 static void     setSingleSteppingFlag(void);
 static void     setSingleSteppingFlag(void);
-static void     recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void);
-static int      doesPCPointToBASEPRIUpdateInstruction(void);
+static int      advancePastPriorityModifyingInstruction(void);
+static int      checkCurrentInstruction(void);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
 static uint16_t getSecondHalfWordOfCurrentInstruction(void);
 static uint16_t throwingMemRead16(uint32_t address);
-static int      isFirstHalfWordOfMSR(uint16_t instructionHalfWord0);
-static int      isSecondHalfWordOfMSRModifyingBASEPRI(uint16_t instructionHalfWord1);
-static int      isSecondHalfWordOfMSR_BASEPRI(uint16_t instructionHalfWord1);
-static int      isSecondHalfWordOfMSR_BASEPRI_MAX(uint16_t instructionHalfWord1);
-static void     recordCurrentBasePriority(void);
-static void     setRestoreBasePriorityFlag(void);
+static int      isInstructionMSR(uint16_t firstWord, uint16_t secondWord);
+static int      processInstructionMSR(uint16_t firstWord, uint16_t secondWord);
+static int      isInstructionCPS(uint16_t firstWord);
+static int      processInstructionCPS(uint16_t firstWord);
+static int      isInstructionMRS(uint16_t firstWord, uint16_t secondWord);
+static int      processInstructionMRS(uint16_t firstWord, uint16_t secondWord);
+static void     recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void);
+static void     recordCurrentPriorityRegs(void);
+static void     setRestorePriorityRegsFlag(void);
 static uint8_t  calculateBasePriorityForThisCPU(uint8_t basePriority);
 void Platform_EnableSingleStep(void)
 {
+    int didAdvancePastPriorityInstruction;
+
     if (MRI_THREAD_MRI)
     {
         setSingleSteppingFlag();
+        return;
+    }
+
+    didAdvancePastPriorityInstruction = advancePastPriorityModifyingInstruction();
+    if (didAdvancePastPriorityInstruction)
+    {
         return;
     }
 
@@ -422,15 +435,18 @@ static void setSingleSteppingFlag(void)
     mriCortexMFlags |= CORTEXM_FLAGS_SINGLE_STEPPING;
 }
 
-static void recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void)
+static int advancePastPriorityModifyingInstruction(void)
 {
-    if (!doesPCPointToBASEPRIUpdateInstruction())
-        recordCurrentBasePriority();
-    Context_Set(&mriCortexMState.context, BASEPRI,
-                calculateBasePriorityForThisCPU(mriCortexMGetPriority(DebugMonitor_IRQn) + 1));
+    if (checkCurrentInstruction())
+    {
+        /* Current instruction is related to priority registers and was simulated so advance PC past it. */
+        Platform_AdvanceProgramCounterToNextInstruction();
+        return 1;
+    }
+    return 0;
 }
 
-static int doesPCPointToBASEPRIUpdateInstruction(void)
+static int checkCurrentInstruction(void)
 {
     uint16_t firstWord = 0;
     uint16_t secondWord = 0;
@@ -446,7 +462,16 @@ static int doesPCPointToBASEPRIUpdateInstruction(void)
         return 0;
     }
 
-    return isFirstHalfWordOfMSR(firstWord) && isSecondHalfWordOfMSRModifyingBASEPRI(secondWord);
+    /* MSR and CPSI* instructions can modify the PRIMASK and BASEPRI registers. */
+    if (isInstructionMSR(firstWord, secondWord))
+        return processInstructionMSR(firstWord, secondWord);
+    if (isInstructionCPS(firstWord))
+        return processInstructionCPS(firstWord);
+    /* MRS instructions might want to read the real values of PRIMASK and BASEPRI and not the values as modified
+       by MRI. */
+    if (isInstructionMRS(firstWord, secondWord))
+        return processInstructionMRS(firstWord, secondWord);
+    return 0;
 }
 
 static uint16_t getFirstHalfWordOfCurrentInstruction(void)
@@ -467,43 +492,99 @@ static uint16_t throwingMemRead16(uint32_t address)
     return instructionWord;
 }
 
-static int isFirstHalfWordOfMSR(uint16_t instructionHalfWord0)
+static int isInstructionMSR(uint16_t firstWord, uint16_t secondWord)
 {
-    static const unsigned short MSRMachineCode = 0xF380;
-    static const unsigned short MSRMachineCodeMask = 0xFFF0;
-
-    return MSRMachineCode == (instructionHalfWord0 & MSRMachineCodeMask);
+    return ((firstWord & 0xFFF0) == 0xF380) && ((secondWord & 0xFF00) == 0x8800);
 }
 
-static int isSecondHalfWordOfMSRModifyingBASEPRI(uint16_t instructionHalfWord1)
+static int processInstructionMSR(uint16_t firstWord, uint16_t secondWord)
 {
-    return isSecondHalfWordOfMSR_BASEPRI(instructionHalfWord1) ||
-           isSecondHalfWordOfMSR_BASEPRI_MAX(instructionHalfWord1);
+    uint16_t Rn = firstWord & 0x000F;
+    uint16_t SYSm = secondWord & 0x00FF;
+
+    switch (SYSm)
+    {
+        case 16: // PRIMASK
+            Context_Set(&mriCortexMState.context, PRIMASK, Context_Get(&mriCortexMState.context, Rn));
+            return 1;
+        case 17: // BASEPRI
+            Context_Set(&mriCortexMState.context, BASEPRI, Context_Get(&mriCortexMState.context, Rn));
+            return 1;
+        case 18: // BASEPRI_MAX
+        {
+            uint32_t basepriVal = Context_Get(&mriCortexMState.context, BASEPRI);
+            uint32_t RnVal = Context_Get(&mriCortexMState.context, Rn);
+            if (basepriVal == 0 || RnVal < basepriVal)
+            {
+                Context_Set(&mriCortexMState.context, BASEPRI, RnVal);
+            }
+            return 1;
+        }
+        default:
+            return 0;
+    }
 }
 
-static int isSecondHalfWordOfMSR_BASEPRI(uint16_t instructionHalfWord1)
+static int isInstructionCPS(uint16_t firstWord)
 {
-    static const unsigned short BASEPRIMachineCode = 0x8811;
-
-    return instructionHalfWord1 == BASEPRIMachineCode;
+    return (firstWord & 0xFFEC) == 0xB660;
 }
 
-static int isSecondHalfWordOfMSR_BASEPRI_MAX(uint16_t instructionHalfWord1)
+static int processInstructionCPS(uint16_t firstWord)
 {
-    static const unsigned short BASEPRI_MAXMachineCode = 0x8812;
+    uint16_t enable = (firstWord & 0x0010) >> 4;
+    uint16_t I = firstWord & 0x0002;
 
-    return instructionHalfWord1 == BASEPRI_MAXMachineCode;
+    if (I)
+    {
+        Context_Set(&mriCortexMState.context, PRIMASK, enable);
+        return 1;
+    }
+    return 0;
 }
 
-static void recordCurrentBasePriority(void)
+static int isInstructionMRS(uint16_t firstWord, uint16_t secondWord)
 {
-    mriCortexMState.originalBasePriority = Context_Get(&mriCortexMState.context, BASEPRI);
-    setRestoreBasePriorityFlag();
+    return ((firstWord & 0xFFFF) == 0xF3EF) && ((secondWord & 0xF000) == 0x8000);
 }
 
-static void setRestoreBasePriorityFlag(void)
+static int processInstructionMRS(uint16_t firstWord, uint16_t secondWord)
 {
-    mriCortexMFlags |= CORTEXM_FLAGS_RESTORE_BASEPRI;
+    uint16_t Rn = (secondWord & 0x0F00) >> 8;
+    uint16_t SYSm = secondWord & 0x00FF;
+
+    switch (SYSm)
+    {
+        case 16: // PRIMASK
+            Context_Set(&mriCortexMState.context, Rn, Context_Get(&mriCortexMState.context, PRIMASK));
+            return 1;
+        case 17: // BASEPRI
+        case 18: // BASEPRI_MAX
+            Context_Set(&mriCortexMState.context, Rn, Context_Get(&mriCortexMState.context, BASEPRI));
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void recordCurrentBasePriorityAndRaisePriorityToDisableNonDebugInterrupts(void)
+{
+    recordCurrentPriorityRegs();
+    Context_Set(&mriCortexMState.context, PRIMASK, 0);
+    Context_Set(&mriCortexMState.context, BASEPRI,
+                calculateBasePriorityForThisCPU(mriCortexMGetPriority(DebugMonitor_IRQn) + 1));
+}
+
+static void recordCurrentPriorityRegs(void)
+{
+    mriCortexMState.primask = Context_Get(&mriCortexMState.context, PRIMASK);
+    mriCortexMState.basepri = Context_Get(&mriCortexMState.context, BASEPRI);
+    setRestorePriorityRegsFlag();
+}
+
+static void setRestorePriorityRegsFlag(void)
+{
+    mriCortexMFlags |= CORTEXM_FLAGS_RESTORE_PRI;
 }
 
 static uint8_t calculateBasePriorityForThisCPU(uint8_t basePriority)
@@ -1350,6 +1431,8 @@ static void clearFaultStatusBits(void);
 static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber);
 static int hasDebugMonInterruptBeenDisabled();
 static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
+static void disableInterruptMaskingIfNecessary(void);
+static void treatDebugEventHardFaultAsDebugMonInterrupt(void);
 static void setPendedFromFaultBit(void);
 int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
 {
@@ -1383,6 +1466,8 @@ int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
            Returns 0 to let asm routine know that it can now just return to let the pended DebugMon run.
         */
         recordAndClearFaultStatusBits(getCurrentlyExecutingExceptionNumber());
+        disableInterruptMaskingIfNecessary();
+        treatDebugEventHardFaultAsDebugMonInterrupt();
         setPendedFromFaultBit();
         setMonitorPending();
         return 0;
@@ -1473,8 +1558,10 @@ static int hasDebugMonInterruptBeenDisabled()
     uint32_t basepri = __get_BASEPRI();
     uint32_t debugMonPriority = mriCortexMGetPriority(DebugMonitor_IRQn);
 
-    if (primask != 0)
+    if (primask != 0 && debugMonPriority > 0)
     {
+        /* All interrupts have been masked and if DebugMon is running at priority lower than 0 then there is no way
+           to safely pend a transition to the DebugMon handler. */
         return 1;
     }
     else if (basepri != 0x00 && (basepri >> mriCortexMState.priorityBitShift) <= debugMonPriority)
@@ -1500,6 +1587,34 @@ static void recordAndClearFaultStatusBits(uint32_t exceptionNumber)
     SCB->DFSR = mriCortexMState.dfsr;
     SCB->HFSR = mriCortexMState.hfsr;
     SCB->CFSR = mriCortexMState.cfsr;
+}
+
+static void disableInterruptMaskingIfNecessary(void)
+{
+    /* When DebugMon is running at priority level 0 then can re-enable interrupts and pend DebugMon but must record
+       the fact that PRIMASK was set so that it can be restored when leaving debugger. */
+    uint32_t primask = __get_PRIMASK();
+    uint32_t basepri = __get_BASEPRI();
+
+    if (primask != 0)
+    {
+        mriCortexMState.primask = primask;
+        mriCortexMState.basepri = basepri;
+        setRestorePriorityRegsFlag();
+        __set_PRIMASK(0);
+    }
+}
+
+static void treatDebugEventHardFaultAsDebugMonInterrupt(void)
+{
+    static const uint32_t debugEventBit = 1 << 31;
+    static const uint32_t debugMonExceptionNumber = 12;
+
+    /* Treat as DebugMon interrupt if only the DEBUGEVT bit is set in the HFSR. */
+    if (mriCortexMState.hfsr == debugEventBit)
+    {
+        mriCortexMState.exceptionNumber = debugMonExceptionNumber;
+    }
 }
 
 
