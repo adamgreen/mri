@@ -261,10 +261,10 @@ static void clearTempBreakpointFlag(void)
 
 static int areSingleSteppingInRange(void)
 {
-    // Ignore ranged single stepping if CTRL+C was pressed or...
+    /* Ignore ranged single stepping if CTRL+C was pressed or... */
     if (g_mri.signalValue == SIGINT)
         return 0;
-    // if a debug breakpoint/watchpoint was hit.
+    /* if a debug breakpoint/watchpoint was hit. */
     if (g_mri.signalValue == SIGTRAP)
     {
         PlatformTrapReason reason = Platform_GetTrapReason();
@@ -310,7 +310,7 @@ static void waitForAckToBeTransmitted(void)
 {
     while ( !Platform_CommHasTransmitCompleted() )
     {
-        // Waiting for ACK to be sent back to GDB for last command received.
+        /* Waiting for ACK to be sent back to GDB for last command received. */
     }
 }
 
