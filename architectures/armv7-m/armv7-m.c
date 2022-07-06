@@ -22,10 +22,6 @@
 #include "debug_cm3.h"
 #include "armv7-m.h"
 
-/* Disable any macro used for errno and use the int global instead. */
-#undef errno
-extern int errno;
-
 /* Fake stack used when task encounters stacking/unstacking fault. */
 static const uint32_t  g_fakeStack[] = { 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD,
                                          0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD,
