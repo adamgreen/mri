@@ -13,6 +13,7 @@
    limitations under the License.
 */
 /* Semihost functionality for redirecting mbed LocalFileSystem operations to the GNU host. */
+#include <errno.h>
 #include <stdint.h>
 #include <string.h>
 #include <core/core.h>
@@ -34,6 +35,8 @@ static int      handleMbedSemihostSeekRequest(PlatformSemihostParameters* pSemih
 static uint32_t extractWordFromBigEndianByteArray(const void* pBigEndianValueToExtract);
 static int      handleMbedSemihostFileLengthRequest(PlatformSemihostParameters* pSemihostParameters);
 static int      handleMbedSemihostRemoveRequest(PlatformSemihostParameters* pSemihostParameters);
+static int      handleMbedSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters);
+static int      handleMbedSemihostErrorNoRequest(PlatformSemihostParameters* pSemihostParameters);
 int Semihost_HandleMbedSemihostRequest(PlatformSemihostParameters* pParameters)
 {
     uint32_t opCode;
@@ -57,6 +60,10 @@ int Semihost_HandleMbedSemihostRequest(PlatformSemihostParameters* pParameters)
         return handleMbedSemihostFileLengthRequest(pParameters);
     case 14:
         return handleMbedSemihostRemoveRequest(pParameters);
+    case 15:
+        return handleMbedSemihostRenameRequest(pParameters);
+    case 19:
+        return handleMbedSemihostErrorNoRequest(pParameters);
     case 257:
         return handleMbedSemihostUidRequest(pParameters);
     default:
@@ -245,4 +252,20 @@ static int handleMbedSemihostRemoveRequest(PlatformSemihostParameters* pSemihost
     RemoveParameters*  pParameters = (RemoveParameters*)pSemihostParameters->parameter2;
     pParameters->filenameLength++;
     return IssueGdbFileUnlinkRequest(pParameters);
+}
+
+static int handleMbedSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters)
+{
+    RenameParameters* pParameters = (RenameParameters*)pSemihostParameters->parameter2;
+    pParameters->origFilenameLength++;
+    pParameters->newFilenameLength++;
+    return IssueGdbFileRenameRequest(pParameters);
+}
+
+static int handleMbedSemihostErrorNoRequest(PlatformSemihostParameters* pSemihostParameters)
+{
+    Platform_AdvanceProgramCounterToNextInstruction();
+    Platform_SetSemihostCallReturnAndErrnoValues(errno, 0);
+
+    return 1;
 }
