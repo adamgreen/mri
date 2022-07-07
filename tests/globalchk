@@ -1,16 +1,16 @@
 #! /usr/bin/env bash
 echo Checking ../lib/armv7-m/libmri_mbed1768.a
 arm-none-eabi-nm -g --defined-only ../lib/armv7-m/libmri_mbed1768.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$"
-arm-none-eabi-nm -u ../lib/armv7-m/libmri_mbed1768.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . errno$" | grep -v "........ . SystemCoreClock$" | sort -u
+arm-none-eabi-nm -u ../lib/armv7-m/libmri_mbed1768.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . SystemCoreClock$" | sort -u
 echo Checking ../lib/armv7-m/libmri_bambino210.a
 arm-none-eabi-nm -g --defined-only ../lib/armv7-m/libmri_bambino210.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$"
-arm-none-eabi-nm -u ../lib/armv7-m/libmri_bambino210.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . errno$" | grep -v "........ . SystemCoreClock$" | sort -u
+arm-none-eabi-nm -u ../lib/armv7-m/libmri_bambino210.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . SystemCoreClock$" | sort -u
 echo Checking ../lib/armv7-m/libmri_nrf52dk_fpu_soft.a
 arm-none-eabi-nm -g --defined-only ../lib/armv7-m/libmri_nrf52dk_fpu_soft.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$"
-arm-none-eabi-nm -u ../lib/armv7-m/libmri_nrf52dk_fpu_soft.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . errno$" | grep -v "........ . SystemCoreClock$" | sort -u
+arm-none-eabi-nm -u ../lib/armv7-m/libmri_nrf52dk_fpu_soft.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . SystemCoreClock$" | sort -u
 echo Checking ../lib/armv7-m/libmri_nrf52dk_fpu_hard.a
 arm-none-eabi-nm -g --defined-only ../lib/armv7-m/libmri_nrf52dk_fpu_hard.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$"
-arm-none-eabi-nm -u ../lib/armv7-m/libmri_nrf52dk_fpu_hard.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . errno$" | grep -v "........ . SystemCoreClock$" | sort -u
+arm-none-eabi-nm -u ../lib/armv7-m/libmri_nrf52dk_fpu_hard.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . SystemCoreClock$" | sort -u
 echo Checking ../lib/armv7-m/libmri_stm32f429-disco.a
 arm-none-eabi-nm -g --defined-only ../lib/armv7-m/libmri_stm32f429-disco.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$"
-arm-none-eabi-nm -u ../lib/armv7-m/libmri_stm32f429-disco.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . errno$" | grep -v "........ . SystemCoreClock$" | sort -u
+arm-none-eabi-nm -u ../lib/armv7-m/libmri_stm32f429-disco.a | grep "........ . .*" | grep -v "........ . mri.*" | grep -v "........ . .*_.*Handler$" | grep -v "........ . SystemCoreClock$" | sort -u

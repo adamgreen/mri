@@ -32,6 +32,7 @@ static int handleNewlibSemihostCloseRequest(PlatformSemihostParameters* pSemihos
 static int handleNewlibSemihostFStatRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters);
+static int handleNewlibSemihostGetErrNoRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemihostParameters);
 int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostParameters)
 {
@@ -57,6 +58,8 @@ int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostPa
             return handleNewlibSemihostStatRequest(pSemihostParameters);
         case MRI_NEWLIB_SEMIHOST_RENAME:
             return handleNewlibSemihostRenameRequest(pSemihostParameters);
+        case MRI_NEWLIB_SEMIHOST_GET_ERRNO:
+            return handleNewlibSemihostGetErrNoRequest(pSemihostParameters);
         case MRI_NEWLIB_SEMIHOST_SET_HOOKS:
             return handleNewlibSemihostSetHooksRequest(pSemihostParameters);
         default:
@@ -161,6 +164,13 @@ static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemiho
     parameters.newFilenameAddress = pSemihostParameters->parameter2;
     parameters.newFilenameLength = mri_strlen((const char*)parameters.newFilenameAddress) + 1;
     return IssueGdbFileRenameRequest(&parameters);
+}
+
+static int handleNewlibSemihostGetErrNoRequest(PlatformSemihostParameters* pSemihostParameters)
+{
+    mriCore_SetSemihostReturnValues(mriCore_GetSemihostErrno(), 0);
+    mriCore_FlagSemihostCallAsHandled();
+    return 1;
 }
 
 static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemihostParameters)

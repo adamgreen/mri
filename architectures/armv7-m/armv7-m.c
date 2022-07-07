@@ -13,7 +13,6 @@
    limitations under the License.
 */
 /* Routines to expose the Cortex-M functionality to the mri debugger. */
-#include <errno.h>
 #include <core/libc.h>
 #include <core/signal.h>
 #include <core/core.h>
@@ -1156,11 +1155,9 @@ PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 }
 
 
-void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
+void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int errNo)
 {
     Context_Set(&mriCortexMState.context, R0, returnValue);
-    if (returnValue < 0)
-        errno = err;
 }
 
 

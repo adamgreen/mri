@@ -112,7 +112,7 @@ typedef struct
 
 PlatformInstructionType     mriPlatform_TypeOfCurrentInstruction(void);
 PlatformSemihostParameters  mriPlatform_GetSemihostCallParameters(void);
-void                        mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err);
+void                        mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int errNo);
 
 const uint8_t*  mriPlatform_GetUid(void);
 uint32_t        mriPlatform_GetUidSize(void);

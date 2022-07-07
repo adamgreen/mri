@@ -13,7 +13,6 @@
    limitations under the License.
 */
 /* Semihost functionality for redirecting mbed LocalFileSystem operations to the GNU host. */
-#include <errno.h>
 #include <stdint.h>
 #include <core/libc.h>
 #include <core/core.h>
@@ -265,7 +264,7 @@ static int handleMbedSemihostRenameRequest(PlatformSemihostParameters* pSemihost
 static int handleMbedSemihostErrorNoRequest(PlatformSemihostParameters* pSemihostParameters)
 {
     Platform_AdvanceProgramCounterToNextInstruction();
-    Platform_SetSemihostCallReturnAndErrnoValues(errno, 0);
+    Platform_SetSemihostCallReturnAndErrnoValues(GetSemihostErrno(), 0);
 
     return 1;
 }

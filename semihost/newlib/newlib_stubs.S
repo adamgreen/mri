@@ -109,6 +109,16 @@ mriNewlib_SemihostFStat:
     bx      lr
 
 
+    .global mriNewlib_SemihostGetErrNo
+    .type mriNewlib_SemihostGetErrNo, function
+    /* extern "C" int mriNewlib_SemihostGetErrNo();
+       Retrieves the errno recorded for the last failed newlib semihost call.
+    */
+mriNewlib_SemihostGetErrNo:
+    bkpt    MRI_NEWLIB_SEMIHOST_GET_ERRNO
+    bx      lr
+
+
     .global mriSetDebuggerHooks
     .type mriSetDebuggerHooks, function
     /* extern "C" void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext);
