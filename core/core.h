@@ -46,6 +46,7 @@ void    mriCore_FlagSemihostCallAsHandled(void);
 int     mriCore_IsFirstException(void);
 int     mriCore_WasSuccessfullyInit(void);
 void    mriCore_RequestResetOnNextContinue(void);
+int     mriCore_WasResetOnNextContinueRequested(void);
 void    mriCore_SetSingleSteppingRange(const AddressRange* pRange);
 
 MriContext* mriCore_GetContext(void);
@@ -78,6 +79,7 @@ void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHoo
 #define IsFirstException                mriCore_IsFirstException
 #define WasSuccessfullyInit             mriCore_WasSuccessfullyInit
 #define RequestResetOnNextContinue      mriCore_RequestResetOnNextContinue
+#define WasResetOnNextContinueRequested mriCore_WasResetOnNextContinueRequested
 #define SetSingleSteppingRange          mriCore_SetSingleSteppingRange
 #define GetContext                      mriCore_GetContext
 #define SetContext                      mriCore_SetContext

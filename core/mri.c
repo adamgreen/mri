@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -172,7 +172,6 @@ static void determineSignalValue(void);
 static int  isDebugTrap(void);
 static void prepareForDebuggerExit(void);
 static void clearFirstExceptionFlag(void);
-static int hasResetBeenRequested(void);
 static void waitForAckToBeTransmitted(void);
 void mriDebugException(MriContext* pContext)
 {
@@ -291,7 +290,7 @@ static int isDebugTrap(void)
 
 static void prepareForDebuggerExit(void)
 {
-    if (hasResetBeenRequested()) {
+    if (WasResetOnNextContinueRequested()) {
         waitForAckToBeTransmitted();
         Platform_ResetDevice();
     }
@@ -299,11 +298,6 @@ static void prepareForDebuggerExit(void)
     if (g_mri.pLeavingHook)
         g_mri.pLeavingHook(g_mri.pvEnteringLeavingContext);
     clearFirstExceptionFlag();
-}
-
-static int hasResetBeenRequested(void)
-{
-    return (int)(g_mri.flags & MRI_FLAGS_RESET_ON_CONTINUE);
 }
 
 static void waitForAckToBeTransmitted(void)
@@ -427,6 +421,11 @@ int WasControlCFlagSentFromGdb(void)
 void RequestResetOnNextContinue(void)
 {
     g_mri.flags |= MRI_FLAGS_RESET_ON_CONTINUE;
+}
+
+int WasResetOnNextContinueRequested(void)
+{
+    return (int)(g_mri.flags & MRI_FLAGS_RESET_ON_CONTINUE);
 }
 
 void SetSingleSteppingRange(const AddressRange* pRange)
