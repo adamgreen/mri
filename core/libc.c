@@ -110,3 +110,32 @@ char* mri_strstr(const char* pHaystack, const char* pNeedle)
     }
     return NULL;
 }
+
+
+
+void* mri_memmove(void* pvDest, const void* pvSrc, size_t len)
+{
+    uint8_t* pDest = (uint8_t*)pvDest;
+    uint8_t* pDestEnd = pDest + len;
+    uint8_t* pSrc = (uint8_t*)pvSrc;
+    uint8_t* pSrcEnd = pSrc + len;
+    int dir = 1;
+    uint8_t* pDestCurr = pDest;
+    uint8_t* pSrcCurr = pSrc;
+
+    if (pDest > pSrc && pDest < pSrcEnd)
+    {
+        dir = -1;
+        pDestCurr = pDestEnd - 1;
+        pSrcCurr = pSrcEnd - 1;
+    }
+
+    while (len--)
+    {
+        *pDestCurr = *pSrcCurr;
+        pDestCurr += dir;
+        pSrcCurr += dir;
+    }
+
+    return pvDest;
+}

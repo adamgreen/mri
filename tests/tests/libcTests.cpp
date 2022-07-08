@@ -30,6 +30,7 @@
     #define mri_strncmp strncmp
     #define mri_strlen strlen
     #define mri_strstr strstr
+    #define mri_memmove memmove
 #endif // !USE_REAL_STD_C_LIB_VERSIONS
 
 
@@ -53,6 +54,14 @@ TEST_GROUP(libc)
 
     void teardown()
     {
+    }
+
+    void fillBuferWithAscendingValues(uint8_t* pBuff, size_t len)
+    {
+        for (size_t i = 0 ; i < len ; i++)
+        {
+            *pBuff++ = (uint8_t)i;
+        }
     }
 };
 
@@ -160,4 +169,51 @@ TEST(libc, mri_strstr)
     CHECK_TRUE(mri_strstr(haystack, "haystac") == haystack);
     CHECK_TRUE(mri_strstr(haystack, "k") == &haystack[7]);
     CHECK_TRUE(mri_strstr(haystack, "haystacl") == NULL);
+}
+
+
+
+TEST(libc, mri_memmove_NonOverlappingCopy)
+{
+    void* pReturn = mri_memmove(m_destBuffer, m_srcBuffer, sizeof(m_destBuffer));
+    POINTERS_EQUAL(pReturn, m_destBuffer);
+    LONGS_EQUAL(0, memcmp(m_destBuffer, m_srcBuffer, sizeof(m_destBuffer)));
+}
+
+TEST(libc, mri_memmove_OverlappingCopy_DestLowerThanSource)
+{
+    uint8_t buffer[64];
+
+    fillBuferWithAscendingValues(buffer, sizeof(buffer));
+    void* pReturn = mri_memmove(&buffer[0], &buffer[1], 63);
+    POINTERS_EQUAL(pReturn, &buffer[0]);
+    BYTES_EQUAL(1, buffer[0]);
+    BYTES_EQUAL(2, buffer[1]);
+    BYTES_EQUAL(63, buffer[62]);
+    BYTES_EQUAL(63, buffer[63]); // This byte should be untouched since data was moved down.
+}
+
+TEST(libc, mri_memmove_OverlappingCopy_DestHigherThanSource)
+{
+    uint8_t buffer[64];
+
+    fillBuferWithAscendingValues(buffer, sizeof(buffer));
+    void* pReturn = mri_memmove(&buffer[1], &buffer[0], 63);
+    POINTERS_EQUAL(pReturn, &buffer[1]);
+    BYTES_EQUAL(0, buffer[0]); // This byte should be untouched since data was moved up.
+    BYTES_EQUAL(0, buffer[1]);
+    BYTES_EQUAL(61, buffer[62]);
+    BYTES_EQUAL(62, buffer[63]);
+}
+
+TEST(libc, mri_memmove_OverlappingCopy_DestHigherThanSource_Only1ByteOverlapping)
+{
+    uint8_t buffer[128];
+
+    fillBuferWithAscendingValues(buffer, sizeof(buffer));
+    void* pReturn = mri_memmove(&buffer[63], &buffer[0], 64);
+    POINTERS_EQUAL(pReturn, &buffer[63]);
+    BYTES_EQUAL(0, buffer[63]);
+    BYTES_EQUAL(1, buffer[64]);
+    BYTES_EQUAL(63, buffer[63+63]);
 }

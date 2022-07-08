@@ -74,6 +74,8 @@
 #define LR      14
 #define PC      15
 #define CPSR    16
+#define MSP     17
+#define PSP     18
 #define PRIMASK 19
 #define BASEPRI 20
 

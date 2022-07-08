@@ -182,12 +182,12 @@ mriExceptionHandler:
 
     /* Unstack integer registers. */
 6$: pop     {r4-r9}
+    msr     psp, r5
     msr     primask, r6
     msr     basepri, r7
     msr     faultmask, r8
     msr     control, r9
     mov     r0, r4  /* R0 = original MSP */
-    /* Just drop the PSP value since updating it could really corrupt things. */
 
     /* R4 - R11, EXC_RETURN */
     pop     {r4-r11, lr}

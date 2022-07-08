@@ -1664,10 +1664,49 @@ void mriCortexMExceptionHandler(IntegerRegisters* pIntegerRegs, uint32_t* pFloat
 
     /* Setup scatter gather list for context. */
     needToFakeFloatRegs = prepareThreadContext(pExceptionStack, pIntegerRegs, pFloatingRegs);
+
+    /* Record some stats about the exception stack to help move it later if the user changes the SP. */
+    uint32_t exceptionStackSize = mriCortexMState.sp - mriCortexMState.taskSP;
+    int isExceptionStackMSP = msp == (uint32_t)pExceptionStack;
+    int isExceptionStackPSP = psp == (uint32_t)pExceptionStack;
+    uint32_t origSP = mriCortexMState.sp;
+
     if (needToFakeFloatRegs)
         allocateFakeFloatRegAndCallMriDebugException();
     else
         mriDebugException(&mriCortexMState.context);
+
+    /* If exception stack has been modified by user then will need to move exception record. */
+    if (mriCortexMState.sp != origSP)
+    {
+        if (isExceptionStackMSP)
+        {
+            Context_Set(&mriCortexMState.context, MSP, mriCortexMState.sp - exceptionStackSize);
+        }
+        if (isExceptionStackPSP)
+        {
+            Context_Set(&mriCortexMState.context, PSP, mriCortexMState.sp - exceptionStackSize);
+        }
+    }
+
+    uint32_t newMSP = Context_Get(&mriCortexMState.context, MSP);
+    uint32_t newPSP = Context_Get(&mriCortexMState.context, PSP);
+    uint32_t oldSP = 0x00000000;
+    uint32_t newSP = 0x00000000;
+    if (isExceptionStackMSP && msp != newMSP)
+    {
+        oldSP = msp;
+        newSP = newMSP;
+    }
+    else if (isExceptionStackPSP && psp != newPSP)
+    {
+        oldSP = psp;
+        newSP = newPSP;
+    }
+    if (oldSP != newSP)
+    {
+        mri_memmove((void*)newSP, (void*)oldSP, exceptionStackSize);
+    }
 }
 
 static int wasPendedFromFault(void)
