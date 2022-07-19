@@ -90,13 +90,13 @@ static void setMbedDetectedFlag(void)
 }
 
 
-const uint8_t* mriPlatform_GetUid(void)
+const uint8_t* Platform_GetUid(void)
 {
     return g_state.mbedUid;
 }
 
 
-uint32_t mriPlatform_GetUidSize(void)
+uint32_t Platform_GetUidSize(void)
 {
     return sizeof(g_state.mbedUid);
 }

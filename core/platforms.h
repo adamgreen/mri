@@ -160,6 +160,7 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_CommReceiveChar                            mriPlatform_CommReceiveChar
 #define Platform_CommSendBuffer                             mriPlatform_CommSendBuffer
 #define Platform_CommSendChar                               mriPlatform_CommSendChar
+#define Platform_HandleGDBCommand                           mriPlatform_HandleGDBCommand
 #define Platform_DetermineCauseOfException                  mriPlatform_DetermineCauseOfException
 #define Platform_GetTrapReason                              mriPlatform_GetTrapReason
 #define Platform_DisplayFaultCauseToGdbConsole              mriPlatform_DisplayFaultCauseToGdbConsole
@@ -197,6 +198,6 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_RtosIsSetThreadStateSupported              mriPlatform_RtosIsSetThreadStateSupported
 #define Platform_RtosSetThreadState                         mriPlatform_RtosSetThreadState
 #define Platform_RtosRestorePrevThreadState                 mriPlatform_RtosRestorePrevThreadState
-#define Platform_HandleFaultFromHighPriorityCode                  mriPlatform_HandleFaultFromHighPriorityCode
+#define Platform_HandleFaultFromHighPriorityCode            mriPlatform_HandleFaultFromHighPriorityCode
 
 #endif /* PLATFORMS_H_ */

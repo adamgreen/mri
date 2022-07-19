@@ -1473,7 +1473,7 @@ int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
     {
         /* Exception occurred in code too high priority to debug so start a crash dump.
 
-           Returns -1 to let asm routine know that it should call mriPlatform_HandleFaultFromHighPriorityCode() to handle
+           Returns -1 to let asm routine know that it should call Platform_HandleFaultFromHighPriorityCode() to handle
            this special case by doing something like dumping a crash dump since MRI can't debug it.
         */
         return -1;

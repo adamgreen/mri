@@ -168,8 +168,8 @@ static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemiho
 
 static int handleNewlibSemihostGetErrNoRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    mriCore_SetSemihostReturnValues(mriCore_GetSemihostErrno(), 0);
-    mriCore_FlagSemihostCallAsHandled();
+    SetSemihostReturnValues(GetSemihostErrno(), 0);
+    FlagSemihostCallAsHandled();
     return 1;
 }
 
@@ -181,7 +181,7 @@ static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemi
 
     mriCoreSetDebuggerHooks(pEnteringHook, pLeavingHook, pvContext);
 
-    mriCore_SetSemihostReturnValues(0, 0);
-    mriCore_FlagSemihostCallAsHandled();
+    SetSemihostReturnValues(0, 0);
+    FlagSemihostCallAsHandled();
     return 1;
 }

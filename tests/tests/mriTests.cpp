@@ -172,7 +172,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_ShouldSucceedAndSetHardwareBreakpointAtSpecif
 {
     mriInit("MRI_UART_MBED_USB");
 
-    CHECK_TRUE( mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_TRUE( SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
     CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xFFFFFFFF, platformMock_SetHardwareBreakpointKindArg() );
@@ -182,12 +182,12 @@ TEST(Mri, mriCoreSetTempBreakpoint_TryToSetBreakpointTwiceAndSecondCallFails)
 {
     mriInit("MRI_UART_MBED_USB");
 
-    CHECK_TRUE( mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_TRUE( SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
     CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
     CHECK_EQUAL( 0xFFFFFFFF, platformMock_SetHardwareBreakpointKindArg() );
 
-    CHECK_FALSE( mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_FALSE( SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
     // Should still just have hardware breakpoint from first successful call.
     CHECK_EQUAL( 1, platformMock_SetHardwareBreakpointCalls() );
     CHECK_EQUAL( 0xBAADF00D & ~1, platformMock_SetHardwareBreakpointAddressArg() );
@@ -199,7 +199,7 @@ TEST(Mri, mriCoreSetTempBreakpoint_SetHardwareBreakpointThrows_ShouldFail_Except
     mriInit("MRI_UART_MBED_USB");
 
     platformMock_SetHardwareBreakpointException(exceededHardwareResourcesException);
-    CHECK_FALSE( mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
+    CHECK_FALSE( SetTempBreakpoint(0xBAADF00D, NULL, NULL) );
     CHECK_EQUAL( noException, getExceptionCode() );
 }
 
@@ -207,9 +207,9 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_DontHitBreakpoint_Breakp
 {
     mriInit("MRI_UART_MBED_USB");
 
-    mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+    SetTempBreakpoint(0xBAADF00D, NULL, NULL);
 
-    mriPlatform_SetProgramCounter(0xBAADF00B);
+    Platform_SetProgramCounter(0xBAADF00B);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
@@ -222,9 +222,9 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_Breakpoint
 {
     mriInit("MRI_UART_MBED_USB");
 
-    mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+    SetTempBreakpoint(0xBAADF00D, NULL, NULL);
 
-    mriPlatform_SetProgramCounter(0xBAADF00D);
+    Platform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
@@ -236,9 +236,9 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_HitBreakpoint_ClearBreak
 {
     mriInit("MRI_UART_MBED_USB");
 
-    mriCore_SetTempBreakpoint(0xBAADF00D, NULL, NULL);
+    SetTempBreakpoint(0xBAADF00D, NULL, NULL);
 
-    mriPlatform_SetProgramCounter(0xBAADF00D);
+    Platform_SetProgramCounter(0xBAADF00D);
     platformMock_ClearHardwareBreakpointException(memFaultException);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
@@ -257,10 +257,10 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning0_S
 {
     mriInit("MRI_UART_MBED_USB");
 
-    mriCore_SetTempBreakpoint(0xBAADF00D, testCallback, (void*)this);
+    SetTempBreakpoint(0xBAADF00D, testCallback, (void*)this);
 
     g_callbackReturnValue = 0;
-    mriPlatform_SetProgramCounter(0xBAADF00D);
+    Platform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
@@ -274,10 +274,10 @@ TEST(Mri, mriCoreSetTempBreakpoint_RunMriDebugException_WithCallbackReturning1_S
 {
     mriInit("MRI_UART_MBED_USB");
 
-    mriCore_SetTempBreakpoint(0xBAADF00D, testCallback, NULL);
+    SetTempBreakpoint(0xBAADF00D, testCallback, NULL);
 
     g_callbackReturnValue = 1;
-    mriPlatform_SetProgramCounter(0xBAADF00D);
+    Platform_SetProgramCounter(0xBAADF00D);
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
