@@ -17,6 +17,7 @@
 #include <core/signal.h>
 #include <core/fileio.h>
 #include <core/core.h>
+#include <core/gdb_console.h>
 #include <core/cmd_common.h>
 #include <core/cmd_file.h>
 
@@ -61,7 +62,14 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
 int IssueGdbFileWriteRequest(const TransferParameters* pParameters)
 {
     static const char  gdbWriteCommand[] = "Fwrite,";
+    const uint32_t     STDOUT_FILE_NO = 1;
     Buffer*            pBuffer = GetInitializedBuffer();
+
+    if (pParameters->fileDescriptor == STDOUT_FILE_NO)
+    {
+        WriteSizedStringToGdbConsole((const char*)pParameters->bufferAddress, pParameters->bufferSize);
+        return 1;
+    }
 
     Buffer_WriteString(pBuffer, gdbWriteCommand);
     Buffer_WriteUIntegerAsHex(pBuffer, pParameters->fileDescriptor);
