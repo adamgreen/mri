@@ -90,8 +90,7 @@
             EXC_RETURN (exception LR)
 
        Once the registers are stacked, mriDebugException is called and upon return, the values are popped off of the
-       stack and placed back into the original registers, except for PRIMASK, FAULTMASK, and CONTROL which always
-       maintain their original value.
+       stack and placed back into the original registers.
     */
 mriExceptionHandler:
     /* Point R0 to the top of the debugger stack, where MSP should be pointed. */
