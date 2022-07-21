@@ -174,7 +174,13 @@ void Buffer_WriteSizedString(Buffer* pBuffer, const char* pString, size_t length
 
 void Buffer_WriteStringAsHex(Buffer* pBuffer, const char* pString)
 {
-    while (*pString)
+    Buffer_WriteSizedStringAsHex(pBuffer, pString, mri_strlen(pString));
+}
+
+
+void Buffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t length)
+{
+    while (length--)
         Buffer_WriteByteAsHex(pBuffer, *pString++);
 }
 
