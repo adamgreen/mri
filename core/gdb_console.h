@@ -20,10 +20,12 @@
 
 /* Real name of functions are in mri namespace. */
 void mriGdbConsole_WriteString(const char* pString);
+void mriGdbConsole_WriteSizedString(const char* pString, size_t length);
 void mriGdbConsole_WriteHexValue(uint32_t value);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
-#define WriteStringToGdbConsole     mriGdbConsole_WriteString
-#define WriteHexValueToGdbConsole   mriGdbConsole_WriteHexValue
+#define WriteStringToGdbConsole      mriGdbConsole_WriteString
+#define WriteSizedStringToGdbConsole mriGdbConsole_WriteSizedString
+#define WriteHexValueToGdbConsole    mriGdbConsole_WriteHexValue
 
 #endif /* GDB_CONSOLE_H_ */

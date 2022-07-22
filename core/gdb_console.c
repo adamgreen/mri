@@ -14,6 +14,7 @@
 */
 /* Routines to output text to stdout on the gdb console. */
 #include <string.h>
+#include <core/libc.h>
 #include <core/buffer.h>
 #include <core/platforms.h>
 #include <core/core.h>
@@ -21,10 +22,9 @@
 #include <core/gdb_console.h>
 
 
-static void writeStringToExclusiveGdbCommChannel(const char* pString);
 void WriteStringToGdbConsole(const char* pString)
 {
-    writeStringToExclusiveGdbCommChannel(pString);
+    WriteSizedStringToGdbConsole(pString, mri_strlen(pString));
 }
 
 /* Send the 'O' command to gdb to output text to its console.
@@ -32,12 +32,12 @@ void WriteStringToGdbConsole(const char* pString)
     Command Format: OXX...
     Where XX is the hexadecimal representation of each character in the string to be sent to the gdb console.
 */
-static void writeStringToExclusiveGdbCommChannel(const char* pString)
+void WriteSizedStringToGdbConsole(const char* pString, size_t length)
 {
     Buffer* pBuffer = GetInitializedBuffer();
 
     Buffer_WriteChar(pBuffer, 'O');
-    Buffer_WriteStringAsHex(pBuffer, pString);
+    Buffer_WriteSizedStringAsHex(pBuffer, pString, length);
     if (!Buffer_OverrunDetected(pBuffer))
         SendPacketToGdb();
 }
