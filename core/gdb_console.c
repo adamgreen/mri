@@ -1,4 +1,4 @@
-/* Copyright 2014 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ void WriteHexValueToGdbConsole(uint32_t Value)
     Buffer_Init(&BufferObject, StringBuffer, sizeof(StringBuffer));
     Buffer_WriteString(&BufferObject, "0x");
     Buffer_WriteUIntegerAsHex(&BufferObject, Value);
-    Buffer_WriteChar(&BufferObject, '\0');
+    Buffer_SetEndOfBuffer(&BufferObject);
 
-    WriteStringToGdbConsole(StringBuffer);
+    WriteSizedStringToGdbConsole(Buffer_GetArray(&BufferObject), Buffer_GetLength(&BufferObject));
 }
