@@ -88,7 +88,7 @@ static int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihos
     parameters.bufferAddress = pSemihostParameters->parameter2;
     parameters.bufferSize = pSemihostParameters->parameter3;
 
-    return IssueGdbFileWriteRequest(&parameters);
+    return Semihost_WriteToFileOrConsole(&parameters);
 }
 
 static int handleNewlibSemihostReadRequest(PlatformSemihostParameters* pSemihostParameters)

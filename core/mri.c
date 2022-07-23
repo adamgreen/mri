@@ -65,6 +65,7 @@ static MriCore g_mri;
 #define MRI_FLAGS_TEMP_BREAKPOINT       (1 << 3)
 #define MRI_FLAGS_RESET_ON_CONTINUE     (1 << 4)
 #define MRI_FLAGS_RANGED_SINGLE_STEP    (1 << 5)
+#define MRI_FLAGS_ENCOUNTERED_CTRL_C    (1 << 6)
 
 /* Calculates the number of items in a static array at compile time. */
 #define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
@@ -163,6 +164,7 @@ void mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPt
 }
 
 
+static void clearControlCEncounteredFlag(void);
 static int wasTempBreakpointHit(void);
 static void clearTempBreakpoint(void);
 static void clearTempBreakpointFlag(void);
@@ -178,6 +180,7 @@ void mriDebugException(MriContext* pContext)
     int justSingleStepped;
 
     SetContext(pContext);
+    clearControlCEncounteredFlag();
     justSingleStepped = Platform_IsSingleStepping();
 
     if (wasTempBreakpointHit())
@@ -233,6 +236,11 @@ void mriDebugException(MriContext* pContext)
     GdbCommandHandlingLoop();
 
     prepareForDebuggerExit();
+}
+
+static void clearControlCEncounteredFlag(void)
+{
+    g_mri.flags &= ~MRI_FLAGS_ENCOUNTERED_CTRL_C;
 }
 
 static int wasTempBreakpointHit(void)
@@ -421,6 +429,16 @@ int WasControlCFlagSentFromGdb(void)
 void RequestResetOnNextContinue(void)
 {
     g_mri.flags |= MRI_FLAGS_RESET_ON_CONTINUE;
+}
+
+int WasControlCEncountered(void)
+{
+    return (int)(g_mri.flags & MRI_FLAGS_ENCOUNTERED_CTRL_C);
+}
+
+void ControlCEncountered(void)
+{
+    g_mri.flags |= MRI_FLAGS_ENCOUNTERED_CTRL_C;
 }
 
 int WasResetOnNextContinueRequested(void)

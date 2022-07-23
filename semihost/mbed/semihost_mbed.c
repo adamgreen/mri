@@ -164,7 +164,7 @@ static int handleMbedSemihostWriteRequest(PlatformSemihostParameters* pSemihostP
     const TransferParameters*  pParameters = (const TransferParameters*)pSemihostParameters->parameter2;
     int returnValue;
 
-    returnValue = IssueGdbFileWriteRequest(pParameters);
+    returnValue = Semihost_WriteToFileOrConsole(pParameters);
     if (returnValue)
         convertBytesTransferredToBytesNotTransferred(pParameters->bufferSize);
 

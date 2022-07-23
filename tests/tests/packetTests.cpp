@@ -16,6 +16,7 @@
 
 extern "C"
 {
+#include <core/core.h>
 #include <core/packet.h>
 #include <core/try_catch.h>
 #include <core/token.h>
@@ -37,6 +38,7 @@ TEST_GROUP(Packet)
         m_pCharacterArray = NULL;
         allocateBuffer(32);
         m_exceptionThrown = 0;
+        mriInit("");
         platformMock_CommInitTransmitDataBuffer(16);
     }
 
@@ -175,6 +177,7 @@ TEST(Packet, PacketSendToGDB_EmptyWithAck)
     platformMock_CommInitReceiveData("+");
     tryPacketSend();
     STRCMP_EQUAL ( platformMock_CommChecksumData("$#"), platformMock_CommGetTransmittedData() );
+    CHECK_FALSE( WasControlCEncountered() );
 }
 
 TEST(Packet, PacketSendToGDB_OkWithAck)
@@ -199,4 +202,13 @@ TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
     platformMock_CommInitReceiveData("$");
     tryPacketSend();
     STRCMP_EQUAL ( platformMock_CommChecksumData("$OK#"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(Packet, PacketSendToGDB_VerifySkipsMultipleControlC)
+{
+    allocateBuffer("");
+    platformMock_CommInitReceiveData("\x03\x03\x03+");
+    tryPacketSend();
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$#"), platformMock_CommGetTransmittedData() );
+    CHECK_TRUE( WasControlCEncountered() );
 }

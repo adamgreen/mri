@@ -41,6 +41,8 @@ void    mriCore_PrepareStringResponse(const char* pErrorString);
 
 int     mriCore_WasControlCFlagSentFromGdb(void);
 void    mriCore_RecordControlCFlagSentFromGdb(int controlCFlag);
+int     mriCore_WasControlCEncountered(void);
+void    mriCore_ControlCEncountered(void);
 int     mriCore_WasSemihostCallCancelledByGdb(void);
 void    mriCore_FlagSemihostCallAsHandled(void);
 int     mriCore_IsFirstException(void);
@@ -74,6 +76,8 @@ void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHoo
 #define PrepareStringResponse           mriCore_PrepareStringResponse
 #define WasControlCFlagSentFromGdb      mriCore_WasControlCFlagSentFromGdb
 #define RecordControlCFlagSentFromGdb   mriCore_RecordControlCFlagSentFromGdb
+#define WasControlCEncountered          mriCore_WasControlCEncountered
+#define ControlCEncountered             mriCore_ControlCEncountered
 #define WasSemihostCallCancelledByGdb   mriCore_WasSemihostCallCancelledByGdb
 #define FlagSemihostCallAsHandled       mriCore_FlagSemihostCallAsHandled
 #define IsFirstException                mriCore_IsFirstException

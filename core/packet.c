@@ -13,8 +13,8 @@
    limitations under the License.
 */
 /* 'Class' to manage the sending and receiving of packets to/from gdb.  Takes care of crc and ack/nak handling too. */
-#include <string.h>
 #include <stdint.h>
+#include <core/core.h>
 #include <core/hex_convert.h>
 #include <core/platforms.h>
 #include <core/packet.h>
@@ -262,11 +262,12 @@ static int receiveCharAfterSkippingControlC(Packet* pPacket)
     static const int controlC = 0x03;
     int              nextChar;
 
-    do
+    nextChar = getNextCharFromGdb(pPacket);
+    while (nextChar == controlC)
     {
+        ControlCEncountered();
         nextChar = getNextCharFromGdb(pPacket);
     }
-    while (nextChar == controlC);
 
     return nextChar;
 }
