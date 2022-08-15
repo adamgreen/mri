@@ -344,7 +344,6 @@ static int      doesPCPointToSVCInstruction(void);
 static void     setHardwareBreakpointOnSvcHandler(void);
 static void     setSvcStepFlag(void);
 static void     setSingleSteppingFlag(void);
-static void     setSingleSteppingFlag(void);
 static int      advancePastPriorityModifyingInstruction(void);
 static int      checkCurrentInstruction(void);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);

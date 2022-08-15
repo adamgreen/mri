@@ -298,7 +298,7 @@ static int isDebugTrap(void)
 
 static void prepareForDebuggerExit(void)
 {
-    if (WasResetOnNextContinueRequested()) {
+    if (WasResetOnNextContinueRequested() && !Platform_IsSingleStepping()) {
         waitForAckToBeTransmitted();
         Platform_ResetDevice();
     }
