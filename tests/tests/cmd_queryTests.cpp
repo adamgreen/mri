@@ -87,7 +87,7 @@ TEST(cmdQuery, QuerySupported)
     platformMock_CommInitReceiveChecksummedData("+$qSupported#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#"
-                                                 "+$qXfer:memory-map:read+;qXfer:features:read+;PacketSize=89#+"),
+                                                 "+$qXfer:memory-map:read+;qXfer:features:read+;vContSupported+;PacketSize=89#+"),
                                                  platformMock_CommGetTransmittedData() );
 }
 

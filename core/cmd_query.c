@@ -102,7 +102,7 @@ uint32_t HandleQueryCommand(void)
 */
 static uint32_t handleQuerySupportedCommand(void)
 {
-    static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;PacketSize=";
+    static const char querySupportResponse[] = "qXfer:memory-map:read+;qXfer:features:read+;vContSupported+;PacketSize=";
     /* Subtract 4 for packet overhead ('$', '#', and 2-byte checksum) as GDB doesn't count those bytes. */
     uint32_t          PacketSize = Platform_GetPacketBufferSize()-4;
     Buffer*           pBuffer = GetInitializedBuffer();
