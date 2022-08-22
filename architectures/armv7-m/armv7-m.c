@@ -1001,6 +1001,21 @@ void Platform_LeavingDebugger(void)
     clearMonitorPending();
 }
 
+void Platform_InvalidateICache(void *pv, uint32_t size)
+{
+#if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+    /* Using DCCMVAU rather than DCCMVAC might be more efficient, but
+     * CMSIS doesn't have a function for that. */
+    SCB_CleanDCache_by_Addr(pv, size);
+
+#if __CM_CMSIS_VERSION >= 0x050002
+    SCB_InvalidateICache_by_Addr(pv, size);
+#else
+    SCB_InvalidateICache();
+#endif
+#endif
+}
+
 static void clearControlCFlag(void)
 {
     mriCortexMFlags &= ~CORTEXM_FLAGS_CTRL_C;
