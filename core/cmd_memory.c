@@ -13,6 +13,7 @@
    limitations under the License.
 */
 /* Handlers for memory related gdb commands. */
+#include <core/platforms.h>
 #include <core/buffer.h>
 #include <core/core.h>
 #include <core/mri.h>
@@ -111,6 +112,8 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
 {
     Buffer*        pBuffer = GetBuffer();
     AddressLength  addressLength;
+    uint32_t*      pv;
+    uint32_t       length;
 
     __try
     {
@@ -122,8 +125,12 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
         return 0;
     }
 
-    if (WriteBinaryBufferToMemory(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length))
+    pv = ADDR32_TO_POINTER(addressLength.address);
+    length = addressLength.length;
+
+    if (WriteBinaryBufferToMemory(pBuffer, pv, length))
     {
+        Platform_InvalidateICache(pv, length);
         PrepareStringResponse("OK");
     }
     else
