@@ -98,7 +98,7 @@ mriExceptionHandler:
     ldr     r1, =CORTEXM_DEBUGGER_STACK_SIZE * 8
     add     r0, r0, r1
 
-    /* Save away copy of MSP value at the time of the fault into R0. */
+    /* Save away copy of MSP value at the time of the fault into R1. */
 3$: mrs     r1, msp
     /* Set MSP to top of debugger stack if it hasn't been disabled. */
     ldr     r2, =mriCortexMFlags
