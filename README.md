@@ -1,7 +1,9 @@
 ## MRI - Monitor for Remote Inspection
 MRI is a debug monitor which allows the GNU debugger, GDB, to debug Cortex-M3/M4 processors. This makes it possible to debug applications running on Cortex-M devices using a full featured source level debugger with no extra hardware other than a serial connection.
 
-**Please Note:**  This project just contains the sources to build the MRI debug monitor library but doesn't show how to link it into your program and make use of it.  Such an example is provided by the [GCC4MBED project.](https://github.com/adamgreen/gcc4mbed)
+**Important Notes:**
+* MRI is meant to work with [arm-none-eabi-gdb](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain). See notes [here](https://github.com/adamgreen/mri/pull/32#issuecomment-1221658927) about running other OS ABI versions of GDB with ARM target support.
+* This project just contains the sources to build the MRI debug monitor library but doesn't show how to link it into your program and make use of it.  Such an example is provided by the [GCC4MBED project.](https://github.com/adamgreen/gcc4mbed)
 
 
 ## MRI Features

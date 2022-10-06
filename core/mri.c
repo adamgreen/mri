@@ -268,16 +268,26 @@ static void clearTempBreakpointFlag(void)
 
 static int areSingleSteppingInRange(void)
 {
-    /* Ignore ranged single stepping if CTRL+C was pressed or... */
-    if (g_mri.signalValue == SIGINT)
-        return 0;
-    /* if a debug breakpoint/watchpoint was hit. */
-    if (g_mri.signalValue == SIGTRAP)
+    switch (g_mri.signalValue)
     {
-        PlatformTrapReason reason = Platform_GetTrapReason();
-        if (reason.type != MRI_PLATFORM_TRAP_TYPE_UNKNOWN)
+        case SIGINT:
+        case SIGSEGV:
+        case SIGBUS:
+        case SIGILL:
+            /* Ignore ranged single stepping if CTRL+C was pressed, or a fault was encountered, or... */
             return 0;
+        case SIGTRAP:
+        {
+            /* if a debug breakpoint/watchpoint was hit. */
+            PlatformTrapReason reason = Platform_GetTrapReason();
+            if (reason.type != MRI_PLATFORM_TRAP_TYPE_UNKNOWN)
+                return 0;
+            break;
+        }
+        default:
+            break;
     }
+
     return g_mri.flags & MRI_FLAGS_RANGED_SINGLE_STEP;
 }
 

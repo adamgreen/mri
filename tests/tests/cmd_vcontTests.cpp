@@ -367,7 +367,7 @@ TEST(cmdVCont, vCont_SingleStepAllWithHigherPriorityRangedSingleStep_VerifyOnlyS
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
-TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanBeInterruptedEvenWhenInRange)
+TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanBeInterrupted_EvenWhenInRange)
 {
     CHECK_FALSE ( Platform_IsSingleStepping() );
     platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004#");
@@ -391,6 +391,84 @@ TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanBeInterruptedEvenWhenInRange)
     platformMock_CommInitReceiveChecksummedData("+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T02responseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanHandleSegFault_EvenWhenInRange)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    // This stop is still in single step range so should just return.
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+
+    // Simulate a segmentation fault as cause and should get T response instead.
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_SetCauseOfException(SIGSEGV);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T0bresponseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanHandleBusFault_EvenWhenInRange)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    // This stop is still in single step range so should just return.
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+
+    // Simulate a bus fault as cause and should get T response instead.
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_SetCauseOfException(SIGBUS);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T0aresponseT#+"), platformMock_CommGetTransmittedData() );
+}
+
+TEST(cmdVCont, vCont_RangedSingleStep_VerifyCanHandleIllegalInstructionFault_EvenWhenInRange)
+{
+    CHECK_FALSE ( Platform_IsSingleStepping() );
+    platformMock_CommInitReceiveChecksummedData("+$vCont;r10000000,10000004#");
+        mriDebugException(platformMock_GetContext());
+    CHECK_TRUE ( Platform_IsSingleStepping() );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_AdvanceProgramCounterToNextInstructionCalls() );
+    CHECK_EQUAL( INITIAL_PC, platformMock_GetProgramCounterValue() );
+
+    // This stop is still in single step range so should just return.
+    Platform_SetProgramCounter(0x10000000);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
+
+    // Simulate a illegal instruction fault as cause and should get T response instead.
+    Platform_SetProgramCounter(0x10000002);
+    platformMock_SetCauseOfException(SIGILL);
+    platformMock_CommInitTransmitDataBuffer(512);
+    platformMock_CommInitReceiveChecksummedData("+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T04responseT#+"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(cmdVCont, vCont_RangedSingleStep_VerifyWillStopForBreakpointpointEvenWhenInRange)
