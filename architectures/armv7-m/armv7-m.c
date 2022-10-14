@@ -1430,7 +1430,7 @@ static void recordAndClearFaultStatusBits(uint32_t exceptionNumber);
 static void disableInterruptMaskingIfNecessary(void);
 static void treatDebugEventHardFaultAsDebugMonInterrupt(void);
 static void setPendedFromFaultBit(void);
-int mriFaultHandler(uint32_t psp, uint32_t msp, uint32_t excReturn)
+int mriPendFaultToDebugMon(uint32_t psp, uint32_t msp, uint32_t excReturn)
 {
     /* This handler will be called from the fault handlers (Hard Fault, etc.)
        What needs to be done depends on CPU state when the fault occurs.
@@ -1543,7 +1543,7 @@ static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber)
     }
     else
     {
-        return mriCortexMGetPriority(-16+exceptionNumber) > mriCortexMGetPriority(DebugMonitor_IRQn);
+        return mriCortexMGetPriority((IRQn_Type)(-16+exceptionNumber)) > mriCortexMGetPriority(DebugMonitor_IRQn);
     }
 }
 
