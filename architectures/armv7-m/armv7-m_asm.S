@@ -201,27 +201,37 @@ mriExceptionHandler:
 
 
 
-    .global HardFault_Handler
-    .type HardFault_Handler, function
+    .global mriFaultHandler
+    .type mriFaultHandler, function
     .thumb_func
-    /* extern "C" void HardFault_Handler(void);
-       Call mriFaultHandler(), implemented in C, to determine how this particular fault should be handled. If it returns
-       a negative return value, then continue onto mriExceptionHandler which will enter MRI. Otherwise mriFaultHandler()
-       has done everything needed to handle this fault and can just return to let code continue executing.
-       All of the other fault handlers will just jump to this one as they are all handled the same way.
+    /* extern "C" void mriFaultHandler(void);
+       Call mriPendFaultToDebugMon(), implemented in C, to determine how this particular fault should be handled. If it
+       returns a negative return value, then continue onto mriExceptionHandler which will enter MRI. Otherwise
+       mriPendFaultToDebugMon() has done everything needed to handle this fault and can just return to let code continue
+       executing. All of the fault handlers will just jump to this one as they are all handled the same way.
     */
-HardFault_Handler:
+mriFaultHandler:
     mrs     r0, psp
     mrs     r1, msp
     mov     r2, lr
     push    {r12, lr}
-    bl      mriFaultHandler
+    bl      mriPendFaultToDebugMon
     movs    r0, r0
     bmi     1$
     pop     {r12, pc}
 1$: bl      mriPlatform_HandleFaultFromHighPriorityCode /* Give platform opportunity to save crash dump. */
     pop     {r12, lr}
     b       mriExceptionHandler
+    .pool
+    .size   mriFaultHandler, .-mriFaultHandler
+
+
+    .global HardFault_Handler
+    .type HardFault_Handler, function
+    .thumb_func
+    /* extern "C" void HardFault_Handler(void); */
+HardFault_Handler:
+    b       mriFaultHandler
     .pool
     .size   HardFault_Handler, .-HardFault_Handler
 
@@ -231,7 +241,7 @@ HardFault_Handler:
     .thumb_func
     /* extern "C" void MemManage_Handler(void); */
 MemManage_Handler:
-    b       HardFault_Handler
+    b       mriFaultHandler
     .pool
     .size   MemManage_Handler, .-MemManage_Handler
 
@@ -241,7 +251,7 @@ MemManage_Handler:
     .thumb_func
     /* extern "C" void BusFault_Handler(void); */
 BusFault_Handler:
-    b       HardFault_Handler
+    b       mriFaultHandler
     .pool
     .size   BusFault_Handler, .-BusFault_Handler
 
@@ -251,7 +261,7 @@ BusFault_Handler:
     .thumb_func
     /* extern "C" void UsageFault_Handler(void); */
 UsageFault_Handler:
-    b       HardFault_Handler
+    b       mriFaultHandler
     .pool
     .size   UsageFault_Handler, .-UsageFault_Handler
 
@@ -260,7 +270,7 @@ UsageFault_Handler:
     .type DebugMon_Handler, function
     .thumb_func
     /* extern "C" void DebugMon_Handler(void);
-       Override Debug Monintor exceptions and send to MriExceptionHandler.
+       Override Debug Monitor exceptions and send to MriExceptionHandler.
     */
 DebugMon_Handler:
     b       mriExceptionHandler
