@@ -905,3 +905,11 @@ TEST(platformMock, Platform_RtosRestorePrevThreadState_VerifyCallCount)
     Platform_RtosRestorePrevThreadState();
     LONGS_EQUAL( 2, platformMock_RtosGetRestorePrevThreadStateCallCount() );
 }
+
+
+TEST(platformMock, Platform_InvalidateICache_VerifyCallCount)
+{
+    CHECK_EQUAL( 0, platformMock_GetInvalidateICacheCalls() );
+        Platform_InvalidateICache(NULL, 0);
+    CHECK_EQUAL( 1, platformMock_GetInvalidateICacheCalls() );
+}

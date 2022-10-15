@@ -823,9 +823,6 @@ uint32_t platformMock_RtosGetRestorePrevThreadStateCallCount(void)
     return g_rtosRestorePrevThreadStateCallCount;
 }
 
-
-
-
 // Stubs called by MRI core.
 uint32_t Platform_RtosGetHaltedThreadId(void)
 {
@@ -902,6 +899,20 @@ void Platform_RtosRestorePrevThreadState(void)
 
 
 
+// Memory Cache instrumentation.
+static int g_invalidateICacheCount;
+int platformMock_GetInvalidateICacheCalls(void)
+{
+    return g_invalidateICacheCount;
+}
+
+void Platform_InvalidateICache(void *pv, uint32_t size)
+{
+    g_invalidateICacheCount++;
+}
+
+
+
 
 
 // Mock Setup and Cleanup APIs.
@@ -965,6 +976,7 @@ void platformMock_Init(void)
     g_rtosThreadStateCount = 0;
     g_rtosInvalidThreadAttempts = 0;
     g_rtosRestorePrevThreadStateCallCount = 0;
+    g_invalidateICacheCount = 0;
 }
 
 void platformMock_Uninit(void)
