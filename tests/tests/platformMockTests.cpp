@@ -907,9 +907,9 @@ TEST(platformMock, Platform_RtosRestorePrevThreadState_VerifyCallCount)
 }
 
 
-TEST(platformMock, Platform_InvalidateICache_VerifyCallCount)
+TEST(platformMock, Platform_SyncICacheToDCache_VerifyCallCount)
 {
-    CHECK_EQUAL( 0, platformMock_GetInvalidateICacheCalls() );
-        Platform_InvalidateICache(NULL, 0);
-    CHECK_EQUAL( 1, platformMock_GetInvalidateICacheCalls() );
+    CHECK_EQUAL( 0, platformMock_GetSyncICacheToDCacheCalls() );
+        Platform_SyncICacheToDCache(NULL, 0);
+    CHECK_EQUAL( 1, platformMock_GetSyncICacheToDCacheCalls() );
 }

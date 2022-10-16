@@ -130,7 +130,7 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
 
     if (WriteBinaryBufferToMemory(pBuffer, pv, length))
     {
-        Platform_InvalidateICache(pv, length);
+        Platform_SyncICacheToDCache(pv, length);
         PrepareStringResponse("OK");
     }
     else

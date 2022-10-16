@@ -901,12 +901,12 @@ void Platform_RtosRestorePrevThreadState(void)
 
 // Memory Cache instrumentation.
 static int g_invalidateICacheCount;
-int platformMock_GetInvalidateICacheCalls(void)
+int platformMock_GetSyncICacheToDCacheCalls(void)
 {
     return g_invalidateICacheCount;
 }
 
-void Platform_InvalidateICache(void *pv, uint32_t size)
+void Platform_SyncICacheToDCache(void *pv, uint32_t size)
 {
     g_invalidateICacheCount++;
 }
