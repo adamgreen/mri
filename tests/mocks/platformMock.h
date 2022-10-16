@@ -110,6 +110,6 @@ void     platformMock_RtosSetThreadList(PlatformMockThread* pThreads, size_t thr
 uint32_t platformMock_RtosGetThreadStateInvalidAttempts(void);
 uint32_t platformMock_RtosGetRestorePrevThreadStateCallCount(void);
 
-int platformMock_GetInvalidateICacheCalls(void);
+int platformMock_GetSyncICacheToDCacheCalls(void);
 
 #endif /* PLATFORM_MOCK_H_ */

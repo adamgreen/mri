@@ -1001,21 +1001,6 @@ void Platform_LeavingDebugger(void)
     clearMonitorPending();
 }
 
-void Platform_InvalidateICache(void *pv, uint32_t size)
-{
-#if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
-    /* Using DCCMVAU rather than DCCMVAC might be more efficient, but
-     * CMSIS doesn't have a function for that. */
-    SCB_CleanDCache_by_Addr(pv, size);
-
-#if __CM_CMSIS_VERSION >= 0x050002
-    SCB_InvalidateICache_by_Addr(pv, size);
-#else
-    SCB_InvalidateICache();
-#endif
-#endif
-}
-
 static void clearControlCFlag(void)
 {
     mriCortexMFlags &= ~CORTEXM_FLAGS_CTRL_C;
@@ -1347,6 +1332,102 @@ const char* Platform_GetTargetXml(void)
 void Platform_ResetDevice(void)
 {
     NVIC_SystemReset();
+}
+
+
+/* Cache related registers as defined in ARMv7-M Architecture Reference Manual but only partially in CMSIS headers. */
+#define SCB_CLIDR   (*(__IM uint32_t*)0xE000ED78)   /* Cache Level ID register */
+#define SCB_CTR     (*(__IM uint32_t*)0xE000ED7C)   /* Cache Type register */
+#define SCB_ICIMVAU (*(__OM uint32_t*)0xE000EF58)   /* I-Cache Invalidate by MVA to PoU */
+#define SCB_DCCMVAU (*(__OM uint32_t*)0xE000EF64)   /* D-Cache Clean by MVA to PoU */
+#define SCB_BPIALL  (*(__OM uint32_t*)0xE000EF78)   /* Branch Predictor Invalidate All */
+
+static int levelOfCacheUnification(void);
+static void cleanDataCacheToPointOfUnification(uint32_t address, uint32_t size);
+static uint32_t getDCacheLineSize(void);
+static void invalidateInstructionCacheToPointOfUnification(uint32_t address, uint32_t size);
+static uint32_t getICacheLineSize(void);
+static void invalidateAllBranchPredictions(void);
+void Platform_SyncICacheToDCache(void *pv, uint32_t size)
+{
+    uint32_t address = (uint32_t)pv;
+
+    if (size == 0 || levelOfCacheUnification() == 0)
+        return;
+
+    __DSB();
+    cleanDataCacheToPointOfUnification(address, size);
+    __DSB();
+    invalidateInstructionCacheToPointOfUnification(address, size);
+    invalidateAllBranchPredictions();
+    __DSB();
+    __ISB();
+}
+
+static int levelOfCacheUnification(void)
+{
+    const uint32_t LoUU_BitShift = 27;
+    const uint32_t LoUU_BitMask = 0x7 << LoUU_BitShift;
+
+    return (SCB_CLIDR & LoUU_BitMask) >> LoUU_BitShift;
+}
+
+static void cleanDataCacheToPointOfUnification(uint32_t address, uint32_t size)
+{
+    uint32_t lineSize = getDCacheLineSize();
+    int32_t  op_size = size + (address & (lineSize - 1U));
+    uint32_t op_addr = address; /* & ~(lineSize - 1U) */
+
+    do
+    {
+        /* Register forces lineSize alignment by setting lsb to 0, so don't need to do in op_addr calc above too. */
+        SCB_DCCMVAU = op_addr;
+        op_addr += lineSize;
+        op_size -= lineSize;
+    } while ( op_size > 0 );
+}
+
+static uint32_t getDCacheLineSize(void)
+{
+    const uint32_t DminLine_BitShift = 16;
+    const uint32_t DminLine_BitMask = 0xF << DminLine_BitShift;
+
+    uint32_t DminLineLog2 = (SCB_CTR & DminLine_BitMask) >> DminLine_BitShift;
+    uint32_t DminLineWords = 1 << DminLineLog2;
+    uint32_t DminLineBytes = DminLineWords * sizeof(uint32_t);
+
+    return DminLineBytes;
+}
+
+static void invalidateInstructionCacheToPointOfUnification(uint32_t address, uint32_t size)
+{
+    uint32_t lineSize = getICacheLineSize();
+    int32_t  op_size = size + (address & (lineSize - 1U));
+    uint32_t op_addr = address; /* & ~(lineSize - 1U) */
+
+    do
+    {
+        /* Register forces lineSize alignment by setting lsb to 0, so don't need to do in op_addr calc above too. */
+        SCB_ICIMVAU = op_addr;
+        op_addr += lineSize;
+        op_size -= lineSize;
+    } while ( op_size > 0 );
+}
+
+static uint32_t getICacheLineSize(void)
+{
+    const uint32_t IminLine_BitMask = 0xF;
+
+    uint32_t IminLineLog2 = SCB_CTR & IminLine_BitMask;
+    uint32_t IminLineWords = 1 << IminLineLog2;
+    uint32_t IminLineBytes = IminLineWords * sizeof(uint32_t);
+
+    return IminLineBytes;
+}
+
+static void invalidateAllBranchPredictions(void)
+{
+    SCB_BPIALL = 1;
 }
 
 

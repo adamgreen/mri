@@ -35,7 +35,7 @@ uint8_t   mriPlatform_MemRead8(const void* pv);
 void      mriPlatform_MemWrite32(void* pv, uint32_t value);
 void      mriPlatform_MemWrite16(void* pv, uint16_t value);
 void      mriPlatform_MemWrite8(void* pv, uint8_t value);
-void      mriPlatform_InvalidateICache(void *pv, uint32_t size);
+void      mriPlatform_SyncICacheToDCache(void *pv, uint32_t size);
 
 uint32_t  mriPlatform_CommHasReceiveData(void);
 uint32_t  mriPlatform_CommHasTransmitCompleted(void);
@@ -156,7 +156,7 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_MemWrite32                                 mriPlatform_MemWrite32
 #define Platform_MemWrite16                                 mriPlatform_MemWrite16
 #define Platform_MemWrite8                                  mriPlatform_MemWrite8
-#define Platform_InvalidateICache                           mriPlatform_InvalidateICache
+#define Platform_SyncICacheToDCache                         mriPlatform_SyncICacheToDCache
 #define Platform_CommHasReceiveData                         mriPlatform_CommHasReceiveData
 #define Platform_CommHasTransmitCompleted                   mriPlatform_CommHasTransmitCompleted
 #define Platform_CommReceiveChar                            mriPlatform_CommReceiveChar
