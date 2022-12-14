@@ -17,30 +17,42 @@
 
 uint32_t Platform_MemRead32(const void* pv)
 {
+    if (pv == 0)
+        return 0;
     return  *(volatile const uint32_t*)pv;
 }
 
 uint16_t Platform_MemRead16(const void* pv)
 {
+    if (pv == 0)
+        return 0;
     return  *(volatile const uint16_t*)pv;
 }
 
 uint8_t Platform_MemRead8(const void* pv)
 {
+    if (pv == 0)
+        return 0;
     return  *(volatile const uint8_t*)pv;
 }
 
 void Platform_MemWrite32(void* pv, uint32_t value)
 {
+    if (pv == 0)
+        return;
     *(volatile uint32_t*)pv = value;
 }
 
 void Platform_MemWrite16(void* pv, uint16_t value)
 {
+    if (pv == 0)
+        return;
     *(volatile uint16_t*)pv = value;
 }
 
 void Platform_MemWrite8(void* pv, uint8_t value)
 {
+    if (pv == 0)
+        return;
     *(volatile uint8_t*)pv = value;
 }
