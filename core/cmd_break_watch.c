@@ -60,6 +60,9 @@ uint32_t HandleBreakpointWatchpointSetCommand(void)
 
     switch(arguments.type)
     {
+#ifdef ALLWAYS_USE_HARDWARE_BREAKPOINT
+    case '0':
+#endif
     case '1':
         handleHardwareBreakpointSetCommand(&arguments);
         break;
@@ -178,6 +181,9 @@ uint32_t HandleBreakpointWatchpointRemoveCommand(void)
 
     switch(arguments.type)
     {
+#ifdef ALLWAYS_USE_HARDWARE_BREAKPOINT
+    case '0':
+#endif
     case '1':
         handleHardwareBreakpointRemoveCommand(&arguments);
         break;
