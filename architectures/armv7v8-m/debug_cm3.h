@@ -21,6 +21,9 @@
 #include <core/try_catch.h>
 
 /* Data Watchpoint and Trace Registers */
+#if ((defined (__ARM_ARCH_8M_MAIN__  ) && (__ARM_ARCH_8M_MAIN__   == 1)) || \
+     (defined (__ARM_ARCH_8M_BASE__  ) && (__ARM_ARCH_8M_BASE__   == 1)) || \
+     (defined (__ARM_ARCH_8_1M_MAIN__) && (__ARM_ARCH_8_1M_MAIN__ == 1))     )
 typedef struct
 {
     /* Comparator register. */
@@ -32,6 +35,20 @@ typedef struct
     /* Reserved 4 bytes to pad struct size out to 16 bytes. */
     __I  uint32_t   Reserved;
 } DWT_COMP_Type;
+# else if ((defined(__ARM_ARCH_7M__) && (__ARM_ARCH_7M__        != 0)) || \
+           (defined(__ARM_ARCH_7EM__) && (__ARM_ARCH_7EM__       != 0))    )
+typedef struct
+{
+    /* Comparator register. */
+    __IO uint32_t   COMP;
+    /* Reserved 4 bytes to pad struct size out to 16 bytes. */
+    __I  uint32_t   Reserved;
+    /* Comparator Mask register. */
+    __IO uint32_t   MASK;
+    /* Comparator Function register. */
+    __IO uint32_t   FUNCTION;
+} DWT_COMP_Type;
+#endif
 
 /* Flash Patch and Breakpoint Registers */
 typedef struct
@@ -344,7 +361,13 @@ static __INLINE int attemptToSetDWTComparatorMask(DWT_COMP_Type* pComparator, ui
     pComparator->MASK = maskBitCount;
 
     /* Processor may limit number of bits to be masked off so check. */
+#if ((defined (__ARM_ARCH_8M_MAIN__  ) && (__ARM_ARCH_8M_MAIN__   == 1)) || \
+     (defined (__ARM_ARCH_8M_BASE__  ) && (__ARM_ARCH_8M_BASE__   == 1)) || \
+     (defined (__ARM_ARCH_8_1M_MAIN__) && (__ARM_ARCH_8_1M_MAIN__ == 1))     )
+    return 1;
+#else
     return pComparator->MASK == maskBitCount;
+#endif
 }
 
 static __INLINE int attemptToSetDWTComparator(DWT_COMP_Type* pComparator,

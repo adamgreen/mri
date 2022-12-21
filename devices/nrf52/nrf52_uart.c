@@ -18,7 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <core/platforms.h>
-#include <architectures/armv7-m/armv7-m.h>
+#include <architectures/armv7v8-m/armv7v8-m.h>
 
 
 typedef struct

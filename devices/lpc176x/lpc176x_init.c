@@ -16,8 +16,8 @@
 #include <core/try_catch.h>
 #include <core/platforms.h>
 #include "lpc176x_init.h"
-#include <architectures/armv7-m/armv7-m.h>
-#include <architectures/armv7-m/debug_cm3.h>
+#include <architectures/armv7v8-m/armv7v8-m.h>
+#include <architectures/armv7v8-m/debug_cm3.h>
 
 
 static const char g_memoryMapXml[] = "<?xml version=\"1.0\"?>"

@@ -16,7 +16,7 @@
 #include <string.h>
 #include <core/platforms.h>
 #include <core/try_catch.h>
-#include <architectures/armv7-m/debug_cm3.h>
+#include <architectures/armv7v8-m/debug_cm3.h>
 #include <devices/lpc43xx/lpc43xx_init.h>
 
 

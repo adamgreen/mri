@@ -16,7 +16,7 @@
 #include <core/libc.h>
 #include <core/platforms.h>
 #include <core/try_catch.h>
-#include <architectures/armv7-m/debug_cm3.h>
+#include <architectures/armv7v8-m/debug_cm3.h>
 #include <devices/lpc176x/lpc176x_init.h>
 #include "mbed1768_asm.h"
 

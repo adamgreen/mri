@@ -86,7 +86,7 @@ HOST_ASFLAGS  := -g -x assembler-with-cpp -MMD -MP
 
 # Output directories for intermediate object files.
 OBJDIR        := obj
-ARMV7M_OBJDIR := $(OBJDIR)/armv7-m
+ARMV7M_OBJDIR := $(OBJDIR)/armv7v8-m
 HOST_OBJDIR   := $(OBJDIR)/host
 
 # Output directory for gcov files.
@@ -94,7 +94,7 @@ GCOVDIR := gcov
 
 # Output directories for final libraries.
 LIBDIR        := lib
-ARMV7M_LIBDIR := $(LIBDIR)/armv7-m
+ARMV7M_LIBDIR := $(LIBDIR)/armv7v8-m
 HOST_LIBDIR   := $(LIBDIR)/host
 
 # Customize some variables for code coverage builds.
@@ -212,7 +212,7 @@ $(eval $(call run_gcov,CORE))
 $(eval $(call armv7m_module,SEMIHOST,semihost semihost/newlib semihost/mbed))
 
 # ARMv7-M architecture sources.
-$(eval $(call armv7m_module,ARMV7M,architectures/armv7-m))
+$(eval $(call armv7m_module,ARMV7M,architectures/armv7v8-m))
 
 # Native memory access sources.
 $(eval $(call armv7m_module,NATIVE_MEM,memory/native))

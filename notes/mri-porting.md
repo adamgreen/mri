@@ -156,7 +156,7 @@ The main thing it does is implement ```Platform_Init()``` which just calls the d
 
 
 ## Debugger Stack
-The ```mriCortexMDebuggerStack``` is the stack used while the program is halted in MRI. Its size is set by the **CORTEXM_DEBUGGER_STACK_SIZE** global in [armv7-m.h](../architectures/armv7-m/armv7-m.h) and might need to be increased if some of your **Platform_*** implementations use more stack than the current device implementations. The ```mriCortexMState.maxStackUsed``` global is updated each time execution is resumed. It indicates the maximum amount of debugger stack used so far in bytes.
+The ```mriCortexMDebuggerStack``` is the stack used while the program is halted in MRI. Its size is set by the **CORTEXM_DEBUGGER_STACK_SIZE** global in [armv7v8-m.h](../architectures/armv7v8-m/armv7v8-m.h) and might need to be increased if some of your **Platform_*** implementations use more stack than the current device implementations. The ```mriCortexMState.maxStackUsed``` global is updated each time execution is resumed. It indicates the maximum amount of debugger stack used so far in bytes.
 
 
 ## Makefile Updates

@@ -17,10 +17,10 @@
 #include <stdlib.h>
 #include <core/libc.h>
 #include <core/platforms.h>
-#include <architectures/armv7-m/debug_cm3.h>
+#include <architectures/armv7v8-m/debug_cm3.h>
 #include "stm32f429xx_init.h"
 #include "stm32f429xx_usart.h"
-#include <architectures/armv7-m/armv7-m.h>
+#include <architectures/armv7v8-m/armv7v8-m.h>
 
 /* Start indices at 0 such that UART1 is at index 0, UART2 is at index 1, etc. */
 static const UartConfiguration g_uartConfigurations[] =

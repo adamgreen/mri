@@ -17,7 +17,7 @@
 #include <string.h>
 #include <core/platforms.h>
 #include <core/try_catch.h>
-#include <architectures/armv7-m/debug_cm3.h>
+#include <architectures/armv7v8-m/debug_cm3.h>
 #include <devices/stm32f429xx/stm32f429xx_init.h>
 
 

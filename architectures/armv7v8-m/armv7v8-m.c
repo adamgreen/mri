@@ -20,7 +20,7 @@
 #include <core/gdb_console.h>
 #include <semihost/newlib/newlib_stubs.h>
 #include "debug_cm3.h"
-#include "armv7-m.h"
+#include "armv7v8-m.h"
 
 /* Fake stack used when task encounters stacking/unstacking fault. */
 static const uint32_t  g_fakeStack[] = { 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD,
