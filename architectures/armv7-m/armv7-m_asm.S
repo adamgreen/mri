@@ -148,7 +148,7 @@ mriExceptionHandler:
 #endif /* MRI_DEVICE_HAS_FPU */
 
     /* All registers integer and float have been pushed on stack. */
-    /* Will pass start of integer registers into mriCortexMExceptionHandler via R1. */
+    /* Will pass start of float registers into mriCortexMExceptionHandler via R1. */
 5$: mrs     r1, msp
 
     /* Save pointer to integer regs in the R4 non-volatile register. */
