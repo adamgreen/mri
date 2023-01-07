@@ -497,13 +497,15 @@ TEST(Buffer, Buffer_WriteSizedString_Full_Overrun)
 TEST(Buffer, Buffer_WriteStringAsHex_Full_No_Overrun)
 {
     static const char   testString[] = "Hi";
+    size_t charsWritten = 0xFFFFFFFF;
 
     allocateBuffer(4);
     __try
-        Buffer_WriteStringAsHex(&m_buffer, testString);
+        charsWritten = Buffer_WriteStringAsHex(&m_buffer, testString);
     __catch
         m_exceptionThrown = 1;
 
+    LONGS_EQUAL( 2, charsWritten );
     BYTES_EQUAL( '4', m_pCharacterArray[0] );
     BYTES_EQUAL( '8', m_pCharacterArray[1] );
     BYTES_EQUAL( '6', m_pCharacterArray[2] );
@@ -511,19 +513,21 @@ TEST(Buffer, Buffer_WriteStringAsHex_Full_No_Overrun)
     validateDepletedBufferNoOverrun();
 }
 
-TEST(Buffer, Buffer_WriteStringAsHex_Overrun_ShouldTruncateOnTwoDigitBoundary)
+TEST(Buffer, Buffer_WriteStringAsHex_ShouldTruncateOnTwoDigitBoundary)
 {
     static const char   testString[] = "Hi";
+    size_t charsWritten = 0xFFFFFFFF;
 
     allocateBuffer(3);
     __try
-        Buffer_WriteStringAsHex(&m_buffer, testString);
+        charsWritten = Buffer_WriteStringAsHex(&m_buffer, testString);
     __catch
         m_exceptionThrown = 1;
+
+    LONGS_EQUAL( 1, charsWritten );
     BYTES_EQUAL( '4', m_pCharacterArray[0] );
     BYTES_EQUAL( '8', m_pCharacterArray[1] );
     BYTES_EQUAL( m_fillChar, m_pCharacterArray[2] );
-    validateDepletedBufferWithOverrun();
 }
 
 TEST(Buffer, Buffer_ReadUIntegerAsHex_JustComma)

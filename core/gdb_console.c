@@ -22,9 +22,9 @@
 #include <core/gdb_console.h>
 
 
-void WriteStringToGdbConsole(const char* pString)
+size_t WriteStringToGdbConsole(const char* pString)
 {
-    WriteSizedStringToGdbConsole(pString, mri_strlen(pString));
+    return WriteSizedStringToGdbConsole(pString, mri_strlen(pString));
 }
 
 /* Send the 'O' command to gdb to output text to its console.
@@ -32,14 +32,16 @@ void WriteStringToGdbConsole(const char* pString)
     Command Format: OXX...
     Where XX is the hexadecimal representation of each character in the string to be sent to the gdb console.
 */
-void WriteSizedStringToGdbConsole(const char* pString, size_t length)
+size_t WriteSizedStringToGdbConsole(const char* pString, size_t length)
 {
     Buffer* pBuffer = GetInitializedBuffer();
+    size_t  charsWritten = 0;
 
     Buffer_WriteChar(pBuffer, 'O');
-    Buffer_WriteSizedStringAsHex(pBuffer, pString, length);
-    if (!Buffer_OverrunDetected(pBuffer))
-        SendPacketToGdb();
+    charsWritten = Buffer_WriteSizedStringAsHex(pBuffer, pString, length);
+    SendPacketToGdb();
+
+    return charsWritten;
 }
 
 
