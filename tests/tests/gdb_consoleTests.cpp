@@ -52,16 +52,17 @@ TEST_GROUP(gdbConsole)
 
 TEST(gdbConsole, WriteStringToGdbConsole_SendAsGdbPacket)
 {
-    WriteStringToGdbConsole("Test\n");
+    size_t charsWritten = WriteStringToGdbConsole("Test\n");
+    LONGS_EQUAL( 5, charsWritten );
     STRCMP_EQUAL ( platformMock_CommChecksumData("$O546573740a#"), platformMock_CommGetTransmittedData() );
 }
 
-TEST(gdbConsole, WriteStringToGdbConsole_FailToSendAsGdbPacketBecauseOfSmallBuffer)
+TEST(gdbConsole, WriteStringToGdbConsole_TruncateWriteBecauseOfSmallBuffer)
 {
-    platformMock_SetPacketBufferSize(10+4);
-    WriteStringToGdbConsole("Test\n");
-    STRCMP_EQUAL ( platformMock_CommChecksumData(""), platformMock_CommGetTransmittedData() );
-    validateExceptionCode(bufferOverrunException);
+    platformMock_SetPacketBufferSize(1+2*4+4);
+    size_t charsWritten = WriteStringToGdbConsole("Test\n");
+    LONGS_EQUAL ( 4, charsWritten );
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$O54657374#"), platformMock_CommGetTransmittedData() );
 }
 
 TEST(gdbConsole, WriteHexValueToGdbConsole_SendMinimumValue)

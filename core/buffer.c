@@ -172,16 +172,25 @@ void Buffer_WriteSizedString(Buffer* pBuffer, const char* pString, size_t length
 }
 
 
-void Buffer_WriteStringAsHex(Buffer* pBuffer, const char* pString)
+size_t Buffer_WriteStringAsHex(Buffer* pBuffer, const char* pString)
 {
-    Buffer_WriteSizedStringAsHex(pBuffer, pString, mri_strlen(pString));
+    return Buffer_WriteSizedStringAsHex(pBuffer, pString, mri_strlen(pString));
 }
 
 
-void Buffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t length)
+size_t Buffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t length)
 {
+    size_t charLimit = Buffer_BytesLeft(pBuffer) / 2;
+    size_t charsWritten;
+
+    if (length > charLimit)
+        length = charLimit;
+    charsWritten = length;
     while (length--)
         Buffer_WriteByteAsHex(pBuffer, *pString++);
+
+    // Returns the number of source string characters consumed and not number of hex digits written to buffer.
+    return charsWritten;
 }
 
 
