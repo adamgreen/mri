@@ -58,9 +58,9 @@ static int writeToGdbConsole(const TransferParameters* pParameters)
     const char* pBuffer = (const char*)pParameters->bufferAddress;
     size_t length = pParameters->bufferSize;
 
-    WriteSizedStringToGdbConsole(pBuffer, length);
+    size_t charsWritten = WriteSizedStringToGdbConsole(pBuffer, length);
 
-    SetSemihostReturnValues(length, 0);
+    SetSemihostReturnValues(charsWritten, 0);
     FlagSemihostCallAsHandled();
 
     if (WasControlCEncountered())
