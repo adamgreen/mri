@@ -94,12 +94,12 @@
     */
 mriExceptionHandler:
     /* Point R0 to the top of the debugger stack, where MSP should be pointed. */
-1$: ldr     r0, =mriCortexMDebuggerStack
+    ldr     r0, =mriCortexMDebuggerStack
     ldr     r1, =CORTEXM_DEBUGGER_STACK_SIZE * 8
     add     r0, r0, r1
 
     /* Save away copy of MSP value at the time of the fault into R1. */
-3$: mrs     r1, msp
+    mrs     r1, msp
     /* Set MSP to top of debugger stack if it hasn't been disabled. */
     ldr     r2, =mriCortexMFlags
     ldr     r2, [r2]
@@ -143,19 +143,19 @@ mriExceptionHandler:
     push    {r1}
     vpush.32 {s16-s31}
     vpush.32 {s0-s15}
-    b       5$
+    /* b       5$ */
     /* Fall through to 5$ */
 #endif /* MRI_DEVICE_HAS_FPU */
 
     /* All registers integer and float have been pushed on stack. */
-    /* Will pass start of integer registers into mriCortexMExceptionHandler via R1. */
+    /* Will pass start of floating point registers into mriCortexMExceptionHandler via R1. */
 5$: mrs     r1, msp
 
     /* Save pointer to integer regs in the R4 non-volatile register. */
     mov     r4, r0
 
     /* Let C code take care of calling mriDebugException. */
-    /* mriCortexMExceptionHandler(R0=pIntegerRegs, R1=pFloatingRegs); */
+    /* mriCortexMExceptionHandler(IntegerRegisters* R0=pIntegerRegs, uint32_t* R1=pFloatingRegs); */
     bl      mriCortexMExceptionHandler
 
     /* Unstack floating point registers. */
@@ -174,9 +174,9 @@ mriExceptionHandler:
     cbz     r1, 6$
     vpop.32   {s16-s31}
     /* If there are more than 16 FP registers to unstack then unstack FPSCR. */
-    it      hi
+    itt     hi
     pophi   {r2}
-    vmsr    fpscr, r2
+    vmsrhi  fpscr, r2
 #endif /* MRI_DEVICE_HAS_FPU */
 
     /* Unstack integer registers. */
@@ -211,16 +211,58 @@ mriExceptionHandler:
        executing. All of the fault handlers will just jump to this one as they are all handled the same way.
     */
 mriFaultHandler:
+    /* Point R12 to the top of the debugger stack, where MSP should be pointed. */
+    ldr     r12, =mriCortexMDebuggerStack
+    ldr     r0, =CORTEXM_DEBUGGER_STACK_SIZE * 8
+    add     r12, r12, r0
+
+    /* Save away MSP, PSP, and LR values at the time of the fault into R0-R2 to be passed into C functions. */
     mrs     r0, psp
     mrs     r1, msp
     mov     r2, lr
-    push    {r12, lr}
+
+    /* Check for GDB initiated memory read/write failures. */
+    /* Save mriCortexMFlags in r3. */
+    ldr     r3, =mriCortexMFlags
+    ldr     r3, [r3]
+    tst     r3, #CORTEXM_FLAGS_ACTIVE_DEBUG
+    beq     1$
+
+    /* MRI has initiated a memory read/write that has failed. Unless MRI has a critical bug, it is safe to use MSP
+       for calling C code at this point to take care of setting the flag to indicate that the read/write has failed
+       and advance the PC past precise read faulting instructions. */
+    push    {r1, lr}
+    /* Call mriCortexHandleDebuggerFault(uint32_t R0=psp, uint32_t R1=msp, uint32_t R2=excReturn) */
+    bl      mriCortexHandleDebuggerFault
+    pop     {r1, pc}
+
+1$:
+    /* Get here if this is a fault that should be debugged by MRI. */
+    /* Set MSP to top of debugger stack if this feature hasn't been disabled. */
+    tst     r3, #CORTEXM_FLAGS_NO_DEBUG_STACK
+    it      eq
+    msreq   msp, r12
+
+    /* Save original MSP and LR on the current stack and then call into C code. */
+    push    {r1, lr}
+    /* Call mriPendFaultToDebugMon(uint32_t R0=psp, uint32_t R1=msp, uint32_t R2=excReturn) */
     bl      mriPendFaultToDebugMon
     movs    r0, r0
-    bmi     1$
-    pop     {r12, pc}
-1$: bl      mriPlatform_HandleFaultFromHighPriorityCode /* Give platform opportunity to save crash dump. */
-    pop     {r12, lr}
+    bmi     2$
+
+    /* mriPendFaultToDebugMon() returned with R0 >= 0 & DebugMon pended so just return from fault handler. */
+    /* Restore MSP and LR values from the stack and return. */
+    pop     {r1, lr}
+    msr     msp, r1
+    bx      lr
+
+2$:
+    /* mriPendFaultToDebugMon() returned with R0 < 0 which means it didn't pend to DebugMon. */
+    /* Give platform opportunity to save crash dump. */
+    bl      mriPlatform_HandleFaultFromHighPriorityCode
+    /* Restore MSP and LR values from the stack and jump to main mriExceptionHandler routine. */
+    pop     {r1, lr}
+    msr     msp, r1
     b       mriExceptionHandler
     .pool
     .size   mriFaultHandler, .-mriFaultHandler
