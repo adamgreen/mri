@@ -91,7 +91,7 @@ static __INLINE void waitForDebuggerToDetach(uint32_t timeOut)
         __throw(timeoutException);
 }
 
-static __INLINE void enableDebugMonitor()
+static __INLINE void enableDebugMonitor(void)
 {
     CoreDebug->DEMCR |=  CoreDebug_DEMCR_MON_EN;
 }

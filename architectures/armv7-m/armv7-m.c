@@ -136,10 +136,10 @@ static void clearState(void);
 static void determinePriorityBitShift(void);
 static void configureDWTandFPB(void);
 static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority);
-static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq);
+static void defaultExternalInterruptsToLowerPriority(uint8_t priority, uint32_t highestExternalIrq);
 static void disableDebuggerStack(void);
 static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority);
-void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, IRQn_Type highestExternalIrq)
+void mriCortexMInit(Token* pParameterTokens, uint8_t debugMonPriority, uint32_t highestExternalIrq)
 {
     if (MRI_THREAD_MRI)
     {
@@ -226,12 +226,12 @@ static void defaultSvcAndSysTickInterruptsToLowerPriority(uint8_t priority)
     mriCortexMSetPriority(SysTick_IRQn, priority, 0);
 }
 
-static void defaultExternalInterruptsToLowerPriority(uint8_t priority, IRQn_Type highestExternalIrq)
+static void defaultExternalInterruptsToLowerPriority(uint8_t priority, uint32_t highestExternalIrq)
 {
-    int irq;
+    uint32_t irq;
 
     for (irq = 0 ; irq <= highestExternalIrq ; irq++)
-        mriCortexMSetPriority((IRQn_Type)irq, priority, 0);
+        mriCortexMSetPriority((uint32_t)irq, priority, 0);
 }
 
 static void disableDebuggerStack(void)
@@ -246,7 +246,7 @@ static void enableDebugMonitorAtSpecifiedPriority(uint8_t priority)
 }
 
 
-void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority)
+void mriCortexMSetPriority(uint32_t irq, uint8_t priority, uint8_t subPriority)
 {
     uint8_t fullPriority = (priority << mriCortexMState.priorityBitShift) |
                            (subPriority & ((1 << mriCortexMState.priorityBitShift) -1));
@@ -265,12 +265,12 @@ void mriCortexMSetPriority(IRQn_Type irq, uint8_t priority, uint8_t subPriority)
 static void     cleanupIfSingleStepping(void);
 static void     restorePriorityRegsIfNeeded(void);
 static uint32_t shouldRestorePriorityRegs(void);
-static void     clearPriorityRestoreFlag();
+static void     clearPriorityRestoreFlag(void);
 static void     removeHardwareBreakpointOnSvcHandlerIfNeeded(void);
 static int      shouldRemoveHardwareBreakpointOnSvcHandler(void);
 static void     clearSvcStepFlag(void);
 static void     clearHardwareBreakpointOnSvcHandler(void);
-static uint32_t getNvicVector(IRQn_Type irq);
+static uint32_t getNvicVector(uint32_t irq);
 static void     clearSingleSteppingFlag(void);
 void Platform_DisableSingleStep(void)
 {
@@ -331,7 +331,7 @@ static void clearHardwareBreakpointOnSvcHandler(void)
     Platform_ClearHardwareBreakpoint(getNvicVector(SVCall_IRQn) & ~1);
 }
 
-static uint32_t getNvicVector(IRQn_Type irq)
+static uint32_t getNvicVector(uint32_t irq)
 {
     const uint32_t           nvicBaseVectorOffset = 16;
     volatile const uint32_t* pVectors = (volatile const uint32_t*)SCB->VTOR;
@@ -596,7 +596,7 @@ static uint8_t calculateBasePriorityForThisCPU(uint8_t basePriority)
 }
 
 
-uint8_t mriCortexMGetPriority(IRQn_Type irq)
+uint8_t mriCortexMGetPriority(uint32_t irq)
 {
     uint8_t priority;
 
@@ -634,7 +634,7 @@ static PlatformTrapReason cacheTrapReason(void);
 static uint32_t encounteredStackingException(void);
 static PlatformTrapReason findMatchedWatchpoint(void);
 static PlatformTrapReason getReasonFromMatchComparator(const DWT_COMP_Type* pComparator);
-static uint32_t hasControlCBeenDetected();
+static uint32_t hasControlCBeenDetected(void);
 static uint8_t  determineCauseOfDebugEvent(void);
 uint8_t Platform_DetermineCauseOfException(void)
 {
@@ -1654,11 +1654,11 @@ static int isExceptionPriorityLowEnoughToDebug(uint32_t exceptionNumber)
     }
     else
     {
-        return mriCortexMGetPriority((IRQn_Type)(-16+exceptionNumber)) > mriCortexMGetPriority(DebugMonitor_IRQn);
+        return mriCortexMGetPriority((uint32_t)(-16+exceptionNumber)) > mriCortexMGetPriority(DebugMonitor_IRQn);
     }
 }
 
-static int hasDebugMonInterruptBeenDisabled()
+static int hasDebugMonInterruptBeenDisabled(void)
 {
     /* Was user code in a critical section that disabled DebugMon interrupt when debug event occurred? */
     uint32_t primask = __get_PRIMASK();
