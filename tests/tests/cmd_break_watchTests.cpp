@@ -143,6 +143,15 @@ TEST(cmdBreakWatch, SetHardwareReadWriteWatchpoint)
     CHECK_EQUAL( MRI_PLATFORM_READWRITE_WATCHPOINT, platformMock_SetHardwareWatchpointTypeArg() );
 }
 
+TEST(cmdBreakWatch, AttemptSetSoftwareBreakpoint_ShouldReturnEmptyResponse)
+{
+    platformMock_CommInitReceiveChecksummedData("+$Z0,87654321,8#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0, platformMock_SetHardwareWatchpointCalls() );
+}
+
 TEST(cmdBreakWatch, InvalidSetHardwareBreakWatchpoint_ShouldReturnEmptyResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$Z5,87654321,8#", "+$c#");
@@ -225,6 +234,14 @@ TEST(cmdBreakWatch, ClearHardwareReadWriteWatchpoint)
     CHECK_EQUAL( MRI_PLATFORM_READWRITE_WATCHPOINT, platformMock_ClearHardwareWatchpointTypeArg() );
 }
 
+TEST(cmdBreakWatch, AttemptClearSoftwareBreakpoint_ShouldReturnEmptyResponse)
+{
+    platformMock_CommInitReceiveChecksummedData("+$z0,87654321,8#", "+$c#");
+        mriDebugException(platformMock_GetContext());
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$#+"), platformMock_CommGetTransmittedData() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareBreakpointCalls() );
+    CHECK_EQUAL( 0, platformMock_ClearHardwareWatchpointCalls() );
+}
 TEST(cmdBreakWatch, InvalidClearHardwareBreakWatchpoint_ShouldReturnEmptyResponse)
 {
     platformMock_CommInitReceiveChecksummedData("+$z5,87654321,8#", "+$c#");

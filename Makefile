@@ -71,15 +71,16 @@ endif
 # Flags to use when cross-compiling ARMv7-M binaries.
 ARMV7M_GCCFLAGS := -Os -g3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
-ARMV7M_GCCFLAGS += -DMRI_THREAD_MRI=0
+ARMV7M_GCCFLAGS += -DMRI_THREAD_MRI=0 -DMRI_ALWAYS_USE_HARDWARE_BREAKPOINT=0
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
 ARMV7M_ASFLAGS  := -mthumb -g3 -x assembler-with-cpp -MMD -MP
 
 # Flags to use when compiling binaries to run on this host system.
 HOST_GCCFLAGS := -O2 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
-HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common -DMRI_THREAD_MRI=0
+HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common
 HOST_GCCFLAGS += -include CppUTest/include/CppUTest/MemoryLeakDetectorMallocMacros.h
+HOST_GCCFLAGS += -DMRI_THREAD_MRI=0 -DMRI_ALWAYS_USE_HARDWARE_BREAKPOINT=0
 HOST_GPPFLAGS := $(HOST_GCCFLAGS) -include CppUTest/include/CppUTest/MemoryLeakDetectorNewMacros.h
 HOST_GCCFLAGS += -std=gnu90
 HOST_ASFLAGS  := -g -x assembler-with-cpp -MMD -MP

@@ -91,6 +91,12 @@ static void parseBreakpointWatchpointCommandArguments(BreakpointWatchpointArgume
         __throwing_func( pArguments->address = ReadUIntegerArgument(pBuffer) );
         __throwing_func( ThrowIfNextCharIsNotEqualTo(pBuffer, ',') );
         __throwing_func( pArguments->kind = ReadUIntegerArgument(pBuffer) );
+        if (MRI_ALWAYS_USE_HARDWARE_BREAKPOINT && pArguments->type == '0')
+        {
+            /* Assume soft breakpoint is really for FLASH on platforms that don't describe memory layout in XML. */
+            pArguments->type = '1';
+        }
+
     }
     __catch
     {
