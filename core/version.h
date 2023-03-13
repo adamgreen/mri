@@ -5,7 +5,7 @@
 #define MRI_BRANCH "https://github.com/adamgreen/mri"
 
 #define MRI_VERSION_MAJOR       1
-#define MRI_VERSION_MINOR       5
+#define MRI_VERSION_MINOR       6
 #define MRI_VERSION_BUILD       20230106
 #define MRI_VERSION_SUBBUILD    0
 
