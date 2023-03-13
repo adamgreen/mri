@@ -73,7 +73,7 @@ TEST_GROUP(cmdQuery)
         char* pStart = pHexDest;
         while (*pSrc)
         {
-            sprintf(pHexDest, "%02x", *pSrc++);
+            snprintf(pHexDest, 3, "%02x", *pSrc++);
             pHexDest += 2;
         }
         int len = pHexDest - pStart;
