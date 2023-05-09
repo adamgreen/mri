@@ -311,6 +311,7 @@ static void prepareForDebuggerExit(void)
     if (WasResetOnNextContinueRequested() && !Platform_IsSingleStepping()) {
         waitForAckToBeTransmitted();
         Platform_ResetDevice();
+        CancelResetRequestOnNextContinue();
     }
     Platform_LeavingDebugger();
     if (g_mri.pLeavingHook)
@@ -449,6 +450,11 @@ int WasControlCEncountered(void)
 void ControlCEncountered(void)
 {
     g_mri.flags |= MRI_FLAGS_ENCOUNTERED_CTRL_C;
+}
+
+void CancelResetRequestOnNextContinue(void)
+{
+    g_mri.flags &= ~MRI_FLAGS_RESET_ON_CONTINUE;
 }
 
 int WasResetOnNextContinueRequested(void)
