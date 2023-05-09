@@ -48,6 +48,7 @@ void    mriCore_FlagSemihostCallAsHandled(void);
 int     mriCore_IsFirstException(void);
 int     mriCore_WasSuccessfullyInit(void);
 void    mriCore_RequestResetOnNextContinue(void);
+void    mriCore_CancelResetRequestOnNextContinue(void);
 int     mriCore_WasResetOnNextContinueRequested(void);
 void    mriCore_SetSingleSteppingRange(const AddressRange* pRange);
 
@@ -70,32 +71,33 @@ void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHoo
 
 
 /* Macroes which allow code to drop the mri namespace prefix. */
-#define InitPacketBuffers               mriCore_InitPacketBuffers
-#define GetBuffer                       mriCore_GetBuffer
-#define GetInitializedBuffer            mriCore_GetInitializedBuffer
-#define PrepareStringResponse           mriCore_PrepareStringResponse
-#define WasControlCFlagSentFromGdb      mriCore_WasControlCFlagSentFromGdb
-#define RecordControlCFlagSentFromGdb   mriCore_RecordControlCFlagSentFromGdb
-#define WasControlCEncountered          mriCore_WasControlCEncountered
-#define ControlCEncountered             mriCore_ControlCEncountered
-#define WasSemihostCallCancelledByGdb   mriCore_WasSemihostCallCancelledByGdb
-#define FlagSemihostCallAsHandled       mriCore_FlagSemihostCallAsHandled
-#define IsFirstException                mriCore_IsFirstException
-#define WasSuccessfullyInit             mriCore_WasSuccessfullyInit
-#define RequestResetOnNextContinue      mriCore_RequestResetOnNextContinue
-#define WasResetOnNextContinueRequested mriCore_WasResetOnNextContinueRequested
-#define SetSingleSteppingRange          mriCore_SetSingleSteppingRange
-#define GetContext                      mriCore_GetContext
-#define SetContext                      mriCore_SetContext
-#define SetSignalValue                  mriCore_SetSignalValue
-#define GetSignalValue                  mriCore_GetSignalValue
-#define SetSemihostReturnValues         mriCore_SetSemihostReturnValues
-#define GetSemihostReturnCode           mriCore_GetSemihostReturnCode
-#define GetSemihostErrno                mriCore_GetSemihostErrno
-#define SendPacketToGdb                 mriCore_SendPacketToGdb
-#define GdbCommandHandlingLoop          mriCore_GdbCommandHandlingLoop
-#define SetTempBreakpoint               mriCore_SetTempBreakpoint
-#define SetDebuggerHooks                mriCoreSetDebuggerHooks
+#define InitPacketBuffers                mriCore_InitPacketBuffers
+#define GetBuffer                        mriCore_GetBuffer
+#define GetInitializedBuffer             mriCore_GetInitializedBuffer
+#define PrepareStringResponse            mriCore_PrepareStringResponse
+#define WasControlCFlagSentFromGdb       mriCore_WasControlCFlagSentFromGdb
+#define RecordControlCFlagSentFromGdb    mriCore_RecordControlCFlagSentFromGdb
+#define WasControlCEncountered           mriCore_WasControlCEncountered
+#define ControlCEncountered              mriCore_ControlCEncountered
+#define WasSemihostCallCancelledByGdb    mriCore_WasSemihostCallCancelledByGdb
+#define FlagSemihostCallAsHandled        mriCore_FlagSemihostCallAsHandled
+#define IsFirstException                 mriCore_IsFirstException
+#define WasSuccessfullyInit              mriCore_WasSuccessfullyInit
+#define RequestResetOnNextContinue       mriCore_RequestResetOnNextContinue
+#define CancelResetRequestOnNextContinue mriCore_CancelResetRequestOnNextContinue
+#define WasResetOnNextContinueRequested  mriCore_WasResetOnNextContinueRequested
+#define SetSingleSteppingRange           mriCore_SetSingleSteppingRange
+#define GetContext                       mriCore_GetContext
+#define SetContext                       mriCore_SetContext
+#define SetSignalValue                   mriCore_SetSignalValue
+#define GetSignalValue                   mriCore_GetSignalValue
+#define SetSemihostReturnValues          mriCore_SetSemihostReturnValues
+#define GetSemihostReturnCode            mriCore_GetSemihostReturnCode
+#define GetSemihostErrno                 mriCore_GetSemihostErrno
+#define SendPacketToGdb                  mriCore_SendPacketToGdb
+#define GdbCommandHandlingLoop           mriCore_GdbCommandHandlingLoop
+#define SetTempBreakpoint                mriCore_SetTempBreakpoint
+#define SetDebuggerHooks                 mriCoreSetDebuggerHooks
 
 /* Macro to convert 32-bit addresses sent from GDB to pointer. */
 #if defined(_LP64) && _LP64

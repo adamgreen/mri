@@ -620,7 +620,7 @@ static __INLINE uint32_t* enableFPBBreakpoint(uint32_t breakpointAddress, int32_
     pExistingFPBBreakpoint = findFPBBreakpointComparator(breakpointAddress, is32BitInstruction);
     if (pExistingFPBBreakpoint)
     {
-        /* This breakpoint is already set to just return pointer to existing comparator. */
+        /* This breakpoint is already set so just return pointer to existing comparator. */
         return pExistingFPBBreakpoint;
     }
 
