@@ -167,8 +167,8 @@ typedef struct
 
 static __I uint8_t _mriAPBAHBPrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
 
-//#define HSI_VALUE ((uint32_t)16000000)
-//#define HSE_VALUE ((uint32_t)25000000)
+#define HSI_VALUE ((uint32_t)16000000)
+#define HSE_VALUE ((uint32_t)25000000)
 
 static void _mriRCC_GetClocksFreq(_mriRCC_ClocksTypeDef* RCC_Clocks)
 {

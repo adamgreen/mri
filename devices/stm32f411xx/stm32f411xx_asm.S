@@ -31,7 +31,7 @@ USART1_IRQHandler:
 
 
     .global USART2_IRQHandler
-/*    .weak   USART2_IRQHandler */
+    .weak   USART2_IRQHandler
     .type USART2_IRQHandler, function
     .thumb_func
     /* extern "C" void USART2_IRQHandler(void);
