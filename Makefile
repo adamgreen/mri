@@ -250,10 +250,10 @@ $(eval $(call make_board_library,BAMBINO210_1,libmri_bambino210.a,\
 $(eval $(call armv7m_module,NRF52DK,boards/nrf52dk))
 $(eval $(call make_board_library,NRF52_DK_1,libmri_nrf52dk_fpu_soft.a,\
                                   CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU NRF52_FPU NRF52DK_FPU,\
-                                  cmsis/nrf52))
+                                  cmsis/NRF52))
 $(eval $(call make_board_library,NRF52_DK_2,libmri_nrf52dk_fpu_hard.a,\
                                   CORE_FPU_HARD SEMIHOST_FPU_HARD ARMV7M_FPU_HARD NATIVE_MEM_FPU_HARD NRF52_FPU_HARD NRF52DK_FPU_HARD,\
-                                  cmsis/nrf52))
+                                  cmsis/NRF52))
 
 # STM32F429i-Discovery STM32F429xx board
 $(eval $(call armv7m_module,STM32F429_DISCO,boards/stm32f429-disco))
