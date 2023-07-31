@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -107,9 +107,9 @@ static int handleNewlibSemihostOpenRequest(PlatformSemihostParameters* pSemihost
     OpenParameters parameters;
 
     parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = mri_strlen((const char*)parameters.filenameAddress) + 1;
-    parameters.flags = pSemihostParameters->parameter2;
-    parameters.mode = pSemihostParameters->parameter3;
+    parameters.filenameLength = pSemihostParameters->parameter2;
+    parameters.flags = pSemihostParameters->parameter3;
+    parameters.mode = pSemihostParameters->parameter4;
 
     return IssueGdbFileOpenRequest(&parameters);
 }
@@ -119,7 +119,7 @@ static int handleNewlibSemihostUnlinkRequest(PlatformSemihostParameters* pSemiho
     RemoveParameters parameters;
 
     parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = mri_strlen((const char*)parameters.filenameAddress) + 1;
+    parameters.filenameLength = pSemihostParameters->parameter2;
 
     return IssueGdbFileUnlinkRequest(&parameters);
 }
@@ -150,8 +150,8 @@ static int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihost
     StatParameters parameters;
 
     parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = mri_strlen((const char*) parameters.filenameAddress) + 1;
-    parameters.fileStatBuffer = pSemihostParameters->parameter2;
+    parameters.filenameLength = pSemihostParameters->parameter2;
+    parameters.fileStatBuffer = pSemihostParameters->parameter3;
     return IssueGdbFileStatRequest(&parameters);
 }
 
@@ -160,9 +160,9 @@ static int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemiho
     RenameParameters parameters;
 
     parameters.origFilenameAddress = pSemihostParameters->parameter1;
-    parameters.origFilenameLength = mri_strlen((const char*)parameters.origFilenameAddress) + 1;
-    parameters.newFilenameAddress = pSemihostParameters->parameter2;
-    parameters.newFilenameLength = mri_strlen((const char*)parameters.newFilenameAddress) + 1;
+    parameters.origFilenameLength = pSemihostParameters->parameter2;
+    parameters.newFilenameAddress = pSemihostParameters->parameter3;
+    parameters.newFilenameLength = pSemihostParameters->parameter4;
     return IssueGdbFileRenameRequest(&parameters);
 }
 
