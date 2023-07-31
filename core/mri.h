@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 #ifndef MRI_H_
 #define MRI_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 /* Used to insert hardcoded breakpoint into user's code. */
@@ -113,11 +114,11 @@ typedef void (*MriDebuggerHookPtr)(void*);
 void mriSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHookPtr pLeavingHook, void* pvContext);
 
 /* Simple assembly language stubs that can be called from user's newlib stubs routines which will cause the operations
-   to be redirected to the GDB host via MRI. */
-int mriNewLib_SemihostOpen(const char *pFilename, int flags, int mode);
-int mriNewLib_SemihostRename(const char *pOldFilename, const char *pNewFilename);
-int mriNewLib_SemihostUnlink(const char *pFilename);
-int mriNewLib_SemihostStat(const char *pFilename, void *pStat);
+   to be redirected to the GDB host via MRI. The filenameLength parameters must include the terminating '\0'. */
+int mriNewLib_SemihostOpen(const char *pFilename, size_t filenameLength, int flags, int mode);
+int mriNewLib_SemihostRename(const char *pOldFilename, size_t oldFilenameLength, const char *pNewFilename, size_t newFilenameLength);
+int mriNewLib_SemihostUnlink(const char *pFilename, size_t filenameLength);
+int mriNewLib_SemihostStat(const char *pFilename, size_t filenameLength, void *pStat);
 int mriNewlib_SemihostWrite(int file, const char *ptr, int len);
 int mriNewlib_SemihostRead(int file, char *ptr, int len);
 int mriNewlib_SemihostLSeek(int file, int offset, int whence);
