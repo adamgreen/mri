@@ -409,6 +409,7 @@ static int matchesString(CompareParams* pParams, Buffer* pBuffer, const char* pS
 static int doesBufferContainThisString(Buffer* pBuffer, const char* pDesiredString, size_t stringLength);
 static int doesBufferContainThisHexString(Buffer* pBuffer, const char* pDesiredString, size_t stringLength);
 static int hexStringCompare(Buffer* pBuffer, const char* pDesiredString, size_t stringLength);
+static uint8_t toLower(uint8_t ch);
 int Buffer_MatchesString(Buffer* pBuffer, const char* pString, size_t stringLength)
 {
     CompareParams params = { doesBufferContainThisString, 1 };
@@ -465,13 +466,14 @@ static int hexStringCompare(Buffer* pBuffer, const char* pDesiredString, size_t 
     size_t i;
     for (i = 0 ; i < stringLength ; i++)
     {
-        uint8_t byte = Buffer_ReadByteAsHex(pBuffer);
-        if (byte < (uint8_t)pDesiredString[i])
+        uint8_t byte = toLower(Buffer_ReadByteAsHex(pBuffer));
+        uint8_t desiredByte = toLower(pDesiredString[i]);
+        if (byte < desiredByte)
         {
             result = -1;
             break;
         }
-        if (byte > (uint8_t)pDesiredString[i])
+        if (byte > desiredByte)
         {
             result = 1;
             break;
@@ -480,3 +482,13 @@ static int hexStringCompare(Buffer* pBuffer, const char* pDesiredString, size_t 
     pBuffer->pCurrent = pOrig;
     return result;
 }
+
+static uint8_t toLower(uint8_t ch)
+{
+    if (ch >= 'A' && ch <= 'Z')
+    {
+        ch = ch - 'A' + 'a';
+    }
+    return ch;
+}
+

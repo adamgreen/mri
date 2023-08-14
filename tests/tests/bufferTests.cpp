@@ -1156,6 +1156,22 @@ TEST(Buffer, Buffer_MatchesHexString_Match)
     validateNoException();
 }
 
+TEST(Buffer, Buffer_MatchesHexString_MatchWhenCaseMismatches)
+{
+    static const char   testString[] = "7265736574";
+    static const char   compareString[] = "ReseT";
+    int                 isEqual = -1;
+
+    allocateBuffer(testString);
+    __try
+        isEqual = Buffer_MatchesHexString(&m_buffer, compareString, sizeof(compareString)-1);
+    __catch
+        m_exceptionThrown = 1;
+    CHECK_TRUE( isEqual );
+    LONGS_EQUAL( 0, Buffer_BytesLeft(&m_buffer) );
+    validateNoException();
+}
+
 TEST(Buffer, Buffer_MatchesHexString_MatchWithTrailingSpace)
 {
     static const char   testString[] = "726573657420";
