@@ -232,6 +232,9 @@ $(eval $(call armv7m_module,NRF52,devices/nrf52))
 # STM32F429XX device sources.
 $(eval $(call armv7m_module,STM32F429XX,devices/stm32f429xx))
 
+# STM32F411XX device sources.
+$(eval $(call armv7m_module,STM32F411XX,devices/stm32f411xx))
+
 
 # ** BOARDS **
 # mbed 1768 board
@@ -250,16 +253,22 @@ $(eval $(call make_board_library,BAMBINO210_1,libmri_bambino210.a,\
 $(eval $(call armv7m_module,NRF52DK,boards/nrf52dk))
 $(eval $(call make_board_library,NRF52_DK_1,libmri_nrf52dk_fpu_soft.a,\
                                   CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU NRF52_FPU NRF52DK_FPU,\
-                                  cmsis/nrf52))
+                                  cmsis/NRF52))
 $(eval $(call make_board_library,NRF52_DK_2,libmri_nrf52dk_fpu_hard.a,\
                                   CORE_FPU_HARD SEMIHOST_FPU_HARD ARMV7M_FPU_HARD NATIVE_MEM_FPU_HARD NRF52_FPU_HARD NRF52DK_FPU_HARD,\
-                                  cmsis/nrf52))
+                                  cmsis/NRF52))
 
 # STM32F429i-Discovery STM32F429xx board
 $(eval $(call armv7m_module,STM32F429_DISCO,boards/stm32f429-disco))
 $(eval $(call make_board_library,STM32F429_DISCO1,libmri_stm32f429-disco.a,\
                                   CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU STM32F429XX_FPU STM32F429_DISCO_FPU,\
                                   cmsis/STM32F429xx))
+
+# WeAct Studio MiniF4 STM32F411xx board
+$(eval $(call armv7m_module,STM32F411_BLACKPILL,boards/stm32f411-blackpill))
+$(eval $(call make_board_library,STM32F411CE_BLACKPILL,libmri_stm32f411-blackpill.a,\
+                                  CORE_FPU SEMIHOST_FPU ARMV7M_FPU NATIVE_MEM_FPU STM32F411XX_FPU STM32F411_BLACKPILL_FPU,\
+                                  cmsis/STM32F411xx))
 
 # All boards to be built for ARM target.
 ARM_BOARDS : $(ARM_BOARD_LIBS)
