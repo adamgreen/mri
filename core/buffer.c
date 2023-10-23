@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -194,13 +194,13 @@ size_t Buffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t
 }
 
 
-static uint32_t parseNextHexDigitAndAddNibbleToValue(Buffer* pBuffer, uint32_t currentValue);
-static void     pushBackLastChar(Buffer* pBuffer);
-static void     clearOverrun(Buffer* pBuffer);
-uint32_t Buffer_ReadUIntegerAsHex(Buffer* pBuffer)
+static uintmri_t parseNextHexDigitAndAddNibbleToValue(Buffer* pBuffer, uintmri_t currentValue);
+static void      pushBackLastChar(Buffer* pBuffer);
+static void      clearOverrun(Buffer* pBuffer);
+uintmri_t Buffer_ReadUIntegerAsHex(Buffer* pBuffer)
 {
-    int      hexDigitsParsed;
-    uint32_t value = 0;
+    int       hexDigitsParsed;
+    uintmri_t value = 0;
 
     for (hexDigitsParsed = 0 ; ; hexDigitsParsed++)
     {
@@ -221,10 +221,10 @@ uint32_t Buffer_ReadUIntegerAsHex(Buffer* pBuffer)
     return value;
 }
 
-static uint32_t parseNextHexDigitAndAddNibbleToValue(Buffer* pBuffer, uint32_t currentValue)
+static uintmri_t parseNextHexDigitAndAddNibbleToValue(Buffer* pBuffer, uintmri_t currentValue)
 {
-    char     nextChar;
-    uint32_t nibbleValue;
+    char      nextChar;
+    uintmri_t nibbleValue;
 
     __try
         nextChar = Buffer_ReadChar(pBuffer);
@@ -257,9 +257,9 @@ static void clearOverrun(Buffer* pBuffer)
 }
 
 
-static int     countLeadingZeroBytes(uint32_t value);
-static uint8_t extractByteAtIndex(uint32_t value, int index);
-void Buffer_WriteUIntegerAsHex(Buffer* pBuffer, uint32_t value)
+static int     countLeadingZeroBytes(uintmri_t value);
+static uint8_t extractByteAtIndex(uintmri_t value, int index);
+void Buffer_WriteUIntegerAsHex(Buffer* pBuffer, uintmri_t value)
 {
     int              leadingZeroBytes;
     int              currentByteIndex;
@@ -281,10 +281,11 @@ void Buffer_WriteUIntegerAsHex(Buffer* pBuffer, uint32_t value)
     }
 }
 
-static int countLeadingZeroBytes(uint32_t value)
+static int countLeadingZeroBytes(uintmri_t value)
 {
-    uint32_t mask = 0xFF000000;
-    int      count = 0;
+    static const int bitsPerByte = 8;
+    uintmri_t        mask = (uintmri_t)0xFF << ((sizeof(uintmri_t) - 1) * bitsPerByte);
+    int              count = 0;
 
     while (mask && 0 == (value & mask))
     {
@@ -295,20 +296,20 @@ static int countLeadingZeroBytes(uint32_t value)
     return count;
 }
 
-static uint8_t extractByteAtIndex(uint32_t value, int index)
+static uint8_t extractByteAtIndex(uintmri_t value, int index)
 {
     static const int bitsPerByte = 8;
-    uint32_t         shiftAmount = index * bitsPerByte;
+    int              shiftAmount = index * bitsPerByte;
 
-    return (uint8_t)((value >> shiftAmount) & 0xff);
+    return (uint8_t)((value >> shiftAmount) & 0xFF);
 }
 
 
-static int32_t convertToIntegerAndThrowIfOutOfRange(int isNegative, uint32_t value);
-int32_t Buffer_ReadIntegerAsHex(Buffer* pBuffer)
+static intmri_t convertToIntegerAndThrowIfOutOfRange(int isNegative, uintmri_t value);
+intmri_t Buffer_ReadIntegerAsHex(Buffer* pBuffer)
 {
-    uint32_t value = 0;
-    int      isNegative = 0;
+    uintmri_t value = 0;
+    int       isNegative = 0;
 
     __try
     {
@@ -323,27 +324,32 @@ int32_t Buffer_ReadIntegerAsHex(Buffer* pBuffer)
     return convertToIntegerAndThrowIfOutOfRange(isNegative, value);
 }
 
-static int32_t convertToIntegerAndThrowIfOutOfRange(int isNegative, uint32_t value)
+static intmri_t convertToIntegerAndThrowIfOutOfRange(int isNegative, uintmri_t value)
 {
-    if (!isNegative && value > INT_MAX)
-        __throw_and_return(invalidValueException, INT_MAX);
+    const intmri_t intMax = ((uintmri_t)-1) >> 1;
+    const intmri_t intMin = -intMax - 1;
 
-    if (isNegative && value > ((uint32_t)INT_MAX + 1))
+    if (!isNegative && value > intMax)
     {
-        __throw_and_return(invalidValueException, INT_MIN);
+        __throw_and_return(invalidValueException, intMax);
+    }
+
+    if (isNegative && value > ((uintmri_t)intMax + 1))
+    {
+        __throw_and_return(invalidValueException, intMin);
     }
 
     return isNegative ? -(int)value : (int)value;
 }
 
 
-static int32_t calculateAbsoluteValueAndWriteMinusSignForNegativeValue(Buffer* pBuffer, int32_t value);
-void Buffer_WriteIntegerAsHex(Buffer* pBuffer, int32_t value)
+static intmri_t calculateAbsoluteValueAndWriteMinusSignForNegativeValue(Buffer* pBuffer, intmri_t value);
+void Buffer_WriteIntegerAsHex(Buffer* pBuffer, intmri_t value)
 {
     __try
     {
         __throwing_func(value = calculateAbsoluteValueAndWriteMinusSignForNegativeValue(pBuffer, value));
-        __throwing_func(Buffer_WriteUIntegerAsHex(pBuffer, (uint32_t)value));
+        __throwing_func(Buffer_WriteUIntegerAsHex(pBuffer, (uintmri_t)value));
     }
     __catch
     {
@@ -351,7 +357,7 @@ void Buffer_WriteIntegerAsHex(Buffer* pBuffer, int32_t value)
     }
 }
 
-static int32_t calculateAbsoluteValueAndWriteMinusSignForNegativeValue(Buffer* pBuffer, int32_t value)
+static intmri_t calculateAbsoluteValueAndWriteMinusSignForNegativeValue(Buffer* pBuffer, intmri_t value)
 {
     if (value < 0)
     {

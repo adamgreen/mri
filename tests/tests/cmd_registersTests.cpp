@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -52,41 +52,41 @@ TEST_GROUP(cmdRegisters)
 
 TEST(cmdRegisters, GetRegisters)
 {
-    uint32_t* pContext = platformMock_GetContextEntries();
-    pContext[0] = 0x11111111;
-    pContext[1] = 0x22222222;
-    pContext[2] = 0x33333333;
-    pContext[3] = 0x44444444;
+    uintmri_t* pContext = platformMock_GetContextEntries();
+    pContext[0] = 0x1111111111111111;
+    pContext[1] = 0x2222222222222222;
+    pContext[2] = 0x3333333333333333;
+    pContext[3] = 0x4444444444444444;
 
     platformMock_CommInitReceiveChecksummedData("+$g#", "+$c#");
         mriDebugException(platformMock_GetContext());
-    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$11111111222222223333333344444444#+"),
+    STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$1111111111111111222222222222222233333333333333334444444444444444#+"),
                    platformMock_CommGetTransmittedData() );
 }
 
 TEST(cmdRegisters, SetRegisters)
 {
-    platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef0#", "+$c#");
+    platformMock_CommInitReceiveChecksummedData("+$G123456789abcdef0222222222222222233333333333333339abcdef012345678#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$OK#+"), platformMock_CommGetTransmittedData() );
-    uint32_t* pContext = platformMock_GetContextEntries();
-    CHECK_EQUAL ( 0x78563412, pContext[0] );
-    CHECK_EQUAL ( 0x22222222, pContext[1] );
-    CHECK_EQUAL ( 0x33333333, pContext[2] );
-    CHECK_EQUAL ( 0xf0debc9a, pContext[3] );
+    uintmri_t* pContext = platformMock_GetContextEntries();
+    LONGS_EQUAL ( 0xF0DEBC9A78563412, pContext[0] );
+    LONGS_EQUAL ( 0x2222222222222222, pContext[1] );
+    LONGS_EQUAL ( 0x3333333333333333, pContext[2] );
+    LONGS_EQUAL ( 0x78563412f0debc9a, pContext[3] );
 }
 
 TEST(cmdRegisters, SetRegisters_BufferTooShort)
 {
-    platformMock_CommInitReceiveChecksummedData("+$G1234567822222222333333339abcdef#", "+$c#");
+    platformMock_CommInitReceiveChecksummedData("+$G123456789abcdef022222222222222223333333333333333fedcba987654321#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+$" MRI_ERROR_BUFFER_OVERRUN "#+"),
                    platformMock_CommGetTransmittedData() );
-    uint32_t* pContext = platformMock_GetContextEntries();
-    CHECK_EQUAL ( 0x78563412, pContext[0] );
-    CHECK_EQUAL ( 0x22222222, pContext[1] );
-    CHECK_EQUAL ( 0x33333333, pContext[2] );
-    CHECK_EQUAL ( 0x00debc9a, pContext[3] );
+    uintmri_t* pContext = platformMock_GetContextEntries();
+    LONGS_EQUAL ( 0xF0DEBC9A78563412, pContext[0] );
+    LONGS_EQUAL ( 0x2222222222222222, pContext[1] );
+    LONGS_EQUAL ( 0x3333333333333333, pContext[2] );
+    LONGS_EQUAL ( 0x0032547698BADCFE, pContext[3] );
 }
 
 

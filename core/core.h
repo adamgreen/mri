@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -98,14 +98,5 @@ void    mriCoreSetDebuggerHooks(MriDebuggerHookPtr pEnteringHook, MriDebuggerHoo
 #define GdbCommandHandlingLoop           mriCore_GdbCommandHandlingLoop
 #define SetTempBreakpoint                mriCore_SetTempBreakpoint
 #define SetDebuggerHooks                 mriCoreSetDebuggerHooks
-
-/* Macro to convert 32-bit addresses sent from GDB to pointer. */
-#if defined(_LP64) && _LP64
-    /* When unit testing on 64-bit, address will be from stack so grab upper 32-bit from stack address. */
-    /* NOTE: This is for unit testing only.  It would never work on real 64-bit systems. */
-    #define ADDR32_TO_POINTER(X) (void*)((size_t)(X) | ((size_t)(&pBuffer) & 0xFFFFFFFF00000000ULL))
-#else
-    #define ADDR32_TO_POINTER(X) (void*)(X)
-#endif /* _LP64 */
 
 #endif /* CORE_H_ */

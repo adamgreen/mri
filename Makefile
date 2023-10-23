@@ -1,4 +1,4 @@
-# Copyright 2022 Adam Green (https://github.com/adamgreen)
+# Copyright 2023 Adam Green (https://github.com/adamgreen)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ endif
 ARMV7M_GCCFLAGS := -Os -g3 -mthumb -mthumb-interwork -Wall -Wextra -Werror -Wno-unused-parameter -MMD -MP
 ARMV7M_GCCFLAGS += -ffunction-sections -fdata-sections -fno-exceptions -fno-delete-null-pointer-checks -fomit-frame-pointer
 ARMV7M_GCCFLAGS += -DMRI_THREAD_MRI=0 -DMRI_ALWAYS_USE_HARDWARE_BREAKPOINT=0
+ARMV7M_GCCFLAGS += -DMRI_UINT_TYPE=uint32_t -DMRI_INT_TYPE=int32_t
 ARMV7M_GPPFLAGS := $(ARMV7M_GCCFLAGS) -fno-rtti
 ARMV7M_GCCFLAGS += -std=gnu90
 ARMV7M_ASFLAGS  := -mthumb -g3 -x assembler-with-cpp -MMD -MP

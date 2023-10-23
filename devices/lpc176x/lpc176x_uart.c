@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -424,7 +424,7 @@ static int commUartIndex(void)
 }
 
 
-uint32_t Platform_CommHasReceiveData(void)
+int Platform_CommHasReceiveData(void)
 {
     static const uint8_t receiverDataReadyBit = 1 << 0;
 
@@ -432,7 +432,7 @@ uint32_t Platform_CommHasReceiveData(void)
 }
 
 
-uint32_t  Platform_CommHasTransmitCompleted(void)
+int  Platform_CommHasTransmitCompleted(void)
 {
     static const uint8_t transmitterEmpty = 1 << 6;
 

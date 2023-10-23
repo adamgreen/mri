@@ -74,7 +74,7 @@ static uint16_t getFirstHalfWordOfCurrentInstruction(void)
 
 static uint16_t throwingMemRead16(uint32_t address)
 {
-    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)address);
+    uint16_t instructionWord = Platform_MemRead16(address);
     if (Platform_WasMemoryFaultEncountered())
         __throw_and_return(memFaultException, 0);
     return instructionWord;

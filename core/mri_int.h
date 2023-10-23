@@ -12,27 +12,22 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/* Routines which expose Micromint Bambino210 specific functionality to the mri debugger. */
-#include <string.h>
-#include <core/platforms.h>
-#include <core/try_catch.h>
-#include <architectures/armv7-m/debug_cm3.h>
-#include <devices/lpc43xx/lpc43xx_init.h>
+/* Integer types used by MRI for debuggee registers, pointer addresses, etc. */
+#ifndef MRI_INT_H_
+#define MRI_INT_H_
+
+#include <stdint.h>
+
+/* The MRI_UINT_TYPE and MRI_INT_TYP macros should be set when calling the compiler to indicate what type should be
+   used for integers on your platform. This allows support for 16/32/64-bit integers. */
+#ifndef MRI_UINT_TYPE
+    #define MRI_UINT_TYPE uintptr_t
+#endif
+#ifndef MRI_INT_TYPE
+    #define MRI_INT_TYPE intptr_t
+#endif
+typedef MRI_UINT_TYPE uintmri_t;
+typedef MRI_INT_TYPE intmri_t;
 
 
-void Platform_Init(Token* pParameterTokens)
-{
-    mriLpc43xx_Init(pParameterTokens);
-}
-
-
-const uint8_t* Platform_GetUid(void)
-{
-    return NULL;
-}
-
-
-size_t Platform_GetUidSize(void)
-{
-    return 0;
-}
+#endif /* MRI_INT_H_ */

@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ uint32_t HandleMemoryReadCommand(void)
     }
 
     InitPacketBuffers();
-    result = ReadMemoryIntoHexBuffer(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length);
+    result = ReadMemoryIntoHexBuffer(pBuffer, addressLength.address, addressLength.length);
     if (result == 0)
         PrepareStringResponse(MRI_ERROR_MEMORY_ACCESS_FAILURE);
 
@@ -82,7 +82,7 @@ uint32_t HandleMemoryWriteCommand(void)
         return 0;
     }
 
-    if (WriteHexBufferToMemory(pBuffer, ADDR32_TO_POINTER(addressLength.address), addressLength.length))
+    if (WriteHexBufferToMemory(pBuffer, addressLength.address, addressLength.length))
     {
         PrepareStringResponse("OK");
     }
@@ -112,8 +112,8 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
 {
     Buffer*        pBuffer = GetBuffer();
     AddressLength  addressLength;
-    uint32_t*      pv;
-    uint32_t       length;
+    uintmri_t      address;
+    uintmri_t      length;
 
     __try
     {
@@ -125,12 +125,11 @@ uint32_t HandleBinaryMemoryWriteCommand(void)
         return 0;
     }
 
-    pv = ADDR32_TO_POINTER(addressLength.address);
+    address = addressLength.address;
     length = addressLength.length;
-
-    if (WriteBinaryBufferToMemory(pBuffer, pv, length))
+    if (WriteBinaryBufferToMemory(pBuffer, address, length))
     {
-        Platform_SyncICacheToDCache(pv, length);
+        Platform_SyncICacheToDCache(address, length);
         PrepareStringResponse("OK");
     }
     else

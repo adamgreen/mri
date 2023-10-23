@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 #include <core/buffer.h>
 
 /* Real name of functions are in mri namespace. */
-uint32_t mriMem_ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount);
-int      mriMem_WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
-int      mriMem_WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
+uintmri_t mriMem_ReadMemoryIntoHexBuffer(Buffer* pBuffer, uintmri_t address, uintmri_t readByteCount);
+int       mriMem_WriteHexBufferToMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount);
+int       mriMem_WriteBinaryBufferToMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define ReadMemoryIntoHexBuffer     mriMem_ReadMemoryIntoHexBuffer

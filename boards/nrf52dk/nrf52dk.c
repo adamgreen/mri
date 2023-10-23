@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,13 +39,13 @@ const uint8_t* Platform_GetUid(void)
 }
 
 
-uint32_t Platform_GetUidSize(void)
+size_t Platform_GetUidSize(void)
 {
     return 0;
 }
 
 
-uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
+size_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
     return sizeof(g_memoryMapXml) - 1;
 }

@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ uint32_t    platformMock_GetProgramCounterValue(void);
 
 void        platformMock_FaultOnSpecificMemoryCall(int callToFail);
 
-uint32_t*   platformMock_GetContextEntries(void);
+uintmri_t*  platformMock_GetContextEntries(void);
 MriContext* platformMock_GetContext(void);
 
 int         platformMock_SetHardwareBreakpointCalls(void);

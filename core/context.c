@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@
 #include <core/try_catch.h>
 
 
-void Context_Init(MriContext* pThis, ContextSection* pSections, uint32_t sectionCount)
+void Context_Init(MriContext* pThis, ContextSection* pSections, size_t sectionCount)
 {
     pThis->pSections = pSections;
     pThis->sectionCount = sectionCount;
 }
 
-uint32_t Context_Count(MriContext* pThis)
+size_t Context_Count(MriContext* pThis)
 {
-    uint32_t i;
-    uint32_t count = 0;
+    size_t i;
+    size_t count = 0;
     for (i = 0 ; i < pThis->sectionCount ; i++)
     {
         count += pThis->pSections[i].count;
@@ -36,11 +36,11 @@ uint32_t Context_Count(MriContext* pThis)
     return count;
 }
 
-uint32_t Context_Get(const MriContext* pThis, uint32_t index)
+uintmri_t Context_Get(const MriContext* pThis, size_t index)
 {
-    uint32_t i;
-    uint32_t count = 0;
-    uint32_t base = 0;
+    size_t i;
+    size_t count = 0;
+    size_t base = 0;
     for (i = 0 ; i < pThis->sectionCount ; i++)
     {
         base = count;
@@ -53,11 +53,11 @@ uint32_t Context_Get(const MriContext* pThis, uint32_t index)
     __throw_and_return(bufferOverrunException, 0);
 }
 
-void Context_Set(MriContext* pThis, uint32_t index, uint32_t newValue)
+void Context_Set(MriContext* pThis, size_t index, uintmri_t newValue)
 {
-    uint32_t i;
-    uint32_t count = 0;
-    uint32_t base = 0;
+    size_t i;
+    size_t count = 0;
+    size_t base = 0;
     for (i = 0 ; i < pThis->sectionCount ; i++)
     {
         base = count;
@@ -75,12 +75,12 @@ void Context_Set(MriContext* pThis, uint32_t index, uint32_t newValue)
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 void Context_CopyToBuffer(MriContext* pThis, Buffer* pBuffer)
 {
-    uint32_t count = Context_Count(pThis);
-    uint32_t i;
+    size_t count = Context_Count(pThis);
+    size_t i;
 
     for (i = 0 ; i < count ; i++)
     {
-        uint32_t reg = Context_Get(pThis, i);
+        uintmri_t reg = Context_Get(pThis, i);
         writeBytesToBufferAsHex(pBuffer, &reg, sizeof(reg));
     }
 }
@@ -96,11 +96,11 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCo
 static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 void Context_CopyFromBuffer(MriContext* pThis, Buffer* pBuffer)
 {
-    uint32_t count = Context_Count(pThis);
-    uint32_t i;
+    size_t count = Context_Count(pThis);
+    size_t i;
 
     for (i = 0 ; i < count ; i++) {
-        uint32_t reg;
+        uintmri_t reg;
         readBytesFromBufferAsHex(pBuffer, &reg, sizeof(reg));
         Context_Set(pThis, i, reg);
     }

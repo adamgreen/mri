@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -85,12 +85,12 @@ TEST(cmdThread, HCommand_InvalidThreadId_ShouldReturnInvalidArgumentError)
 
 TEST(cmdThread, HCommand_UseValidContext_VerifyRegisterRead)
 {
-    uint32_t contextEntries[4] =
+    uintmri_t contextEntries[4] =
     {
-        0x11111111,
-        0x22222222,
-        0x33333333,
-        0x44444444
+        0x1111111111111111,
+        0x2222222222222222,
+        0x3333333333333333,
+        0x4444444444444444
     };
     ContextSection section = { .pValues = contextEntries, .count = sizeof(contextEntries)/sizeof(contextEntries[0]) };
     MriContext context;
@@ -100,33 +100,33 @@ TEST(cmdThread, HCommand_UseValidContext_VerifyRegisterRead)
     platformMock_CommInitReceiveChecksummedData("+$Hgbaadbeef#", "+$g#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#+" "$OK#"
-                                                 "+$11111111222222223333333344444444#" "+"),
+                                                 "+$1111111111111111222222222222222233333333333333334444444444444444#" "+"),
                    platformMock_CommGetTransmittedData() );
 }
 
 TEST(cmdThread, HCommand_UseValidContext_VerifyRegisterWrite)
 {
-    uint32_t contextEntries[4] =
+    uintmri_t contextEntries[4] =
     {
-        0x11111111,
-        0x22222222,
-        0x33333333,
-        0x44444444
+        0x1111111111111111,
+        0x2222222222222222,
+        0x3333333333333333,
+        0x4444444444444444
     };
     ContextSection section = { .pValues = contextEntries, .count = sizeof(contextEntries)/sizeof(contextEntries[0]) };
     MriContext context;
     Context_Init(&context, &section, 1);
     platformMock_RtosSetThreadContext(0xbaadbeef, &context);
 
-    platformMock_CommInitReceiveChecksummedData("+$Hgbaadbeef#", "+$Gaaaaaaaabbbbbbbbccccccccdddddddd#", "+$c#");
+    platformMock_CommInitReceiveChecksummedData("+$Hgbaadbeef#", "+$Gaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd#", "+$c#");
         mriDebugException(platformMock_GetContext());
     STRCMP_EQUAL ( platformMock_CommChecksumData("$T05responseT#" "+$OK#" "+$OK#" "+"),
                    platformMock_CommGetTransmittedData() );
 
-    LONGS_EQUAL ( 0xAAAAAAAA, contextEntries[0] );
-    LONGS_EQUAL ( 0xBBBBBBBB, contextEntries[1] );
-    LONGS_EQUAL ( 0xCCCCCCCC, contextEntries[2] );
-    LONGS_EQUAL ( 0xDDDDDDDD, contextEntries[3] );
+    LONGS_EQUAL ( 0xAAAAAAAAAAAAAAAA, contextEntries[0] );
+    LONGS_EQUAL ( 0xBBBBBBBBBBBBBBBB, contextEntries[1] );
+    LONGS_EQUAL ( 0xCCCCCCCCCCCCCCCC, contextEntries[2] );
+    LONGS_EQUAL ( 0xDDDDDDDDDDDDDDDD, contextEntries[3] );
 }
 
 

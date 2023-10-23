@@ -48,7 +48,7 @@ void mriStm32f411xx_Init(Token* pParameterTokens)
 
 
 
-uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
+size_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
     return sizeof(g_memoryMapXml) - 1;
 }

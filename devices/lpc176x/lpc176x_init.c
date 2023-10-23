@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ void mriLpc176x_Init(Token* pParameterTokens)
 }
 
 
-uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
+size_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
     return sizeof(g_memoryMapXml) - 1;
 }

@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <core/buffer.h>
 #include <core/try_catch.h>
+#include <core/mri_int.h>
 
 /* The bits that can be set in the return value from a command handler to indicate if the caller should return
    immediately or send the prepared response back to gdb.  It also indicates whether program execution should be
@@ -30,15 +31,15 @@
 
 typedef struct
 {
-    uint32_t address;
-    uint32_t length;
+    uintmri_t address;
+    uintmri_t length;
 } AddressLength;
 
 /* Real name of functions are in mri namespace. */
-__throws void     mriCmd_ReadAddressAndLengthArguments(Buffer* pBuffer, AddressLength* pArguments);
-__throws void     mriCmd_ReadAddressAndLengthArgumentsWithColon(Buffer* pBuffer, AddressLength* pArguments);
-__throws uint32_t mriCmd_ReadUIntegerArgument(Buffer* pBuffer);
-__throws void     mriCmd_ThrowIfNextCharIsNotEqualTo(Buffer* pBuffer, char thisChar);
+__throws void      mriCmd_ReadAddressAndLengthArguments(Buffer* pBuffer, AddressLength* pArguments);
+__throws void      mriCmd_ReadAddressAndLengthArgumentsWithColon(Buffer* pBuffer, AddressLength* pArguments);
+__throws uintmri_t mriCmd_ReadUIntegerArgument(Buffer* pBuffer);
+__throws void      mriCmd_ThrowIfNextCharIsNotEqualTo(Buffer* pBuffer, char thisChar);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define ReadAddressAndLengthArguments           mriCmd_ReadAddressAndLengthArguments

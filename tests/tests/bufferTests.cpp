@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -905,31 +905,31 @@ TEST(Buffer, Buffer_ReadIntegerAsHex_Neg80000000)
     validateNoException();
 }
 
-TEST(Buffer, Buffer_ReadIntegerAsHex_Neg80000001)
+TEST(Buffer, Buffer_ReadIntegerAsHex_Neg8000000000000001)
 {
-    static const char testString[] = "-80000001";
-    int32_t           value = -1;
+    static const char testString[] = "-8000000000000001";
+    int64_t           value = -1;
 
     allocateBuffer(testString);
     __try
         value = Buffer_ReadIntegerAsHex(&m_buffer);
     __catch
         m_exceptionThrown = 1;
-    LONGS_EQUAL( INT_MIN, value );
+    LONGS_EQUAL( LONG_MIN, value );
     validateInvalidValueException();
 }
 
-TEST(Buffer, Buffer_ReadIntegerAsHex_80000000)
+TEST(Buffer, Buffer_ReadIntegerAsHex_8000000000000000)
 {
-    static const char testString[] = "80000000";
-    int32_t           value = -1;
+    static const char testString[] = "8000000000000000";
+    int64_t           value = -1;
 
     allocateBuffer(testString);
     __try
         value = Buffer_ReadIntegerAsHex(&m_buffer);
     __catch
         m_exceptionThrown = 1;
-    LONGS_EQUAL( INT_MAX, value );
+    LONGS_EQUAL( LONG_MAX, value );
     validateInvalidValueException();
 }
 

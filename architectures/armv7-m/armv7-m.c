@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -488,7 +488,7 @@ static uint16_t getSecondHalfWordOfCurrentInstruction(void)
 
 static uint16_t throwingMemRead16(uint32_t address)
 {
-    uint16_t instructionWord = Platform_MemRead16((const uint16_t*)address);
+    uint16_t instructionWord = Platform_MemRead16(address);
     if (Platform_WasMemoryFaultEncountered())
         __throw_and_return(memFaultException, 0);
     return instructionWord;
@@ -624,7 +624,7 @@ char* Platform_GetPacketBuffer(void)
 }
 
 
-uint32_t Platform_GetPacketBufferSize(void)
+size_t Platform_GetPacketBufferSize(void)
 {
     return sizeof(mriCortexMState.packetBuffer);
 }
@@ -1332,7 +1332,7 @@ void Platform_ClearHardwareWatchpoint(uint32_t address, uint32_t size, PlatformW
     disableDWTWatchpoint(address, size, nativeType);
 }
 
-uint32_t Platform_GetTargetXmlSize(void)
+size_t Platform_GetTargetXmlSize(void)
 {
     return sizeof(g_targetXml) - 1;
 }
@@ -1363,10 +1363,8 @@ static uint32_t getDCacheLineSize(void);
 static void invalidateInstructionCacheToPointOfUnification(uint32_t address, uint32_t size);
 static uint32_t getICacheLineSize(void);
 static void invalidateAllBranchPredictions(void);
-void Platform_SyncICacheToDCache(void *pv, uint32_t size)
+void Platform_SyncICacheToDCache(uintmri_t address, size_t size)
 {
-    uint32_t address = (uint32_t)pv;
-
     if (size == 0 || levelOfCacheUnification() == 0)
         return;
 

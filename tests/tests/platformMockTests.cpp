@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -509,7 +509,7 @@ TEST(platformMock, Platform_WasMemoryFaultEncountered_FailSecondCallOnly)
 
 TEST(platformMock, Platform_GetContext)
 {
-    uint32_t* pContextEntries = platformMock_GetContextEntries();
+    uintmri_t* pContextEntries = platformMock_GetContextEntries();
     MriContext* pContext = platformMock_GetContext();
 
     pContextEntries[0] = 0x11111111;

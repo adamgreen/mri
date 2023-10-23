@@ -32,7 +32,7 @@ static void writeTrapReasonToBuffer(Buffer* pBuffer);
           ii is the hex offset of the 32-bit register value following the ':'  The offset is relative to the register
              contents in the g response packet and the SContext structure.
           xxxxxxxx is the 32-bit value of the specified register in hex format.
-          The above ii:xxxxxxxx; patterns can be repeated for whichever register values should be sent with T repsonse.
+          The above ii:xxxxxxxx; patterns can be repeated for whichever register values should be sent with T response.
 */
 uint32_t Send_T_StopResponse(void)
 {

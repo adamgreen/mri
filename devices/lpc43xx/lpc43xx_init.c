@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ void mriLpc43xx_Init(Token* pParameterTokens)
 
 
 static int isLpc4337(void);
-uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
+size_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
     if (isLpc4337())
         return sizeof(g_memoryMapXml4337) - 1;

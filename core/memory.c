@@ -1,4 +1,4 @@
-/* Copyright 2017 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,35 +17,38 @@
 #include <core/memory.h>
 
 
-static uint32_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount);
-static uint32_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory);
-static int isNotHalfWordAligned(const void* pvMemory);
+static uintmri_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, uintmri_t address, uintmri_t readByteCount);
+static uintmri_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address);
+static int isNotHalfWordAligned(uintmri_t address);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t length);
-static uint32_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory);
-static int isNotWordAligned(const void* pvMemory);
-uint32_t ReadMemoryIntoHexBuffer(Buffer* pBuffer, const void* pvMemory, uint32_t readByteCount)
+static uintmri_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address);
+static int isNotWordAligned(uintmri_t address);
+static uintmri_t readMemoryDoubleWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address);
+static int isNot64BitAligned(uintmri_t address);
+uintmri_t ReadMemoryIntoHexBuffer(Buffer* pBuffer, uintmri_t address, uintmri_t readByteCount)
 {
     switch (readByteCount)
     {
     case 2:
-        return readMemoryHalfWordIntoHexBuffer(pBuffer, pvMemory);
+        return readMemoryHalfWordIntoHexBuffer(pBuffer, address);
     case 4:
-        return readMemoryWordIntoHexBuffer(pBuffer, pvMemory);
+        return readMemoryWordIntoHexBuffer(pBuffer, address);
+    case 8:
+        return readMemoryDoubleWordIntoHexBuffer(pBuffer, address);
     default:
-        return readMemoryBytesIntoHexBuffer(pBuffer, pvMemory, readByteCount);
+        return readMemoryBytesIntoHexBuffer(pBuffer, address, readByteCount);
     }
 }
 
-static uint32_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMemory, uint32_t readByteCount)
+static uintmri_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, uintmri_t address, uintmri_t readByteCount)
 {
-    uint32_t byteCount = 0;
-    uint8_t* p = (uint8_t*) pvMemory;
+    uintmri_t byteCount = 0;
 
     while (readByteCount-- > 0)
     {
         uint8_t byte;
 
-        byte = Platform_MemRead8(p++);
+        byte = Platform_MemRead8(address++);
         if (Platform_WasMemoryFaultEncountered())
             break;
 
@@ -56,14 +59,14 @@ static uint32_t readMemoryBytesIntoHexBuffer(Buffer* pBuffer, const void*  pvMem
     return byteCount;
 }
 
-static uint32_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
+static uintmri_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address)
 {
     uint16_t value;
 
-    if (isNotHalfWordAligned(pvMemory))
-        return readMemoryBytesIntoHexBuffer(pBuffer, pvMemory, 2);
+    if (isNotHalfWordAligned(address))
+        return readMemoryBytesIntoHexBuffer(pBuffer, address, sizeof(uint16_t));
 
-    value = Platform_MemRead16(pvMemory);
+    value = Platform_MemRead16(address);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
     writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
@@ -71,9 +74,9 @@ static uint32_t readMemoryHalfWordIntoHexBuffer(Buffer* pBuffer, const void* pvM
     return sizeof(value);
 }
 
-static int isNotHalfWordAligned(const void* pvMemory)
+static int isNotHalfWordAligned(uintmri_t address)
 {
-    return (size_t)pvMemory & 1;
+    return address & 1;
 }
 
 static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t length)
@@ -83,14 +86,14 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, const void* pv, size_t leng
         Buffer_WriteByteAsHex(pBuffer, *pBytes++);
 }
 
-static uint32_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemory)
+static uintmri_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address)
 {
     uint32_t value;
 
-    if (isNotWordAligned(pvMemory))
-        return readMemoryBytesIntoHexBuffer(pBuffer, pvMemory, 4);
+    if (isNotWordAligned(address))
+        return readMemoryBytesIntoHexBuffer(pBuffer, address, sizeof(uint32_t));
 
-    value = Platform_MemRead32(pvMemory);
+    value = Platform_MemRead32(address);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
     writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
@@ -98,33 +101,61 @@ static uint32_t readMemoryWordIntoHexBuffer(Buffer* pBuffer, const void* pvMemor
     return sizeof(value);
 }
 
-static int isNotWordAligned(const void* pvMemory)
+static int isNotWordAligned(uintmri_t address)
 {
-    return (size_t)pvMemory & 3;
+    return address & 3;
+}
+
+static uintmri_t readMemoryDoubleWordIntoHexBuffer(Buffer* pBuffer, uintmri_t address)
+{
+    if (sizeof(uintmri_t) >= 8)
+    {
+        uint64_t value;
+
+        if (isNot64BitAligned(address))
+            return readMemoryBytesIntoHexBuffer(pBuffer, address, sizeof(uint64_t));
+
+        value = Platform_MemRead64(address);
+        if (Platform_WasMemoryFaultEncountered())
+            return 0;
+        writeBytesToBufferAsHex(pBuffer, &value, sizeof(value));
+
+        return sizeof(value);
+    }
+    else
+    {
+        return readMemoryBytesIntoHexBuffer(pBuffer, address, sizeof(uint64_t));
+    }
+}
+
+static int isNot64BitAligned(uintmri_t address)
+{
+    return address & 7;
 }
 
 
-static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount);
-static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory);
+static int writeHexBufferToByteMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount);
+static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, uintmri_t address);
 static int readBytesFromHexBuffer(Buffer* pBuffer, void* pv, size_t length);
-static int writeHexBufferToWordMemory(Buffer* pBuffer, void* pvMemory);
-int WriteHexBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
+static int writeHexBufferToWordMemory(Buffer* pBuffer, uintmri_t address);
+static int writeHexBufferToDoubleWordMemory(Buffer* pBuffer, uintmri_t address);
+int WriteHexBufferToMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount)
 {
     switch (writeByteCount)
     {
     case 2:
-        return writeHexBufferToHalfWordMemory(pBuffer, pvMemory);
+        return writeHexBufferToHalfWordMemory(pBuffer, address);
     case 4:
-        return writeHexBufferToWordMemory(pBuffer, pvMemory);
+        return writeHexBufferToWordMemory(pBuffer, address);
+    case 8:
+        return writeHexBufferToDoubleWordMemory(pBuffer, address);
     default:
-        return writeHexBufferToByteMemory(pBuffer, pvMemory, writeByteCount);
+        return writeHexBufferToByteMemory(pBuffer, address, writeByteCount);
     }
 }
 
-static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
+static int writeHexBufferToByteMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount)
 {
-    uint8_t* p = (uint8_t*) pvMemory;
-
     while (writeByteCount-- > 0)
     {
         uint8_t byte;
@@ -134,7 +165,7 @@ static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t 
         __catch
             __rethrow_and_return(0);
 
-        Platform_MemWrite8(p++, byte);
+        Platform_MemWrite8(address++, byte);
         if (Platform_WasMemoryFaultEncountered())
             return 0;
     }
@@ -142,17 +173,17 @@ static int writeHexBufferToByteMemory(Buffer* pBuffer, void* pvMemory, uint32_t 
     return 1;
 }
 
-static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
+static int writeHexBufferToHalfWordMemory(Buffer* pBuffer, uintmri_t address)
 {
     uint16_t value;
 
-    if (isNotHalfWordAligned(pvMemory))
-        return writeHexBufferToByteMemory(pBuffer, pvMemory, 2);
+    if (isNotHalfWordAligned(address))
+        return writeHexBufferToByteMemory(pBuffer, address, sizeof(uint16_t));
 
     if (!readBytesFromHexBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
-    Platform_MemWrite16(pvMemory, value);
+    Platform_MemWrite16(address, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
@@ -172,45 +203,70 @@ static int readBytesFromHexBuffer(Buffer* pBuffer, void* pv, size_t length)
     return 1;
 }
 
-static int writeHexBufferToWordMemory(Buffer* pBuffer, void* pvMemory)
+static int writeHexBufferToWordMemory(Buffer* pBuffer, uintmri_t address)
 {
     uint32_t value;
 
-    if (isNotWordAligned(pvMemory))
-        return writeHexBufferToByteMemory(pBuffer, pvMemory, 4);
+    if (isNotWordAligned(address))
+        return writeHexBufferToByteMemory(pBuffer, address, sizeof(uint32_t));
 
     if (!readBytesFromHexBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
-    Platform_MemWrite32(pvMemory, value);
+    Platform_MemWrite32(address, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
     return 1;
 }
 
+static int writeHexBufferToDoubleWordMemory(Buffer* pBuffer, uintmri_t address)
+{
+    if (sizeof(uintmri_t) >= 8)
+    {
+        uint64_t value;
 
-static int  writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount);
-static int  writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory);
-static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount);
-static int  writeBinaryBufferToWordMemory(Buffer* pBuffer, void* pvMemory);
-int WriteBinaryBufferToMemory(Buffer* pBuffer, void* pvMemory, uint32_t writeByteCount)
+        if (isNot64BitAligned(address))
+            return writeHexBufferToByteMemory(pBuffer, address, sizeof(uint64_t));
+
+        if (!readBytesFromHexBuffer(pBuffer, &value, sizeof(value)))
+            return 0;
+
+        Platform_MemWrite64(address, value);
+        if (Platform_WasMemoryFaultEncountered())
+            return 0;
+
+        return 1;
+    }
+    else
+    {
+        return writeHexBufferToByteMemory(pBuffer, address, sizeof(uint64_t));
+    }
+}
+
+
+static int  writeBinaryBufferToByteMemory(Buffer*  pBuffer, uintmri_t address, uintmri_t writeByteCount);
+static int  writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, uintmri_t address);
+static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uintmri_t writeByteCount);
+static int  writeBinaryBufferToWordMemory(Buffer* pBuffer, uintmri_t address);
+static int  writeBinaryBufferToDoubleWordMemory(Buffer* pBuffer, uintmri_t address);
+int WriteBinaryBufferToMemory(Buffer* pBuffer, uintmri_t address, uintmri_t writeByteCount)
 {
     switch (writeByteCount)
     {
     case 2:
-        return writeBinaryBufferToHalfWordMemory(pBuffer, pvMemory);
+        return writeBinaryBufferToHalfWordMemory(pBuffer, address);
     case 4:
-        return writeBinaryBufferToWordMemory(pBuffer, pvMemory);
+        return writeBinaryBufferToWordMemory(pBuffer, address);
+    case 8:
+        return writeBinaryBufferToDoubleWordMemory(pBuffer, address);
     default:
-        return writeBinaryBufferToByteMemory(pBuffer, pvMemory, writeByteCount);
+        return writeBinaryBufferToByteMemory(pBuffer, address, writeByteCount);
     }
 }
 
-static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount)
+static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, uintmri_t address, uintmri_t writeByteCount)
 {
-    uint8_t* p = (uint8_t*) pvMemory;
-
     while (writeByteCount-- > 0)
     {
         char currChar;
@@ -220,7 +276,7 @@ static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint3
         __catch
             __rethrow_and_return(0);
 
-        Platform_MemWrite8(p++, (uint8_t)currChar);
+        Platform_MemWrite8(address++, (uint8_t)currChar);
         if (Platform_WasMemoryFaultEncountered())
             return 0;
     }
@@ -228,24 +284,24 @@ static int writeBinaryBufferToByteMemory(Buffer*  pBuffer, void* pvMemory, uint3
     return 1;
 }
 
-static int writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, void* pvMemory)
+static int writeBinaryBufferToHalfWordMemory(Buffer* pBuffer, uintmri_t address)
 {
     uint16_t value;
 
-    if (isNotHalfWordAligned(pvMemory))
-        return writeBinaryBufferToByteMemory(pBuffer, pvMemory, 2);
+    if (isNotHalfWordAligned(address))
+        return writeBinaryBufferToByteMemory(pBuffer, address, sizeof(uint16_t));
 
     if (!readBytesFromBinaryBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
-    Platform_MemWrite16(pvMemory, value);
+    Platform_MemWrite16(address, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
     return 1;
 }
 
-static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uint32_t writeByteCount)
+static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uintmri_t writeByteCount)
 {
     uint8_t* p = (uint8_t*) pvMemory;
 
@@ -260,19 +316,43 @@ static int readBytesFromBinaryBuffer(Buffer*  pBuffer, void* pvMemory, uint32_t 
     return 1;
 }
 
-static int writeBinaryBufferToWordMemory(Buffer* pBuffer, void* pvMemory)
+static int writeBinaryBufferToWordMemory(Buffer* pBuffer, uintmri_t address)
 {
     uint32_t value;
 
-    if (isNotWordAligned(pvMemory))
-        return writeBinaryBufferToByteMemory(pBuffer, pvMemory, 4);
+    if (isNotWordAligned(address))
+        return writeBinaryBufferToByteMemory(pBuffer, address, sizeof(uint32_t));
 
     if (!readBytesFromBinaryBuffer(pBuffer, &value, sizeof(value)))
         return 0;
 
-    Platform_MemWrite32(pvMemory, value);
+    Platform_MemWrite32(address, value);
     if (Platform_WasMemoryFaultEncountered())
         return 0;
 
     return 1;
+}
+
+static int writeBinaryBufferToDoubleWordMemory(Buffer* pBuffer, uintmri_t address)
+{
+    if (sizeof(uintmri_t) >= 8)
+    {
+        uint64_t value;
+
+        if (isNot64BitAligned(address))
+            return writeBinaryBufferToByteMemory(pBuffer, address, sizeof(uint64_t));
+
+        if (!readBytesFromBinaryBuffer(pBuffer, &value, sizeof(value)))
+            return 0;
+
+        Platform_MemWrite64(address, value);
+        if (Platform_WasMemoryFaultEncountered())
+            return 0;
+
+        return 1;
+    }
+    else
+    {
+        return writeBinaryBufferToByteMemory(pBuffer, address, sizeof(uint64_t));
+    }
 }

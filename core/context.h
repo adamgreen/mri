@@ -1,4 +1,4 @@
-/* Copyright 2020 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,23 +23,23 @@
 
 typedef struct
 {
-    uint32_t* pValues;
-    uint32_t  count;
+    uintmri_t* pValues;
+    size_t     count;
 } ContextSection;
 
 typedef struct
 {
-    ContextSection*     pSections;
-    uint32_t            sectionCount;
+    ContextSection* pSections;
+    size_t          sectionCount;
 } MriContext;
 
 /* Real name of functions are in mri namespace. */
-void     mriContext_Init(MriContext* pThis, ContextSection* pSections, uint32_t sectionCount);
-uint32_t mriContext_Count(MriContext* pThis);
-uint32_t mriContext_Get(const MriContext* pThis, uint32_t index);
-void     mriContext_Set(MriContext* pThis, uint32_t index, uint32_t newValue);
-void     mriContext_CopyToBuffer(MriContext* pThis, Buffer* pBuffer);
-void     mriContext_CopyFromBuffer(MriContext* pThis, Buffer* pBuffer);
+void      mriContext_Init(MriContext* pThis, ContextSection* pSections, size_t sectionCount);
+size_t    mriContext_Count(MriContext* pThis);
+uintmri_t mriContext_Get(const MriContext* pThis, size_t index);
+void      mriContext_Set(MriContext* pThis, size_t index, uintmri_t newValue);
+void      mriContext_CopyToBuffer(MriContext* pThis, Buffer* pBuffer);
+void      mriContext_CopyFromBuffer(MriContext* pThis, Buffer* pBuffer);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define Context_Init            mriContext_Init

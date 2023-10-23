@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ extern "C"
 #include <core/core.h>
 }
 #include <platformMock.h>
+#include <assert.h>
 
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"

@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,20 +25,22 @@
 
 void      mriPlatform_Init(Token* pParameterTokens);
 char*     mriPlatform_GetPacketBuffer(void);
-uint32_t  mriPlatform_GetPacketBufferSize(void);
+size_t    mriPlatform_GetPacketBufferSize(void);
 void      mriPlatform_EnteringDebugger(void);
 void      mriPlatform_LeavingDebugger(void);
 
-uint32_t  mriPlatform_MemRead32(const void* pv);
-uint16_t  mriPlatform_MemRead16(const void* pv);
-uint8_t   mriPlatform_MemRead8(const void* pv);
-void      mriPlatform_MemWrite32(void* pv, uint32_t value);
-void      mriPlatform_MemWrite16(void* pv, uint16_t value);
-void      mriPlatform_MemWrite8(void* pv, uint8_t value);
-void      mriPlatform_SyncICacheToDCache(void *pv, uint32_t size);
+uint64_t  mriPlatform_MemRead64(uintmri_t address);
+uint32_t  mriPlatform_MemRead32(uintmri_t address);
+uint16_t  mriPlatform_MemRead16(uintmri_t address);
+uint8_t   mriPlatform_MemRead8(uintmri_t address);
+void      mriPlatform_MemWrite64(uintmri_t address, uint64_t value);
+void      mriPlatform_MemWrite32(uintmri_t address, uint32_t value);
+void      mriPlatform_MemWrite16(uintmri_t address, uint16_t value);
+void      mriPlatform_MemWrite8(uintmri_t address, uint8_t value);
+void      mriPlatform_SyncICacheToDCache(uintmri_t address, size_t size);
 
-uint32_t  mriPlatform_CommHasReceiveData(void);
-uint32_t  mriPlatform_CommHasTransmitCompleted(void);
+int       mriPlatform_CommHasReceiveData(void);
+int       mriPlatform_CommHasTransmitCompleted(void);
 int       mriPlatform_CommReceiveChar(void);
 void      mriPlatform_CommSendBuffer(Buffer* pBuffer);
 void      mriPlatform_CommSendChar(int character);
@@ -58,7 +60,7 @@ typedef enum
 typedef struct
 {
     PlatformTrapType    type;
-    uint32_t            address;
+    uintmri_t           address;
 } PlatformTrapReason;
 
 uint8_t             mriPlatform_DetermineCauseOfException(void);
@@ -68,32 +70,32 @@ void                mriPlatform_DisplayFaultCauseToGdbConsole(void);
 void      mriPlatform_EnableSingleStep(void);
 void      mriPlatform_DisableSingleStep(void);
 int       mriPlatform_IsSingleStepping(void);
-uint32_t  mriPlatform_GetProgramCounter(void);
-void      mriPlatform_SetProgramCounter(uint32_t newPC);
+uintmri_t mriPlatform_GetProgramCounter(void);
+void      mriPlatform_SetProgramCounter(uintmri_t newPC);
 void      mriPlatform_AdvanceProgramCounterToNextInstruction(void);
 int       mriPlatform_WasProgramCounterModifiedByUser(void);
 int       mriPlatform_WasMemoryFaultEncountered(void);
 
 void      mriPlatform_WriteTResponseRegistersToBuffer(Buffer* pBuffer);
 
-uint32_t     mriPlatform_GetDeviceMemoryMapXmlSize(void);
+size_t       mriPlatform_GetDeviceMemoryMapXmlSize(void);
 const char*  mriPlatform_GetDeviceMemoryMapXml(void);
-uint32_t     mriPlatform_GetTargetXmlSize(void);
+size_t       mriPlatform_GetTargetXmlSize(void);
 const char*  mriPlatform_GetTargetXml(void);
 
 typedef enum
 {
-    MRI_PLATFORM_WRITE_WATCHPOINT = 0,
-    MRI_PLATFORM_READ_WATCHPOINT,
-    MRI_PLATFORM_READWRITE_WATCHPOINT
+    MRI_PLATFORM_WRITE_WATCHPOINT = 1,
+    MRI_PLATFORM_READ_WATCHPOINT = 2,
+    MRI_PLATFORM_READWRITE_WATCHPOINT = 3
 }  PlatformWatchpointType;
 
-__throws void  mriPlatform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind);
-__throws void  mriPlatform_SetHardwareBreakpoint(uint32_t address);
-__throws void  mriPlatform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind);
-__throws void  mriPlatform_ClearHardwareBreakpoint(uint32_t address);
-__throws void  mriPlatform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type);
-__throws void  mriPlatform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type);
+__throws void  mriPlatform_SetHardwareBreakpointOfGdbKind(uintmri_t address, uintmri_t kind);
+__throws void  mriPlatform_SetHardwareBreakpoint(uintmri_t address);
+__throws void  mriPlatform_ClearHardwareBreakpointOfGdbKind(uintmri_t address, uintmri_t kind);
+__throws void  mriPlatform_ClearHardwareBreakpoint(uintmri_t address);
+__throws void  mriPlatform_SetHardwareWatchpoint(uintmri_t address, uintmri_t size,  PlatformWatchpointType type);
+__throws void  mriPlatform_ClearHardwareWatchpoint(uintmri_t address, uintmri_t size,  PlatformWatchpointType type);
 
 typedef enum
 {
@@ -105,10 +107,10 @@ typedef enum
 
 typedef struct
 {
-    uint32_t    parameter1;
-    uint32_t    parameter2;
-    uint32_t    parameter3;
-    uint32_t    parameter4;
+    uintmri_t    parameter1;
+    uintmri_t    parameter2;
+    uintmri_t    parameter3;
+    uintmri_t    parameter4;
 }  PlatformSemihostParameters;
 
 PlatformInstructionType     mriPlatform_TypeOfCurrentInstruction(void);
@@ -116,7 +118,7 @@ PlatformSemihostParameters  mriPlatform_GetSemihostCallParameters(void);
 void                        mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int errNo);
 
 const uint8_t*  mriPlatform_GetUid(void);
-uint32_t        mriPlatform_GetUidSize(void);
+size_t          mriPlatform_GetUidSize(void);
 
 void            mriPlatform_ResetDevice(void);
 
@@ -128,18 +130,18 @@ typedef enum
 } PlatformThreadState;
 
 /* Can be passed as threadId to Platform_RtosSetThreadState() to set state of all threads at once. */
-#define MRI_PLATFORM_ALL_THREADS        0xFFFFFFFF
+#define MRI_PLATFORM_ALL_THREADS        ((uintmri_t)0xFFFFFFFF)
 /* Can be passed as threadId to Platform_RtosSetThreadState() to set state of all threads that are still frozen. */
-#define MRI_PLATFORM_ALL_FROZEN_THREADS 0xFFFFFFFE
+#define MRI_PLATFORM_ALL_FROZEN_THREADS ((uintmri_t)0xFFFFFFFE)
 
-uint32_t        mriPlatform_RtosGetHaltedThreadId(void);
-uint32_t        mriPlatform_RtosGetFirstThreadId(void);
-uint32_t        mriPlatform_RtosGetNextThreadId(void);
-const char*     mriPlatform_RtosGetExtraThreadInfo(uint32_t threadId);
-MriContext*     mriPlatform_RtosGetThreadContext(uint32_t threadId);
-int             mriPlatform_RtosIsThreadActive(uint32_t threadId);
+uintmri_t       mriPlatform_RtosGetHaltedThreadId(void);
+uintmri_t       mriPlatform_RtosGetFirstThreadId(void);
+uintmri_t       mriPlatform_RtosGetNextThreadId(void);
+const char*     mriPlatform_RtosGetExtraThreadInfo(uintmri_t threadId);
+MriContext*     mriPlatform_RtosGetThreadContext(uintmri_t threadId);
+int             mriPlatform_RtosIsThreadActive(uintmri_t threadId);
 int             mriPlatform_RtosIsSetThreadStateSupported(void);
-void            mriPlatform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state);
+void            mriPlatform_RtosSetThreadState(uintmri_t threadId, PlatformThreadState state);
 void            mriPlatform_RtosRestorePrevThreadState(void);
 
 void            mriPlatform_HandleFaultFromHighPriorityCode(void);
@@ -150,9 +152,11 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_GetPacketBufferSize                        mriPlatform_GetPacketBufferSize
 #define Platform_EnteringDebugger                           mriPlatform_EnteringDebugger
 #define Platform_LeavingDebugger                            mriPlatform_LeavingDebugger
+#define Platform_MemRead64                                  mriPlatform_MemRead64
 #define Platform_MemRead32                                  mriPlatform_MemRead32
 #define Platform_MemRead16                                  mriPlatform_MemRead16
 #define Platform_MemRead8                                   mriPlatform_MemRead8
+#define Platform_MemWrite64                                 mriPlatform_MemWrite64
 #define Platform_MemWrite32                                 mriPlatform_MemWrite32
 #define Platform_MemWrite16                                 mriPlatform_MemWrite16
 #define Platform_MemWrite8                                  mriPlatform_MemWrite8

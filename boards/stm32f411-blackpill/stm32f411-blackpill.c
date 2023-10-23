@@ -33,7 +33,7 @@ const uint8_t* Platform_GetUid(void)
 }
 
 
-uint32_t Platform_GetUidSize(void)
+size_t Platform_GetUidSize(void)
 {
     return 0;
 }

@@ -1,4 +1,4 @@
-/* Copyright 2013 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,32 +15,42 @@
 /* Routines to access memory on target device when running on target itself. */
 #include <core/platforms.h>
 
-uint32_t Platform_MemRead32(const void* pv)
+uint64_t Platform_MemRead64(uintmri_t address)
 {
-    return  *(volatile const uint32_t*)pv;
+    return  *(volatile const uint64_t*)address;
 }
 
-uint16_t Platform_MemRead16(const void* pv)
+uint32_t Platform_MemRead32(uintmri_t address)
 {
-    return  *(volatile const uint16_t*)pv;
+    return  *(volatile const uint32_t*)address;
 }
 
-uint8_t Platform_MemRead8(const void* pv)
+uint16_t Platform_MemRead16(uintmri_t address)
 {
-    return  *(volatile const uint8_t*)pv;
+    return  *(volatile const uint16_t*)address;
 }
 
-void Platform_MemWrite32(void* pv, uint32_t value)
+uint8_t Platform_MemRead8(uintmri_t address)
 {
-    *(volatile uint32_t*)pv = value;
+    return  *(volatile const uint8_t*)address;
 }
 
-void Platform_MemWrite16(void* pv, uint16_t value)
+void Platform_MemWrite64(uintmri_t address, uint64_t value)
 {
-    *(volatile uint16_t*)pv = value;
+    *(volatile uint64_t*)address = value;
 }
 
-void Platform_MemWrite8(void* pv, uint8_t value)
+void Platform_MemWrite32(uintmri_t address, uint32_t value)
 {
-    *(volatile uint8_t*)pv = value;
+    *(volatile uint32_t*)address = value;
+}
+
+void Platform_MemWrite16(uintmri_t address, uint16_t value)
+{
+    *(volatile uint16_t*)address = value;
+}
+
+void Platform_MemWrite8(uintmri_t address, uint8_t value)
+{
+    *(volatile uint8_t*)address = value;
 }

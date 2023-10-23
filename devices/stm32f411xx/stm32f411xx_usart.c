@@ -461,12 +461,12 @@ static int commUartIndex(void)
     return mriStm32f411xxState.pCurrentUart - g_uartConfigurations;
 }
 
-uint32_t Platform_CommHasReceiveData(void)
+int Platform_CommHasReceiveData(void)
 {
     return mriStm32f411xxState.pCurrentUart->pUartRegisters->SR & USART_SR_RXNE;
 }
 
-uint32_t Platform_CommHasTransmitCompleted(void)
+int Platform_CommHasTransmitCompleted(void)
 {
     return mriStm32f411xxState.pCurrentUart->pUartRegisters->SR & USART_SR_TC;
 }

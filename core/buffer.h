@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <core/mri_int.h>
 
 typedef struct
 {
@@ -28,29 +29,29 @@ typedef struct
 } Buffer;
 
 /* Real name of functions are in mri namespace. */
-void     mriBuffer_Init(Buffer* pBuffer, char* pBufferStart, size_t bufferSize);
-void     mriBuffer_Reset(Buffer* pBuffer);
-void     mriBuffer_SetEndOfBuffer(Buffer* pBuffer);
-void     mriBuffer_Advance(Buffer* pBuffer, size_t amount);
-size_t   mriBuffer_BytesLeft(Buffer* pBuffer);
-int      mriBuffer_OverrunDetected(Buffer* pBuffer);
-size_t   mriBuffer_GetLength(Buffer* pBuffer);
-char*    mriBuffer_GetArray(Buffer* pBuffer);
-void     mriBuffer_WriteChar(Buffer* pBuffer, char character);
-char     mriBuffer_ReadChar(Buffer* pBuffer);
-void     mriBuffer_WriteByteAsHex(Buffer* pBuffer, uint8_t byte);
-uint8_t  mriBuffer_ReadByteAsHex(Buffer* pBuffer);
-void     mriBuffer_WriteString(Buffer* pBuffer, const char* pString);
-void     mriBuffer_WriteSizedString(Buffer* pBuffer, const char* pString, size_t length);
-size_t   mriBuffer_WriteStringAsHex(Buffer* pBuffer, const char* pString);
-size_t   mriBuffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t length);
-uint32_t mriBuffer_ReadUIntegerAsHex(Buffer* pBuffer);
-void     mriBuffer_WriteUIntegerAsHex(Buffer* pBuffer, uint32_t value);
-int32_t  mriBuffer_ReadIntegerAsHex(Buffer* pBuffer);
-void     mriBuffer_WriteIntegerAsHex(Buffer* pBuffer, int32_t value);
-int      mriBuffer_IsNextCharEqualTo(Buffer* pBuffer, char thisChar);
-int      mriBuffer_MatchesString(Buffer* pBuffer, const char* pString, size_t stringLength);
-int      mriBuffer_MatchesHexString(Buffer* pBuffer, const char* pString, size_t stringLength);
+void      mriBuffer_Init(Buffer* pBuffer, char* pBufferStart, size_t bufferSize);
+void      mriBuffer_Reset(Buffer* pBuffer);
+void      mriBuffer_SetEndOfBuffer(Buffer* pBuffer);
+void      mriBuffer_Advance(Buffer* pBuffer, size_t amount);
+size_t    mriBuffer_BytesLeft(Buffer* pBuffer);
+int       mriBuffer_OverrunDetected(Buffer* pBuffer);
+size_t    mriBuffer_GetLength(Buffer* pBuffer);
+char*     mriBuffer_GetArray(Buffer* pBuffer);
+void      mriBuffer_WriteChar(Buffer* pBuffer, char character);
+char      mriBuffer_ReadChar(Buffer* pBuffer);
+void      mriBuffer_WriteByteAsHex(Buffer* pBuffer, uint8_t byte);
+uint8_t   mriBuffer_ReadByteAsHex(Buffer* pBuffer);
+void      mriBuffer_WriteString(Buffer* pBuffer, const char* pString);
+void      mriBuffer_WriteSizedString(Buffer* pBuffer, const char* pString, size_t length);
+size_t    mriBuffer_WriteStringAsHex(Buffer* pBuffer, const char* pString);
+size_t    mriBuffer_WriteSizedStringAsHex(Buffer* pBuffer, const char* pString, size_t length);
+uintmri_t mriBuffer_ReadUIntegerAsHex(Buffer* pBuffer);
+void      mriBuffer_WriteUIntegerAsHex(Buffer* pBuffer, uintmri_t value);
+intmri_t  mriBuffer_ReadIntegerAsHex(Buffer* pBuffer);
+void      mriBuffer_WriteIntegerAsHex(Buffer* pBuffer, intmri_t value);
+int       mriBuffer_IsNextCharEqualTo(Buffer* pBuffer, char thisChar);
+int       mriBuffer_MatchesString(Buffer* pBuffer, const char* pString, size_t stringLength);
+int       mriBuffer_MatchesHexString(Buffer* pBuffer, const char* pString, size_t stringLength);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define Buffer_Init                  mriBuffer_Init

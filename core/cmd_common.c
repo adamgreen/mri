@@ -1,4 +1,4 @@
-/* Copyright 2012 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@ void ReadAddressAndLengthArgumentsWithColon(Buffer* pBuffer, AddressLength* pArg
 }
 
 
-uint32_t ReadUIntegerArgument(Buffer* pBuffer)
+uintmri_t ReadUIntegerArgument(Buffer* pBuffer)
 {
-    uint32_t value;
+    uintmri_t value;
 
     __try
         value = Buffer_ReadUIntegerAsHex(pBuffer);

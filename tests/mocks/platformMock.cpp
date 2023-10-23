@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2023 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -219,7 +219,7 @@ int platformMock_CommGetHasTransmitCompletedCallCount(void)
 }
 
 // Platform_Comm* stubs called by MRI core.
-uint32_t Platform_CommHasReceiveData(void)
+int Platform_CommHasReceiveData(void)
 {
     if (isReceiveBufferEmpty())
     {
@@ -238,7 +238,7 @@ static uint32_t isReceiveBufferEmpty()
     return (uint32_t)(Buffer_BytesLeft(&g_receiveBuffers[g_receiveIndex]) == 0);
 }
 
-uint32_t  Platform_CommHasTransmitCompleted(void)
+int  Platform_CommHasTransmitCompleted(void)
 {
     g_hasTransmitCompletedCount++;
     return TRUE;
@@ -300,7 +300,7 @@ void Platform_LeavingDebugger(void)
 // NOTE: Packet must be big enough for g/G packets to hold 16 general purpose registers + PSR with 2 hex digits per
 //       byte + 1 more byte for the g/G command character + 4 more bytes for packet header/checksum_trailer.
 static char     g_packetBuffer[1 + (16 + 1) * (sizeof(uint32_t) * 2) + 4];
-static uint32_t g_packetBufferSize;
+static size_t   g_packetBufferSize;
 
 void platformMock_SetPacketBufferSize(uint32_t setValue)
 {
@@ -314,7 +314,7 @@ char* Platform_GetPacketBuffer(void)
     return g_packetBuffer;
 }
 
-uint32_t  Platform_GetPacketBufferSize(void)
+size_t  Platform_GetPacketBufferSize(void)
 {
     return g_packetBufferSize;
 }
@@ -426,7 +426,7 @@ void Platform_AdvanceProgramCounterToNextInstruction(void)
     g_programCounter += 4;
 }
 
-void Platform_SetProgramCounter(uint32_t newPC)
+void Platform_SetProgramCounter(uintmri_t newPC)
 {
     g_programCounter = newPC;
     g_setProgramCounterCalls++;
@@ -437,7 +437,7 @@ int Platform_WasProgramCounterModifiedByUser(void)
     return FALSE;
 }
 
-uint32_t  Platform_GetProgramCounter(void)
+uintmri_t  Platform_GetProgramCounter(void)
 {
     return g_programCounter;
 }
@@ -502,11 +502,11 @@ int Platform_WasMemoryFaultEncountered(void)
 
 
 // Context Related Instrumentation.
-static uint32_t         g_contextEntries[4];
+static uintmri_t         g_contextEntries[4];
 static ContextSection   g_contextSection = { .pValues = g_contextEntries, .count = 4 };
 static MriContext       g_context;
 
-uint32_t* platformMock_GetContextEntries(void)
+uintmri_t* platformMock_GetContextEntries(void)
 {
     return g_contextEntries;
 }
@@ -635,7 +635,7 @@ void platformMock_ClearHardwareWatchpointException(uint32_t exceptionToThrow)
 }
 
 // Stubs called from MRI core.
-__throws void  Platform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
+__throws void  Platform_SetHardwareBreakpointOfGdbKind(uintmri_t address, uintmri_t kind)
 {
     g_setHardwareBreakpointCalls++;
     g_setHardwareBreakpointAddressArg = address;
@@ -644,7 +644,7 @@ __throws void  Platform_SetHardwareBreakpointOfGdbKind(uint32_t address, uint32_
         __throw(g_setHardwareBreakpointException);
 }
 
-__throws void  Platform_SetHardwareBreakpoint(uint32_t address)
+__throws void  Platform_SetHardwareBreakpoint(uintmri_t address)
 {
     g_setHardwareBreakpointCalls++;
     g_setHardwareBreakpointAddressArg = address;
@@ -653,7 +653,7 @@ __throws void  Platform_SetHardwareBreakpoint(uint32_t address)
         __throw(g_setHardwareBreakpointException);
 }
 
-__throws void  Platform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint32_t kind)
+__throws void  Platform_ClearHardwareBreakpointOfGdbKind(uintmri_t address, uintmri_t kind)
 {
     g_clearHardwareBreakpointCalls++;
     g_clearHardwareBreakpointAddressArg = address;
@@ -662,7 +662,7 @@ __throws void  Platform_ClearHardwareBreakpointOfGdbKind(uint32_t address, uint3
         __throw(g_clearHardwareBreakpointException);
 }
 
-__throws void  Platform_ClearHardwareBreakpoint(uint32_t address)
+__throws void  Platform_ClearHardwareBreakpoint(uintmri_t address)
 {
     g_clearHardwareBreakpointCalls++;
     g_clearHardwareBreakpointAddressArg = address;
@@ -671,7 +671,7 @@ __throws void  Platform_ClearHardwareBreakpoint(uint32_t address)
         __throw(g_clearHardwareBreakpointException);
 }
 
-__throws void  Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+__throws void  Platform_SetHardwareWatchpoint(uintmri_t address, uintmri_t size,  PlatformWatchpointType type)
 {
     g_setHardwareWatchpointCalls++;
     g_setHardwareWatchpointAddressArg = address;
@@ -681,7 +681,7 @@ __throws void  Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  
         __throw(g_setHardwareWatchpointException);
 }
 
-__throws void  Platform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+__throws void  Platform_ClearHardwareWatchpoint(uintmri_t address, uintmri_t size,  PlatformWatchpointType type)
 {
     g_clearHardwareWatchpointCalls++;
     g_clearHardwareWatchpointAddressArg = address;
@@ -698,7 +698,7 @@ static char g_deviceMemoryMapXml[] = "TEST";
 static char g_targetXml[] = "test!";
 
 // Stubs called by MRI core.
-uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
+size_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
     return sizeof(g_deviceMemoryMapXml) - 1;
 }
@@ -708,7 +708,7 @@ const char*  Platform_GetDeviceMemoryMapXml(void)
     return g_deviceMemoryMapXml;
 }
 
-uint32_t Platform_GetTargetXmlSize(void)
+size_t Platform_GetTargetXmlSize(void)
 {
     return sizeof(g_targetXml) - 1;
 }
@@ -824,18 +824,18 @@ uint32_t platformMock_RtosGetRestorePrevThreadStateCallCount(void)
 }
 
 // Stubs called by MRI core.
-uint32_t Platform_RtosGetHaltedThreadId(void)
+uintmri_t Platform_RtosGetHaltedThreadId(void)
 {
     return g_rtosThreadId;
 }
 
-uint32_t Platform_RtosGetFirstThreadId(void)
+uintmri_t Platform_RtosGetFirstThreadId(void)
 {
     g_rtosThreadIndex = 0;
     return Platform_RtosGetNextThreadId();
 }
 
-uint32_t Platform_RtosGetNextThreadId(void)
+uintmri_t Platform_RtosGetNextThreadId(void)
 {
     skipNullThreadIds();
     if (g_rtosThreadIndex >= g_rtosThreadCount)
@@ -849,7 +849,7 @@ static void skipNullThreadIds()
         g_rtosThreadIndex++;
 }
 
-const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
+const char* Platform_RtosGetExtraThreadInfo(uintmri_t threadID)
 {
     if (threadID == g_rtosExtraThreadInfoThreadId)
         return g_pRtosExtraThreadInfo;
@@ -857,14 +857,14 @@ const char* Platform_RtosGetExtraThreadInfo(uint32_t threadID)
         return NULL;
 }
 
-MriContext* Platform_RtosGetThreadContext(uint32_t threadId)
+MriContext* Platform_RtosGetThreadContext(uintmri_t threadId)
 {
     if (g_rtosContextThreadId == threadId)
         return g_pRtosContext;
     return NULL;
 }
 
-int Platform_RtosIsThreadActive(uint32_t threadId)
+int Platform_RtosIsThreadActive(uintmri_t threadId)
 {
     return threadId == g_rtosActiveThread;
 }
@@ -874,7 +874,7 @@ int Platform_RtosIsSetThreadStateSupported(void)
     return g_isRtosSetThreadStateSupported;
 }
 
-void Platform_RtosSetThreadState(uint32_t threadId, PlatformThreadState state)
+void Platform_RtosSetThreadState(uintmri_t threadId, PlatformThreadState state)
 {
     bool foundThread = false;
 
@@ -906,7 +906,7 @@ int platformMock_GetSyncICacheToDCacheCalls(void)
     return g_invalidateICacheCount;
 }
 
-void Platform_SyncICacheToDCache(void *pv, uint32_t size)
+void Platform_SyncICacheToDCache(uintmri_t address, size_t size)
 {
     g_invalidateICacheCount++;
 }
