@@ -1,4 +1,4 @@
-/* Copyright 2022 Adam Green (https://github.com/adamgreen/)
+/* Copyright 2024 Adam Green (https://github.com/adamgreen/)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <core/cmd_file.h>
 #include <core/fileio.h>
 #include <core/mbedsys.h>
+#include "semihost_arm.h"
 
 
 static uint32_t convertRealViewOpenModeToPosixOpenFlags(uint32_t openMode);
@@ -35,6 +36,7 @@ static int      handleArmSemihostFileLengthRequest(PlatformSemihostParameters* p
 static int      handleArmSemihostRemoveRequest(PlatformSemihostParameters* pSemihostParameters);
 static int      handleArmSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters);
 static int      handleArmSemihostErrorNoRequest(PlatformSemihostParameters* pSemihostParameters);
+static int      handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters);
 int Semihost_HandleArmSemihostRequest(PlatformSemihostParameters* pParameters)
 {
     uint32_t opCode;
@@ -42,26 +44,28 @@ int Semihost_HandleArmSemihostRequest(PlatformSemihostParameters* pParameters)
     opCode = pParameters->parameter1;
     switch (opCode)
     {
-    case 1:
+    case MRI_ARM_SEMIHOST_OPEN:
         return handleArmSemihostOpenRequest(pParameters);
-    case 2:
+    case MRI_ARM_SEMIHOST_CLOSE:
         return handleArmSemihostCloseRequest(pParameters);
-    case 5:
+    case MRI_ARM_SEMIHOST_WRITE:
         return handleArmSemihostWriteRequest(pParameters);
-    case 6:
+    case MRI_ARM_SEMIHOST_READ:
         return handleArmSemihostReadRequest(pParameters);
-    case 9:
+    case MRI_ARM_SEMIHOST_IS_TTY:
         return handleArmSemihostIsTtyRequest(pParameters);
-    case 10:
+    case MRI_ARM_SEMIHOST_SEEK:
         return handleArmSemihostSeekRequest(pParameters);
-    case 12:
+    case MRI_ARM_SEMIHOST_FILE_LENGTH:
         return handleArmSemihostFileLengthRequest(pParameters);
-    case 14:
+    case MRI_ARM_SEMIHOST_REMOVE:
         return handleArmSemihostRemoveRequest(pParameters);
-    case 15:
+    case MRI_ARM_SEMIHOST_RENAME:
         return handleArmSemihostRenameRequest(pParameters);
-    case 19:
+    case MRI_ARM_SEMIHOST_ERR_NO:
         return handleArmSemihostErrorNoRequest(pParameters);
+    case MRI_ARM_SEMIHOST_UUID:
+         return handleMbedSemihostUidRequest(pParameters);
     default:
         return 0;
     }
@@ -270,3 +274,29 @@ static int handleArmSemihostErrorNoRequest(PlatformSemihostParameters* pSemihost
 
     return 1;
 }
+
+static int handleMbedSemihostUidRequest(PlatformSemihostParameters* pParameters)
+{
+    /* This semi-host routine only works on device in monitor mode but that is ok since that is all that works on these
+       older mbed boards anyway as they didn't expose their JTAG/SWD interface pins.
+    */
+    typedef struct
+    {
+        uint8_t*   pBuffer;
+        uint32_t   bufferSize;
+    } SUidParameters;
+    uint32_t              uidSize = Platform_GetUidSize();
+    const SUidParameters* pUidParameters;
+    uint32_t              copySize;
+
+    pUidParameters = (const SUidParameters*)pParameters->parameter2;
+    copySize = pUidParameters->bufferSize;
+    if (copySize > uidSize)
+        copySize = uidSize;
+    mri_memcpy(pUidParameters->pBuffer, Platform_GetUid(), copySize);
+
+    Platform_AdvanceProgramCounterToNextInstruction();
+    Platform_SetSemihostCallReturnAndErrnoValues(0, 0);
+
+    return 1;
+ }

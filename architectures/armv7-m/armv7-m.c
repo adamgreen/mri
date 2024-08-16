@@ -19,6 +19,7 @@
 #include <core/platforms.h>
 #include <core/gdb_console.h>
 #include <semihost/newlib/newlib_stubs.h>
+#include <semihost/arm/semihost_arm.h>
 #include "debug_cm3.h"
 #include "armv7-m.h"
 
@@ -1134,7 +1135,7 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
 
 static int isInstructionArmSemihostBreakpoint(uint16_t instruction)
 {
-    static const uint16_t armSemihostBreakpointMachineCode = 0xbeab;
+    static const uint16_t armSemihostBreakpointMachineCode = 0xbe00 | MRI_ARM_SEMIHOST_BKPT_NO;
 
     return armSemihostBreakpointMachineCode == instruction;
 }
