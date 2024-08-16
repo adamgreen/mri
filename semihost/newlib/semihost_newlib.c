@@ -21,8 +21,6 @@
 #include "newlib_stubs.h"
 
 
-static uint16_t getFirstHalfWordOfCurrentInstruction(void);
-static uint16_t throwingMemRead16(uint32_t address);
 static int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostReadRequest(PlatformSemihostParameters* pSemihostParameters);
 static int handleNewlibSemihostOpenRequest(PlatformSemihostParameters* pSemihostParameters);
@@ -36,7 +34,7 @@ static int handleNewlibSemihostGetErrNoRequest(PlatformSemihostParameters* pSemi
 static int handleNewlibSemihostSetHooksRequest(PlatformSemihostParameters* pSemihostParameters);
 int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    uint16_t semihostOperation = getFirstHalfWordOfCurrentInstruction() & 0x00FF;
+    uintmri_t semihostOperation = Platform_GetNewlibSemihostOperation();
 
     switch (semihostOperation)
     {
@@ -65,19 +63,6 @@ int Semihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostPa
         default:
             return 0;
     }
-}
-
-static uint16_t getFirstHalfWordOfCurrentInstruction(void)
-{
-    return throwingMemRead16(Platform_GetProgramCounter());
-}
-
-static uint16_t throwingMemRead16(uint32_t address)
-{
-    uint16_t instructionWord = Platform_MemRead16(address);
-    if (Platform_WasMemoryFaultEncountered())
-        __throw_and_return(memFaultException, 0);
-    return instructionWord;
 }
 
 static int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters)

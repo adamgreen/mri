@@ -24,7 +24,7 @@ int Semihost_IsDebuggeeMakingSemihostCall(void)
 {
     PlatformInstructionType instructionType = Platform_TypeOfCurrentInstruction();
 
-    return (instructionType == MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL ||
+    return (instructionType == MRI_PLATFORM_INSTRUCTION_ARM_SEMIHOST_CALL ||
             instructionType == MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL);
 }
 
@@ -33,8 +33,8 @@ int Semihost_HandleSemihostRequest(void)
     PlatformInstructionType    instructionType = Platform_TypeOfCurrentInstruction();
     PlatformSemihostParameters parameters = Platform_GetSemihostCallParameters();
 
-    if (instructionType == MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL)
-        return Semihost_HandleMbedSemihostRequest(&parameters);
+    if (instructionType == MRI_PLATFORM_INSTRUCTION_ARM_SEMIHOST_CALL)
+        return Semihost_HandleArmSemihostRequest(&parameters);
     else if (instructionType == MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL)
         return Semihost_HandleNewlibSemihostRequest(&parameters);
     else

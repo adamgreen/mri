@@ -210,8 +210,8 @@ $(eval $(call make_library,CORE,core memory/native,libmricore.a,.))
 $(eval $(call make_tests,CORE,tests/tests tests/mocks,. tests/mocks,))
 $(eval $(call run_gcov,CORE))
 
-# Sources for newlib and mbed's LocalFileSystem semihosting support.
-$(eval $(call armv7m_module,SEMIHOST,semihost semihost/newlib semihost/mbed))
+# Sources for newlib and ARM semihosting support.
+$(eval $(call armv7m_module,SEMIHOST,semihost semihost/newlib semihost/arm))
 
 # ARMv7-M architecture sources.
 $(eval $(call armv7m_module,ARMV7M,architectures/armv7-m))

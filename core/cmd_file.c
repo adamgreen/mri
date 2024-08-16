@@ -22,7 +22,7 @@
 
 
 static int processGdbFileResponseCommands(void);
-/* Send file open request to gdb on behalf of mbed LocalFileSystem.
+/* Send file open request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Fopen,ff/nn,gg,mm
 
@@ -50,7 +50,7 @@ int IssueGdbFileOpenRequest(const OpenParameters* pParameters)
 }
 
 
-/* Send file write request to gdb on behalf of mbed LocalFileSystem or stdout/stderr.
+/* Send file write request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Fwrite,ff,pp,cc
 
@@ -75,7 +75,7 @@ int IssueGdbFileWriteRequest(const TransferParameters* pParameters)
 }
 
 
-/* Send file read request to gdb on behalf of mbed LocalFileSystem or stdin.
+/* Send file read request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Fread,ff,pp,cc
 
@@ -100,7 +100,7 @@ int IssueGdbFileReadRequest(const TransferParameters* pParameters)
 }
 
 
-/* Send file close request to gdb on behalf of mbed LocalFileSystem.
+/* Send file close request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Fclose,ff
 
@@ -119,7 +119,7 @@ int IssueGdbFileCloseRequest(uint32_t fileDescriptor)
 }
 
 
-/* Send file seek request to gdb on behalf of mbed LocalFileSystem.
+/* Send file seek request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Flseek,ff,oo,ww
 
@@ -144,7 +144,7 @@ int IssueGdbFileSeekRequest(const SeekParameters* pParameters)
 }
 
 
-/* Send file stat request to gdb on behalf of mbed LocalFileSystem to get file length.
+/* Send file stat request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Ffstat,ff,bb
 
@@ -166,7 +166,7 @@ int IssueGdbFileFStatRequest(uint32_t fileDescriptor, uint32_t fileStatBuffer)
 }
 
 
-/* Send file unlink request to gdb on behalf of mbed LocalFileSystem.
+/* Send file unlink request to gdb on behalf of the target's semi-hosting request.
 
     Data Format: Funlink,ff/nn
 

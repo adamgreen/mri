@@ -1104,7 +1104,7 @@ int Platform_WasProgramCounterModifiedByUser(void)
 }
 
 
-static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
+static int isInstructionArmSemihostBreakpoint(uint16_t instruction);
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
 static int isInstructionHardcodedBreakpoint(uint16_t instruction);
 PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
@@ -1122,8 +1122,8 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
         return MRI_PLATFORM_INSTRUCTION_OTHER;
     }
 
-    if (isInstructionMbedSemihostBreakpoint(currentInstruction))
-        return MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
+    if (isInstructionArmSemihostBreakpoint(currentInstruction))
+        return MRI_PLATFORM_INSTRUCTION_ARM_SEMIHOST_CALL;
     else if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL;
     else if (isInstructionHardcodedBreakpoint(currentInstruction))
@@ -1132,11 +1132,11 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
         return MRI_PLATFORM_INSTRUCTION_OTHER;
 }
 
-static int isInstructionMbedSemihostBreakpoint(uint16_t instruction)
+static int isInstructionArmSemihostBreakpoint(uint16_t instruction)
 {
-    static const uint16_t mbedSemihostBreakpointMachineCode = 0xbeab;
+    static const uint16_t armSemihostBreakpointMachineCode = 0xbeab;
 
-    return mbedSemihostBreakpointMachineCode == instruction;
+    return armSemihostBreakpointMachineCode == instruction;
 }
 
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
@@ -1167,6 +1167,22 @@ PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 
     return parameters;
 }
+
+
+uintmri_t Platform_GetNewlibSemihostOperation(void)
+{
+    uintmri_t opCode = 0;
+    __try
+    {
+        opCode = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        opCode = 0;
+    }
+    return opCode & 0xFF;
+}
+
 
 
 void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int errNo)

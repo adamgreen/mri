@@ -24,13 +24,13 @@ int mriSemihost_IsDebuggeeMakingSemihostCall(void);
 int mriSemihost_HandleSemihostRequest(void);
 int mriSemihost_WriteToFileOrConsole(const TransferParameters* pParameters);
 int mriSemihost_HandleNewlibSemihostRequest(PlatformSemihostParameters* pSemihostParameters);
-int mriSemihost_HandleMbedSemihostRequest(PlatformSemihostParameters* pParameters);
+int mriSemihost_HandleArmSemihostRequest(PlatformSemihostParameters* pParameters);
 
 /* Macroes which allow code to drop the mri namespace prefix. */
 #define Semihost_IsDebuggeeMakingSemihostCall   mriSemihost_IsDebuggeeMakingSemihostCall
 #define Semihost_HandleSemihostRequest          mriSemihost_HandleSemihostRequest
 #define Semihost_WriteToFileOrConsole           mriSemihost_WriteToFileOrConsole
 #define Semihost_HandleNewlibSemihostRequest    mriSemihost_HandleNewlibSemihostRequest
-#define Semihost_HandleMbedSemihostRequest      mriSemihost_HandleMbedSemihostRequest
+#define Semihost_HandleArmSemihostRequest      mriSemihost_HandleArmSemihostRequest
 
 #endif /* SEMIHOST_H_ */

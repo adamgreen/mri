@@ -14,6 +14,7 @@
 */
 /* Routines to access memory on target device when running on target itself. */
 #include <core/platforms.h>
+#include <core/libc.h>
 
 uint64_t Platform_MemRead64(uintmri_t address)
 {
@@ -53,4 +54,10 @@ void Platform_MemWrite16(uintmri_t address, uint16_t value)
 void Platform_MemWrite8(uintmri_t address, uint8_t value)
 {
     *(volatile uint8_t*)address = value;
+}
+
+uintmri_t Platform_ReadMemory(void* pvBuffer, uintmri_t address, uintmri_t readByteCount)
+{
+    mri_memcpy(pvBuffer, (const void*)address, readByteCount);
+    return readByteCount;
 }

@@ -37,6 +37,7 @@ void      mriPlatform_MemWrite64(uintmri_t address, uint64_t value);
 void      mriPlatform_MemWrite32(uintmri_t address, uint32_t value);
 void      mriPlatform_MemWrite16(uintmri_t address, uint16_t value);
 void      mriPlatform_MemWrite8(uintmri_t address, uint8_t value);
+uintmri_t mriPlatform_ReadMemory(void* pvBuffer, uintmri_t address, uintmri_t readByteCount);
 void      mriPlatform_SyncICacheToDCache(uintmri_t address, size_t size);
 
 int       mriPlatform_CommHasReceiveData(void);
@@ -100,7 +101,7 @@ __throws void  mriPlatform_ClearHardwareWatchpoint(uintmri_t address, uintmri_t 
 typedef enum
 {
     MRI_PLATFORM_INSTRUCTION_OTHER = 0,
-    MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL,
+    MRI_PLATFORM_INSTRUCTION_ARM_SEMIHOST_CALL,
     MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL,
     MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT,
 }  PlatformInstructionType;
@@ -115,6 +116,7 @@ typedef struct
 
 PlatformInstructionType     mriPlatform_TypeOfCurrentInstruction(void);
 PlatformSemihostParameters  mriPlatform_GetSemihostCallParameters(void);
+uintmri_t                   mriPlatform_GetNewlibSemihostOperation(void);
 void                        mriPlatform_SetSemihostCallReturnAndErrnoValues(int returnValue, int errNo);
 
 const uint8_t*  mriPlatform_GetUid(void);
@@ -160,6 +162,7 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_MemWrite32                                 mriPlatform_MemWrite32
 #define Platform_MemWrite16                                 mriPlatform_MemWrite16
 #define Platform_MemWrite8                                  mriPlatform_MemWrite8
+#define Platform_ReadMemory                                 mriPlatform_ReadMemory
 #define Platform_SyncICacheToDCache                         mriPlatform_SyncICacheToDCache
 #define Platform_CommHasReceiveData                         mriPlatform_CommHasReceiveData
 #define Platform_CommHasTransmitCompleted                   mriPlatform_CommHasTransmitCompleted
@@ -191,6 +194,7 @@ void            mriPlatform_HandleFaultFromHighPriorityCode(void);
 #define Platform_ClearHardwareWatchpoint                    mriPlatform_ClearHardwareWatchpoint
 #define Platform_TypeOfCurrentInstruction                   mriPlatform_TypeOfCurrentInstruction
 #define Platform_GetSemihostCallParameters                  mriPlatform_GetSemihostCallParameters
+#define Platform_GetNewlibSemihostOperation                 mriPlatform_GetNewlibSemihostOperation
 #define Platform_SetSemihostCallReturnAndErrnoValues        mriPlatform_SetSemihostCallReturnAndErrnoValues
 #define Platform_GetUid                                     mriPlatform_GetUid
 #define Platform_GetUidSize                                 mriPlatform_GetUidSize

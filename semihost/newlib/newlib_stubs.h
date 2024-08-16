@@ -33,4 +33,17 @@
 
 #define MRI_NEWLIB_SEMIHOST_MAX         0xff
 
+#define MRI_ARM_SEMIHOST_BKPT_NO        0xab
+
+#define MRI_ARM_SEMIHOST_OPEN           1
+#define MRI_ARM_SEMIHOST_CLOSE          2
+#define MRI_ARM_SEMIHOST_WRITE          5
+#define MRI_ARM_SEMIHOST_READ           6
+#define MRI_ARM_SEMIHOST_IS_TTY         9
+#define MRI_ARM_SEMIHOST_SEEK           10
+#define MRI_ARM_SEMIHOST_FILE_LENGTH    12
+#define MRI_ARM_SEMIHOST_REMOVE         14
+#define MRI_ARM_SEMIHOST_RENAME         15
+#define MRI_ARM_SEMIHOST_ERR_NO         19
+
 #endif /* MRI_NEWLIB_STUBS_H_ */
