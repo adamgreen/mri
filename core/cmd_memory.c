@@ -105,8 +105,8 @@ uint32_t HandleMemoryWriteCommand(void)
 
     Where AAAAAAAA is the hexadecimal representation of the address where the write is to start.
           LLLLLLLL is the hexadecimal representation of the length (in bytes) of the write to be conducted.
-          xx is the hexadecimal representation of the first byte to be written to the specified location.
-          ... continue returning the rest of LLLLLLLL-1 bytes in hexadecimal format.
+          xx is the byte in escaped binary format of the first byte to be written to the specified location.
+          ... continue returning the rest of the bytes in escaped binary format.
 */
 uint32_t HandleBinaryMemoryWriteCommand(void)
 {
